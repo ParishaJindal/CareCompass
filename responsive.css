@@ -1,0 +1,348 @@
+/**
+ * CareCompass - Healthcare Navigation for Everyone
+ * 
+ * responsive.css
+ * Mobile-first responsive breakpoints, mobile navigation menu,
+ * stacked filter drawers, and touch-target optimizations.
+ */
+
+/* ========================================================
+   COMPACT DESKTOP & LAPTOP BREAKPOINT (<= 1240px)
+   ======================================================== */
+@media (max-width: 1240px) {
+  .nav-container {
+    padding: 12px 24px;
+    gap: 16px;
+  }
+
+  .brand-tagline {
+    display: none; /* Streamline brand on compact viewports to prevent nav congestion */
+  }
+
+  .nav-links-list {
+    gap: 14px;
+  }
+
+  .nav-link {
+    font-size: 0.88rem;
+    padding: 6px 4px;
+  }
+
+  .directory-layout {
+    grid-template-columns: 240px 1fr;
+    gap: 24px;
+    padding: 0 20px;
+  }
+
+  .directory-split-view {
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: 20px;
+  }
+}
+
+/* ========================================================
+   TABLET BREAKPOINT (<= 1080px)
+   ======================================================== */
+@media (max-width: 1080px) {
+  .hero-headline {
+    font-size: 2.35rem;
+  }
+
+  .directory-split-view {
+    grid-template-columns: 1fr;
+  }
+
+  .map-column {
+    height: 420px;
+    position: relative;
+    top: 0;
+  }
+
+  .steps-grid, .trust-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .footer-top {
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+
+  .contact-details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ========================================================
+   MOBILE BREAKPOINT (<= 768px)
+   ======================================================== */
+@media (max-width: 768px) {
+  .nav-container {
+    padding: 10px 16px;
+  }
+
+  .mobile-menu-btn {
+    display: flex;
+  }
+
+  /* Mobile Navigation Drawer */
+  .main-nav {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border-bottom: 2px solid var(--border-color);
+    box-shadow: var(--shadow-lg);
+    padding: 20px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+    z-index: 9999;
+  }
+
+  .main-nav.mobile-open {
+    display: flex;
+  }
+
+  .nav-links-list {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    width: 100%;
+  }
+
+  .nav-link {
+    font-size: 1.05rem;
+    padding: 8px 0;
+    width: 100%;
+  }
+
+  .nav-actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    margin-top: 8px;
+  }
+
+  .nav-actions .btn {
+    width: 100%;
+  }
+
+  .lang-switcher {
+    justify-content: center;
+    margin-bottom: 8px;
+  }
+
+  /* Hero Section Mobile */
+  .hero-section {
+    padding: 36px 16px;
+  }
+
+  .hero-headline {
+    font-size: 1.75rem;
+  }
+
+  .hero-subhead {
+    font-size: 1rem;
+    margin-bottom: 24px;
+  }
+
+  .search-card-hero {
+    padding: 18px;
+  }
+
+  .search-form-row {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .search-card-hero .btn-primary {
+    width: 100%;
+  }
+
+  .hero-search-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .demo-scenario-callout {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .demo-scenario-callout .btn {
+    width: 100%;
+  }
+
+  /* Directory Layout Mobile */
+  .directory-layout {
+    grid-template-columns: 1fr;
+    margin: 16px auto;
+    padding: 0 16px;
+  }
+
+  .directory-filter-panel {
+    position: relative;
+    top: 0;
+    height: auto;
+    max-height: 400px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    overscroll-behavior-y: contain;
+  }
+
+  #directory-results-column {
+    height: auto;
+    max-height: none;
+    overflow-y: visible;
+  }
+
+  .results-content-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .view-mode-toggles {
+    justify-content: center;
+  }
+
+  .alt-body {
+    grid-template-columns: 1fr;
+  }
+
+  .alt-actions {
+    min-width: unset;
+  }
+
+  .facility-card {
+    padding: 18px;
+  }
+
+  .card-header {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .card-actions-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .card-actions-bar .contact-links,
+  .card-actions-bar .nav-links {
+    width: 100%;
+  }
+
+  .card-actions-bar .btn {
+    width: 100%;
+  }
+
+  .detail-header-card {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 20px;
+  }
+
+  .dh-actions {
+    width: 100%;
+  }
+
+  .dh-actions .btn {
+    width: 100%;
+  }
+
+  .footer-top {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding: 40px 16px 24px;
+  }
+}
+
+/* ========================================================
+   SMALL MOBILE BREAKPOINT (<= 480px)
+   ======================================================== */
+@media (max-width: 480px) {
+  html {
+    font-size: 15px;
+  }
+
+  .btn {
+    min-height: 44px; /* Accessible Touch Target */
+  }
+
+  .hero-headline {
+    font-size: 1.55rem;
+  }
+
+  .category-card {
+    padding: 16px;
+  }
+
+  .categories-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .modal-dialog {
+    padding: 0;
+  }
+
+  .modal-header, .modal-body, .modal-footer {
+    padding: 16px;
+  }
+}
+
+/* ========================================================
+   CONFIDENTIAL LOGIN PAGE RESPONSIVE ADAPTATIONS
+   ======================================================== */
+@media (max-width: 960px) {
+  .login-card-wrapper {
+    grid-template-columns: 1fr;
+    max-width: 580px;
+  }
+  
+  .login-brand-panel {
+    padding: 32px 24px;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .login-form-panel {
+    padding: 32px 24px;
+  }
+
+  .clearance-pills-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .login-page-layout {
+    padding: 20px 12px 40px;
+  }
+
+  .confidential-classification-bar {
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 14px;
+    border-radius: 12px;
+  }
+
+  .confidential-tag-text {
+    font-size: 0.72rem;
+  }
+
+  .otp-inputs-row {
+    gap: 5px;
+    justify-content: center;
+  }
+
+  .otp-box {
+    width: 36px;
+    height: 40px;
+    font-size: 1.1rem;
+  }
+}
+

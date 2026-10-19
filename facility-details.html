@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="View verified medical service availability, last audit timestamps, operational notes, and accessibility features at CareCompass.">
+  <title>Facility Service Audit & Verification Details — CareCompass</title>
+  
+  <!-- Open Graph & Twitter Cards for Google / Social Previews -->
+  <meta property="og:title" content="Facility Service Audit & Verification Details — CareCompass">
+  <meta property="og:description" content="View verified medical service availability, last audit timestamps, operational notes, and accessibility features at CareCompass.">
+  <meta property="og:image" content="../assets/images/logo.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="../assets/images/logo.png">
+
+  <!-- Modern Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../assets/images/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <link rel="alternate icon" href="../favicon.ico">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+  <link rel="stylesheet" href="../css/accessibility.css">
+</head>
+<body>
+
+  <!-- Accessible Skip to Content Link -->
+  <a href="#facility-detail-content" class="skip-link">Skip to main content</a>
+
+  <!-- Emergency Notice Ribbon -->
+  <aside class="emergency-ribbon" id="emergency-ribbon" role="alert" aria-label="Emergency medical assistance notice">
+    <div class="emergency-ribbon-content">
+      <span class="emergency-badge">EMERGENCY SOS</span>
+      <span data-i18n="emergencyAlert">In an acute medical emergency, dial 108 / 102 (Ambulance) or 112 immediately.</span>
+    </div>
+    <button type="button" class="emergency-close-btn" id="emergency-ribbon-close" aria-label="Dismiss emergency notice">&times;</button>
+  </aside>
+
+  <!-- Navigation Bar -->
+  <header class="main-header" role="banner">
+    <div class="nav-container">
+      <a href="../index.html" class="brand-wrapper" aria-label="CareCompass Home">
+        <div class="brand-icon-box">
+          <img src="../assets/images/favicon.png" alt="CareCompass Icon" class="brand-icon-img">
+        </div>
+        <div class="brand-text-group">
+          <span class="brand-name" data-i18n="brandName">CareCompass</span>
+          <span class="brand-tagline">
+            <span data-i18n="brandTagline">Healthcare Navigation for Everyone</span>
+          </span>
+        </div>
+      </a>
+
+      <!-- Mobile Hamburger Button -->
+      <button type="button" class="mobile-menu-btn" id="mobile-menu-toggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="main-nav-links">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <!-- Nav Links -->
+      <nav class="main-nav" id="main-nav-links" role="navigation" aria-label="Main navigation">
+        <ul class="nav-links-list">
+          <li><a href="../index.html" class="nav-link" data-i18n="navHome">Home</a></li>
+          <li><a href="find-healthcare.html" class="nav-link" data-i18n="navFindCare">Find Healthcare</a></li>
+          <li><a href="../index.html#how-it-works" class="nav-link" data-i18n="navHowItWorks">How It Works</a></li>
+          <li><a href="about.html" class="nav-link" data-i18n="navAbout">About Us</a></li>
+          <li><a href="contact.html" class="nav-link" data-i18n="navContact">Contact</a></li>
+        </ul>
+
+        <div class="nav-actions">
+          <div class="nav-auth-container">
+            <a href="login.html" class="btn btn-outline btn-sm" data-i18n="navSignIn">Sign In</a>
+          </div>
+
+          <button type="button" class="btn btn-outline btn-sm trigger-accessibility-modal" id="nav-btn-a11y" aria-label="Open accessibility settings">
+            ♿ <span data-i18n="navAccessibilityBtn">Accessibility</span>
+          </button>
+
+          <div class="lang-switcher" role="group" aria-label="Language selection">
+            <button type="button" class="lang-switch-btn active" data-lang="en" aria-pressed="true">EN</button>
+            <button type="button" class="lang-switch-btn" data-lang="hi" aria-pressed="false">हिंदी</button>
+          </div>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Details Content -->
+  <main id="facility-detail-content" style="max-width: 1180px; margin: 32px auto; padding: 0 24px;">
+    
+    <!-- Dynamic Container populated by app.js -->
+    <div id="facility-detail-container" role="region" aria-label="Healthcare facility details and verified service audit">
+      <div style="text-align:center; padding: 60px 20px;">
+        <p>Loading facility verification records...</p>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Accessibility Settings Modal -->
+  <div id="accessibility-modal" class="modal" role="dialog" aria-labelledby="access-modal-title" aria-modal="true" aria-hidden="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="access-modal-title" data-i18n="accessTitle">♿ Accessibility Settings</h3>
+        <button type="button" class="modal-close-btn" aria-label="Close accessibility settings">&times;</button>
+      </div>
+      <div class="modal-body">
+        
+        <div class="filter-group">
+          <label class="filter-label" data-i18n="accessTextSize">Text Size Scale</label>
+          <div class="view-mode-toggles">
+            <button type="button" class="view-toggle-btn" data-font-size="normal">Normal (100%)</button>
+            <button type="button" class="view-toggle-btn" data-font-size="large">Large (115%)</button>
+            <button type="button" class="view-toggle-btn" data-font-size="xlarge">Extra Large (130%)</button>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label" for="toggle-high-contrast" data-i18n="accessContrast">High Contrast Theme</label>
+          <label class="filter-checkbox-item">
+            <input type="checkbox" id="toggle-high-contrast">
+            <span>High Contrast Mode (Deep Navy & Vivid Yellow)</span>
+          </label>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label" for="toggle-simple-mode" data-i18n="accessSimpleMode">Simple Reading Mode</label>
+          <label class="filter-checkbox-item">
+            <input type="checkbox" id="toggle-simple-mode">
+            <span>Simplified text and high-legibility layout</span>
+          </label>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary modal-close-btn" data-i18n="accessClose">Save & Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Report Outdated Information Modal -->
+  <div id="report-modal" class="modal" role="dialog" aria-labelledby="report-modal-title" aria-modal="true" aria-hidden="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="report-modal-title">📢 Report Outdated or Inaccurate Information</h3>
+        <button type="button" class="modal-close-btn" aria-label="Close report dialog">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="report-success-message" style="display: none;" class="alert-notice">
+          <strong>Thank you!</strong> Your verification discrepancy has been recorded in the community audit queue. Our team reviews submissions within 2 hours.
+        </div>
+
+        <form id="report-outdated-form">
+          <div class="search-field-group" style="margin-bottom: 14px;">
+            <label for="report-facility-name">Facility Name</label>
+            <input type="text" id="report-facility-name" class="form-input" required readonly>
+          </div>
+
+          <div class="search-field-group" style="margin-bottom: 14px;">
+            <label for="report-service-name">Medical Service</label>
+            <input type="text" id="report-service-name" class="form-input" placeholder="e.g. X-ray, Ultrasound">
+          </div>
+
+          <div class="search-field-group" style="margin-bottom: 14px;">
+            <label for="report-observed-status">Observed Status</label>
+            <select id="report-observed-status" class="filter-select">
+              <option value="service_broken">Service is Down / Equipment Broken</option>
+              <option value="specialist_absent">Doctor / Specialist Not on Duty</option>
+              <option value="service_active">Service is Actually Available (False Negative)</option>
+              <option value="changed_hours">Operating Hours Have Changed</option>
+              <option value="incorrect_phone">Incorrect Phone Number</option>
+            </select>
+          </div>
+
+          <div class="search-field-group" style="margin-bottom: 14px;">
+            <label for="report-comments">Additional Details</label>
+            <textarea id="report-comments" class="form-input" rows="3" placeholder="Describe what you observed (e.g. receptionist mentioned machine will be fixed on Monday)..." style="height: auto;"></textarea>
+          </div>
+
+          <div class="search-field-group" style="margin-bottom: 16px;">
+            <label for="report-email">Your Contact Email (Optional, for verification credit)</label>
+            <input type="email" id="report-email" class="form-input" placeholder="name@example.com">
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%;">
+            Submit Verification Report
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="main-footer" role="contentinfo">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <img src="../assets/images/logo.png" alt="CareCompass Logo" class="footer-brand-logo">
+        <p>
+          A smart digital healthcare navigation platform providing verified service availability, timestamp tracking, and intelligent alternative recommendations.
+        </p>
+      </div>
+
+      <div class="footer-col">
+        <h4>Navigation</h4>
+        <ul class="footer-links">
+          <li><a href="../index.html">Home</a></li>
+          <li><a href="find-healthcare.html">Find Healthcare</a></li>
+          <li><a href="../index.html#how-it-works">How It Works</a></li>
+          <li><a href="about.html">About Us</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Verification & Trust</h4>
+        <ul class="footer-links">
+          <li><a href="about.html#verification-policy">Verification Methodology</a></li>
+          <li><a href="contact.html#report-form">Report Outdated Info</a></li>
+          <li><a href="about.html#accessibility-statement">Accessibility Commitment</a></li>
+          <li><a href="about.html#privacy-policy">Privacy & Data Policy</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Medical Disclaimer</h4>
+        <div class="footer-disclaimer-box" data-i18n="footerDisclaimer">
+          CareCompass provides directory and verified availability estimates based on recent audits. In life-threatening emergencies, dial 108 / 112 immediately.
+        </div>
+        <div style="margin-top: 14px;">
+          <a href="admin.html" style="display:inline-flex; align-items:center; gap:6px; font-size:0.8rem; color:#0d9488; font-weight:700; text-decoration:none; padding:4px 10px; background:rgba(13,148,136,0.08); border:1px solid rgba(13,148,136,0.25); border-radius:6px;">
+            🔐 Admin Portal (Parisha)
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2026 CareCompass. Developed for digital healthcare access, transparency, and accessibility.</p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="../js/healthcare-data.js"></script>
+  <script src="../js/verification.js"></script>
+  <script src="../js/recommendations.js"></script>
+  <script src="../js/translations.js"></script>
+  <script src="../js/accessibility.js"></script>
+  <script src="../js/search.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/app.js"></script>
+</body>
+</html>

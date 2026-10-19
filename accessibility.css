@@ -1,0 +1,231 @@
+/**
+ * CareCompass - Healthcare Navigation for Everyone
+ * 
+ * accessibility.css
+ * High Contrast Theme, Font Sizing Scalers, Focus Visible Rings,
+ * Reduced Motion, and Simplified Reading Mode.
+ */
+
+/* ========================================================
+   KEYBOARD FOCUS VISIBILITY (WCAG 2.4.7 Focus Visible)
+   ======================================================== */
+:focus-visible {
+  outline: 3px solid var(--color-secondary) !important;
+  outline-offset: 3px !important;
+}
+
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible {
+  outline: 3px solid var(--color-secondary) !important;
+  outline-offset: 2px !important;
+}
+
+/* ========================================================
+   FONT SIZE SCALERS (WCAG 1.4.4 Resize Text)
+   ======================================================== */
+body.text-size-large {
+  font-size: 18px;
+}
+
+body.text-size-large .hero-headline {
+  font-size: 3.1rem;
+}
+
+body.text-size-large .btn {
+  font-size: 1.05rem;
+  padding: 12px 22px;
+}
+
+body.text-size-large .form-input {
+  font-size: 1.05rem;
+  padding: 14px 16px 14px 44px;
+}
+
+body.text-size-xlarge {
+  font-size: 20px;
+}
+
+body.text-size-xlarge .hero-headline {
+  font-size: 3.4rem;
+}
+
+body.text-size-xlarge .btn {
+  font-size: 1.15rem;
+  padding: 14px 26px;
+}
+
+body.text-size-xlarge .facility-name {
+  font-size: 1.6rem;
+}
+
+/* ========================================================
+   HIGH CONTRAST THEME (WCAG 1.4.3 / 1.4.6 Contrast Enhanced)
+   High contrast dark navy and vivid yellow/cyan accents
+   ======================================================== */
+body.theme-high-contrast {
+  --bg-page: #05101a;
+  --bg-card: #0b1e36;
+  --bg-card-muted: #071526;
+  --bg-banner: #0d2544;
+  
+  --text-main: #ffffff;
+  --text-muted: #cbd5e1;
+  --text-subtle: #94a3b8;
+  
+  --color-primary: #fef08a;          /* High contrast bright yellow */
+  --color-primary-light: #fef9c3;
+  --color-secondary: #38bdf8;        /* High contrast bright cyan */
+  --color-secondary-hover: #7dd3fc;
+  
+  --border-color: #475569;
+  --border-light: #334155;
+
+  /* Status Tokens High Contrast */
+  --status-available-bg: #064e3b;
+  --status-available-text: #6ee7b7;
+  --status-available-border: #34d399;
+  --status-available-dot: #10b981;
+
+  --status-unavailable-bg: #7f1d1d;
+  --status-unavailable-text: #fca5a5;
+  --status-unavailable-border: #f87171;
+  --status-unavailable-dot: #ef4444;
+
+  --status-unverified-bg: #78350f;
+  --status-unverified-text: #fde68a;
+  --status-unverified-border: #fbbf24;
+  --status-unverified-dot: #f59e0b;
+}
+
+body.theme-high-contrast .main-header {
+  background: #05101a;
+  border-bottom: 2px solid #fef08a;
+}
+
+body.theme-high-contrast .brand-name {
+  color: #fef08a;
+}
+
+body.theme-high-contrast .nav-link {
+  color: #ffffff;
+}
+
+body.theme-high-contrast .nav-link.active {
+  color: #38bdf8;
+}
+
+body.theme-high-contrast .hero-section {
+  background: #05101a;
+}
+
+body.theme-high-contrast .hero-headline {
+  color: #fef08a;
+}
+
+body.theme-high-contrast .hero-subhead {
+  color: #e2e8f0;
+}
+
+body.theme-high-contrast .search-card-hero,
+body.theme-high-contrast .directory-filter-panel,
+body.theme-high-contrast .facility-card,
+body.theme-high-contrast .modal-dialog,
+body.theme-high-contrast .detail-header-card,
+body.theme-high-contrast .detail-section,
+body.theme-high-contrast .category-card,
+body.theme-high-contrast .step-card,
+body.theme-high-contrast .trust-card {
+  background: #0b1e36;
+  border: 2px solid #94a3b8;
+  color: #ffffff;
+}
+
+body.theme-high-contrast .btn-primary {
+  background: #fef08a;
+  color: #000000;
+  border: 2px solid #ffffff;
+  font-weight: 800;
+}
+
+body.theme-high-contrast .btn-primary:hover {
+  background: #ffffff;
+  color: #000000;
+}
+
+body.theme-high-contrast .btn-secondary {
+  background: #38bdf8;
+  color: #000000;
+  font-weight: 800;
+}
+
+body.theme-high-contrast .btn-outline {
+  border: 2px solid #fef08a;
+  color: #fef08a;
+}
+
+body.theme-high-contrast .form-input,
+body.theme-high-contrast .filter-select {
+  background: #05101a;
+  color: #ffffff;
+  border: 2px solid #94a3b8;
+}
+
+body.theme-high-contrast .alt-recommendation-box {
+  background: #042f2e;
+  border: 3px solid #38bdf8;
+}
+
+body.theme-high-contrast .alt-explanation-box {
+  background: #071526;
+  color: #7dd3fc;
+  border: 1px solid #38bdf8;
+}
+
+body.theme-high-contrast .services-audit-table th {
+  background: #071526;
+  color: #fef08a;
+  border-bottom: 2px solid #ffffff;
+}
+
+body.theme-high-contrast .services-audit-table td {
+  border-bottom: 1px solid #475569;
+}
+
+/* ========================================================
+   SIMPLE READING MODE
+   ======================================================== */
+body.mode-simple {
+  line-height: 1.8;
+}
+
+body.mode-simple .hero-section {
+  padding: 36px 20px;
+}
+
+body.mode-simple .hero-subhead {
+  font-size: 1.3rem;
+  max-width: 650px;
+}
+
+body.mode-simple .categories-section,
+body.mode-simple .trust-section {
+  display: block;
+}
+
+/* ========================================================
+   REDUCED MOTION (WCAG 2.3.3)
+   ======================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+body.reduced-motion *, body.reduced-motion *::before, body.reduced-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
