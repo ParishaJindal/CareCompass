@@ -1,0 +1,45 @@
+# Environment and Secret Credentials
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Database local storage & binary dumps
+data/hospitals.db
+*.sqlite
+*.sqlite3
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs & Temporary files
+*.log
+logs/
+.system_generated/
+scratch/
+
+# Build artifacts & caches
+.vercel
+dist/
+build/
+coverage/
+
+# IDE settings
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace

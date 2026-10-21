@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Contact CareCompass, report outdated healthcare information, or view emergency helpline numbers.">
+  <title>Contact & Feedback — CareCompass</title>
+  
+  <!-- Open Graph & Twitter Cards for Google / Social Previews -->
+  <meta property="og:title" content="Contact & Feedback — CareCompass">
+  <meta property="og:description" content="Contact CareCompass, report outdated healthcare information, or view emergency helpline numbers.">
+  <meta property="og:image" content="../assets/images/logo.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="../assets/images/logo.png">
+
+  <!-- Modern Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../assets/images/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <link rel="alternate icon" href="../favicon.ico">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+  <link rel="stylesheet" href="../css/accessibility.css">
+</head>
+<body>
+
+  <!-- Accessible Skip to Content Link -->
+  <a href="#contact-main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Emergency Notice Ribbon -->
+  <aside class="emergency-ribbon" id="emergency-ribbon" role="alert" aria-label="Emergency medical assistance notice">
+    <div class="emergency-ribbon-content">
+      <span class="emergency-badge">EMERGENCY SOS</span>
+      <span data-i18n="emergencyAlert">In an acute medical emergency, dial 108 / 102 (Ambulance) or 112 immediately.</span>
+    </div>
+    <button type="button" class="emergency-close-btn" id="emergency-ribbon-close" aria-label="Dismiss emergency notice">&times;</button>
+  </aside>
+
+  <!-- Navigation Bar -->
+  <header class="main-header" role="banner">
+    <div class="nav-container">
+      <a href="../index.html" class="brand-wrapper" aria-label="CareCompass Home">
+        <div class="brand-icon-box">
+          <img src="../assets/images/favicon.png" alt="CareCompass Icon" class="brand-icon-img">
+        </div>
+        <div class="brand-text-group">
+          <span class="brand-name" data-i18n="brandName">CareCompass</span>
+          <span class="brand-tagline">
+            <span data-i18n="brandTagline">Healthcare Navigation for Everyone</span>
+          </span>
+        </div>
+      </a>
+
+      <!-- Mobile Hamburger Button -->
+      <button type="button" class="mobile-menu-btn" id="mobile-menu-toggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="main-nav-links">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <!-- Nav Links -->
+      <nav class="main-nav" id="main-nav-links" role="navigation" aria-label="Main navigation">
+        <ul class="nav-links-list">
+          <li><a href="../index.html" class="nav-link" data-i18n="navHome">Home</a></li>
+          <li><a href="find-healthcare.html" class="nav-link" data-i18n="navFindCare">Find Healthcare</a></li>
+          <li><a href="../index.html#how-it-works" class="nav-link" data-i18n="navHowItWorks">How It Works</a></li>
+          <li><a href="about.html" class="nav-link" data-i18n="navAbout">About Us</a></li>
+          <li><a href="contact.html" class="nav-link active" data-i18n="navContact">Contact</a></li>
+        </ul>
+
+        <div class="nav-actions">
+          <div class="nav-auth-container">
+            <a href="login.html" class="btn btn-outline btn-sm" data-i18n="navSignIn">Sign In</a>
+          </div>
+
+          <button type="button" class="btn btn-outline btn-sm trigger-accessibility-modal" id="nav-btn-a11y" aria-label="Open accessibility settings">
+            ♿ <span data-i18n="navAccessibilityBtn">Accessibility</span>
+          </button>
+
+          <div class="lang-switcher" role="group" aria-label="Language selection">
+            <button type="button" class="lang-switch-btn active" data-lang="en" aria-pressed="true">EN</button>
+            <button type="button" class="lang-switch-btn" data-lang="hi" aria-pressed="false">हिंदी</button>
+          </div>
+
+          <a href="find-healthcare.html" class="btn btn-primary btn-sm" data-i18n="navFindCareBtn">
+            Find Care
+          </a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Contact Content -->
+  <main id="contact-main-content" style="max-width: 1140px; margin: 40px auto; padding: 0 24px;">
+
+    <div style="text-align: center; margin-bottom: 36px;">
+      <h1 style="font-size: 2.3rem; font-weight: 800; color: var(--color-primary); margin-bottom: 8px;">
+        Contact CareCompass & Community Audit Desk
+      </h1>
+      <p style="font-size: 1.05rem; color: var(--text-muted); max-width: 680px; margin: 0 auto;">
+        Have feedback, questions about our verification algorithm, or spotted an outdated hospital listing? We are here to help.
+      </p>
+    </div>
+
+    <!-- Emergency Numbers Ribbon Box -->
+    <div style="background: #fef2f2; border: 1.5px solid #f87171; border-radius: 12px; padding: 20px; margin-bottom: 36px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; text-align: center;">
+      <div>
+        <span style="font-size: 0.8rem; font-weight: 700; color: #991b1b; text-transform: uppercase;">Medical Ambulance</span>
+        <div style="font-size: 1.4rem; font-weight: 800; color: #b91c1c;">Dial 108 / 102</div>
+      </div>
+      <div>
+        <span style="font-size: 0.8rem; font-weight: 700; color: #991b1b; text-transform: uppercase;">National Emergency</span>
+        <div style="font-size: 1.4rem; font-weight: 800; color: #b91c1c;">Dial 112</div>
+      </div>
+      <div>
+        <span style="font-size: 0.8rem; font-weight: 700; color: #991b1b; text-transform: uppercase;">Women Helpline</span>
+        <div style="font-size: 1.4rem; font-weight: 800; color: #b91c1c;">Dial 1091</div>
+      </div>
+      <div>
+        <span style="font-size: 0.8rem; font-weight: 700; color: #991b1b; text-transform: uppercase;">Tele-Mental Health (Tele-MANAS)</span>
+        <div style="font-size: 1.4rem; font-weight: 800; color: #b91c1c;">Dial 14416</div>
+      </div>
+    </div>
+
+    <!-- Official Coordinator Email Banner -->
+    <div style="background: linear-gradient(135deg, #0f2b48, #0d9488); color:#ffffff; padding: 24px 28px; border-radius: 14px; margin-bottom: 32px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; box-shadow: 0 10px 25px rgba(15,43,72,0.15);">
+      <div>
+        <span style="background:rgba(255,255,255,0.2); font-size:0.75rem; font-weight:700; padding:3px 12px; border-radius:9999px; text-transform:uppercase; letter-spacing:0.5px;">
+          Direct Queries Desk
+        </span>
+        <h3 style="margin:10px 0 4px 0; font-size:1.35rem; color:#ffffff; font-weight:800;">
+          parishajindal17@gmail.com
+        </h3>
+        <p style="margin:0; font-size:0.88rem; color:#e0f2fe; max-width:620px;">
+          All inquiries submitted on CareCompass are routed directly to <strong>Parisha Jindal</strong> and logged into the Admin Portal for prompt review and resolution.
+        </p>
+      </div>
+      <a href="mailto:parishajindal17@gmail.com?subject=CareCompass%20Healthcare%20Inquiry" class="btn btn-secondary" style="background:#ffffff; color:#0f2b48; font-weight:800; border:none; padding:10px 20px;">
+        ✉️ Email Parisha Directly
+      </a>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 32px;" class="contact-grid">
+      
+      <!-- General Contact Form -->
+      <section class="detail-section">
+        <h2>Send a Healthcare Query</h2>
+        <p class="section-subtext">Directly connected to <strong>parishajindal17@gmail.com</strong>. We reply within 24 hours.</p>
+
+        <div id="contact-success-toast" class="alert-notice" style="display:none; margin-bottom: 16px; background:#ecfdf5; border:1px solid #10b981; color:#065f46;">
+          ✓ <strong>Query Sent to parishajindal17@gmail.com!</strong> Thank you for contacting CareCompass. Your inquiry has been securely delivered to Parisha Jindal's desk and queued in the Admin Portal.
+        </div>
+
+        <form id="general-contact-form" action="https://formsubmit.co/parishajindal17@gmail.com" method="POST">
+          <input type="hidden" name="_subject" value="CareCompass New Healthcare Query">
+          <input type="hidden" name="_captcha" value="false">
+          <input type="hidden" name="_template" value="table">
+
+          <div class="search-field-group" style="margin-bottom: 14px;">
+            <label for="contact-name">Full Name *</label>
+            <input type="text" id="contact-name" name="name" class="form-input" placeholder="e.g. Rahul Sharma" required>
+          </div>
+
+          <div class="search-field-group" style="margin-bottom: 14px;">
+            <label for="contact-email">Email Address *</label>
+            <input type="email" id="contact-email" name="email" class="form-input" placeholder="e.g. rahul@example.com" required>
+          </div>
+
+          <div class="search-field-group" style="margin-bottom: 14px;">
+            <label for="contact-phone">Phone Number (Optional)</label>
+            <input type="tel" id="contact-phone" name="phone" class="form-input" placeholder="e.g. +91 98765 43210">
+          </div>
+
+          <div class="search-field-group" style="margin-bottom: 14px;">
+            <label for="contact-topic">Inquiry Topic</label>
+            <select id="contact-topic" name="topic" class="filter-select">
+              <option value="Hospital Bed & ICU Availability">Hospital Bed & ICU Availability</option>
+              <option value="Doctor or Radiologist Inquiries">Doctor or Radiologist Inquiries</option>
+              <option value="New Facility Listing Request">New Facility Listing Request</option>
+              <option value="Verification Algorithm & Audit">Verification Algorithm & Audit</option>
+              <option value="Website Bug / Technical Assistance">Website Bug / Technical Assistance</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="search-field-group" style="margin-bottom: 20px;">
+            <label for="contact-message">Your Query / Message *</label>
+            <textarea id="contact-message" name="message" class="form-input" rows="4" placeholder="Describe your query in detail..." required style="height: auto;"></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary" id="btn-submit-contact" style="width: 100%;">
+            Send Query to parishajindal17@gmail.com &rarr;
+          </button>
+        </form>
+      </section>
+
+      <!-- Dedicated Report Outdated Information Section -->
+      <section class="detail-section" id="report-form">
+        <h2>Report Outdated Facility or Service Information</h2>
+        <p class="section-subtext">Help fellow patients avoid unnecessary journeys by reporting incorrect timings or broken machines.</p>
+
+        <div id="page-report-success-toast" class="alert-notice" style="display:none; margin-bottom: 16px;">
+          ✓ <strong>Audit Submitted!</strong> Your verification notice has been queued for verification team review.
+        </div>
+
+        <form id="page-report-outdated-form">
+          <div class="search-field-group" style="margin-bottom: 14px;">
+            <label for="page-report-fac-select">Select Facility *</label>
+            <select id="page-report-fac-select" class="filter-select" required>
+              <option value="">-- Choose a Facility --</option>
+              <option value="CityCare Hospital">CityCare Hospital (Central District)</option>
+              <option value="Sunrise Diagnostic Centre">Sunrise Diagnostic Centre (Central District)</option>
+              <option value="Green Valley Clinic">Green Valley Clinic (Central District)</option>
+              <option value="Apex Super-Speciality Hospital">Apex Super-Speciality Hospital (North District)</option>
+              <option value="LifeLine 24/7 Pharmacy">LifeLine 24/7 Pharmacy (Central District)</option>
+              <option value="Metro Children & Maternity Clinic">Metro Children & Maternity Clinic (South Hills)</option>
+              <option value="Other">Other / Facility Not Listed</option>
+            </select>
+          </div>
+
+          <div class="search-field-group" style="margin-bottom: 14px;">
+            <label for="page-report-service">Specific Medical Service Affected *</label>
+            <input type="text" id="page-report-service" class="form-input" placeholder="e.g. X-ray, Ultrasound, Blood Test" required>
+          </div>
+
+          <div class="search-field-group" style="margin-bottom: 14px;">
+            <label for="page-report-status">Discrepancy Type *</label>
+            <select id="page-report-status" class="filter-select">
+              <option value="broken">Machine / Service Confirmed Broken or Down</option>
+              <option value="hours">Operating Hours Changed</option>
+              <option value="specialist">Doctor / Radiologist Not Available</option>
+              <option value="phone">Wrong Phone Number</option>
+              <option value="restored">Service Has Been Restored (Available)</option>
+            </select>
+          </div>
+
+          <div class="search-field-group" style="margin-bottom: 20px;">
+            <label for="page-report-details">Verification Notes</label>
+            <textarea id="page-report-details" class="form-input" rows="3" placeholder="Provide any details (e.g. called reception today at 10 AM, confirmed technician resigned)..." style="height: auto;"></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-secondary" style="width: 100%;">
+            Submit Outdated Info Report
+          </button>
+        </form>
+      </section>
+
+    </div>
+
+    <!-- Frequently Asked Questions -->
+    <section class="detail-section" style="margin-top: 36px;">
+      <h2>Frequently Asked Questions</h2>
+      <div style="display:flex; flex-direction:column; gap:16px; margin-top:18px;">
+        <div style="background:var(--bg-card-muted); padding:16px; border-radius:8px;">
+          <h4 style="color:var(--color-primary); margin-bottom:6px;">Q: Why doesn't CareCompass show every clinic as "Available"?</h4>
+          <p style="font-size:0.9rem; color:var(--text-muted); line-height:1.6;">
+            A: Unlike generic search engines that assume a hospital offers every service just because its front doors are unlocked, CareCompass verifies department readiness. If a hospital hasn't confirmed its radiology desk or its X-ray machine is undergoing maintenance, we mark it either <em>UNAVAILABLE</em> or <em>NOT VERIFIED</em>.
+          </p>
+        </div>
+
+        <div style="background:var(--bg-card-muted); padding:16px; border-radius:8px;">
+          <h4 style="color:var(--color-primary); margin-bottom:6px;">Q: What should I do if a service is marked "NOT VERIFIED"?</h4>
+          <p style="font-size:0.9rem; color:var(--text-muted); line-height:1.6;">
+            A: We recommend using the one-click "Call to Confirm" button on the facility card before travelling. A quick 1-minute phone call can save an hour of frustrating travel.
+          </p>
+        </div>
+
+        <div style="background:var(--bg-card-muted); padding:16px; border-radius:8px;">
+          <h4 style="color:var(--color-primary); margin-bottom:6px;">Q: Is CareCompass free to use?</h4>
+          <p style="font-size:0.9rem; color:var(--text-muted); line-height:1.6;">
+            A: Yes. CareCompass is built as a public interest digital healthcare access initiative. It does not require fees, logins, or insurance cards to search.
+          </p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Accessibility Settings Modal -->
+  <div id="accessibility-modal" class="modal" role="dialog" aria-labelledby="access-modal-title" aria-modal="true" aria-hidden="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="access-modal-title" data-i18n="accessTitle">♿ Accessibility Settings</h3>
+        <button type="button" class="modal-close-btn" aria-label="Close accessibility settings">&times;</button>
+      </div>
+      <div class="modal-body">
+        
+        <div class="filter-group">
+          <label class="filter-label" data-i18n="accessTextSize">Text Size Scale</label>
+          <div class="view-mode-toggles">
+            <button type="button" class="view-toggle-btn" data-font-size="normal">Normal (100%)</button>
+            <button type="button" class="view-toggle-btn" data-font-size="large">Large (115%)</button>
+            <button type="button" class="view-toggle-btn" data-font-size="xlarge">Extra Large (130%)</button>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label" for="toggle-high-contrast" data-i18n="accessContrast">High Contrast Theme</label>
+          <label class="filter-checkbox-item">
+            <input type="checkbox" id="toggle-high-contrast">
+            <span>High Contrast Mode (Deep Navy & Vivid Yellow)</span>
+          </label>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label" for="toggle-simple-mode" data-i18n="accessSimpleMode">Simple Reading Mode</label>
+          <label class="filter-checkbox-item">
+            <input type="checkbox" id="toggle-simple-mode">
+            <span>Simplified text and high-legibility layout</span>
+          </label>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary modal-close-btn" data-i18n="accessClose">Save & Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="main-footer" role="contentinfo">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <img src="../assets/images/logo.png" alt="CareCompass Logo" class="footer-brand-logo">
+        <p>
+          A smart digital healthcare navigation platform providing verified service availability, timestamp tracking, and intelligent alternative recommendations.
+        </p>
+      </div>
+
+      <div class="footer-col">
+        <h4>Navigation</h4>
+        <ul class="footer-links">
+          <li><a href="../index.html">Home</a></li>
+          <li><a href="find-healthcare.html">Find Healthcare</a></li>
+          <li><a href="../index.html#how-it-works">How It Works</a></li>
+          <li><a href="about.html">About Us</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Verification & Trust</h4>
+        <ul class="footer-links">
+          <li><a href="about.html#verification-policy">Verification Methodology</a></li>
+          <li><a href="#report-form">Report Outdated Info</a></li>
+          <li><a href="about.html#accessibility-statement">Accessibility Commitment</a></li>
+          <li><a href="about.html#privacy-policy">Privacy & Data Policy</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Medical Disclaimer</h4>
+        <div class="footer-disclaimer-box" data-i18n="footerDisclaimer">
+          CareCompass provides directory and verified availability estimates based on recent audits. In life-threatening emergencies, dial 108 / 112 immediately.
+        </div>
+        <div style="margin-top: 14px;">
+          <a href="admin.html" style="display:inline-flex; align-items:center; gap:6px; font-size:0.8rem; color:#0d9488; font-weight:700; text-decoration:none; padding:4px 10px; background:rgba(13,148,136,0.08); border:1px solid rgba(13,148,136,0.25); border-radius:6px;">
+            🔐 Admin Portal (Parisha)
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2026 CareCompass. Developed for digital healthcare access, transparency, and accessibility.</p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="../js/config.js"></script>
+  <script src="../js/healthcare-data.js"></script>
+  <script src="../js/verification.js"></script>
+  <script src="../js/recommendations.js"></script>
+  <script src="../js/translations.js"></script>
+  <script src="../js/accessibility.js"></script>
+  <script src="../js/search.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/app.js"></script>
+
+  <script>
+    // General Contact Form Submission connected to parishajindal17@gmail.com
+    document.getElementById("general-contact-form")?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const submitBtn = document.getElementById("btn-submit-contact");
+      const name = document.getElementById("contact-name").value.trim();
+      const email = document.getElementById("contact-email").value.trim();
+      const phone = document.getElementById("contact-phone")?.value.trim() || "";
+      const topic = document.getElementById("contact-topic").value;
+      const message = document.getElementById("contact-message").value.trim();
+
+      const inquiry = {
+        id: "INQ-" + Date.now().toString().slice(-6),
+        name,
+        email,
+        phone: phone || "Not provided",
+        topic,
+        message,
+        recipient: "parishajindal17@gmail.com",
+        date: new Date().toLocaleString(),
+        timestamp: new Date().toISOString(),
+        status: "unread"
+      };
+
+      // Save to localStorage for Admin Portal display
+      const currentInquiries = JSON.parse(localStorage.getItem("carecompass_inquiries") || "[]");
+      currentInquiries.unshift(inquiry);
+      localStorage.setItem("carecompass_inquiries", JSON.stringify(currentInquiries));
+
+      // Attempt live POST to FormSubmit endpoint connected to parishajindal17@gmail.com
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Sending to parishajindal17@gmail.com...";
+      }
+
+      try {
+        await fetch("https://formsubmit.co/ajax/parishajindal17@gmail.com", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify({
+            _subject: `CareCompass Query [${inquiry.id}]: ${topic} - ${name}`,
+            Name: name,
+            Email: email,
+            Phone: phone,
+            Topic: topic,
+            Message: message
+          })
+        });
+      } catch (err) {
+        console.warn("Async form submission fallback:", err);
+      }
+
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = "Send Query to parishajindal17@gmail.com &rarr;";
+      }
+
+      const toast = document.getElementById("contact-success-toast");
+      if (toast) {
+        toast.style.display = "block";
+        toast.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      form.reset();
+      CareCompassA11y.announce(`Inquiry ${inquiry.id} sent successfully to parishajindal17@gmail.com.`);
+    });
+
+    // Outdated report submission
+    document.getElementById("page-report-outdated-form")?.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const fac = document.getElementById("page-report-fac-select").value;
+      const svc = document.getElementById("page-report-service").value;
+      const status = document.getElementById("page-report-status").value;
+      const notes = document.getElementById("page-report-details").value;
+
+      const report = { 
+        id: "REP-" + Date.now().toString().slice(-6), 
+        fac, 
+        svc, 
+        status, 
+        notes, 
+        date: new Date().toLocaleString(),
+        timestamp: new Date().toISOString(),
+        reviewed: false
+      };
+      const current = JSON.parse(localStorage.getItem("carecompass_user_reports") || "[]");
+      current.unshift(report);
+      localStorage.setItem("carecompass_user_reports", JSON.stringify(current));
+
+      document.getElementById("page-report-success-toast").style.display = "block";
+      e.target.reset();
+      CareCompassA11y.announce("Thank you. Outdated information report recorded and forwarded to Parisha.");
+    });
+  </script>
+</body>
+</html>

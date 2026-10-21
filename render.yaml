@@ -1,0 +1,34 @@
+# Render Infrastructure-as-Code Blueprint for CareCompass
+# Deploys the Node.js Express REST API connected to Supabase PostgreSQL
+
+services:
+  - type: web
+    name: carecompass-api
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: DB_POOL_MAX
+        value: 10
+      - key: DB_TIMEOUT_MS
+        value: 5000
+      - key: DATABASE_SSL
+        value: true
+      - key: RATE_LIMIT_WINDOW_MS
+        value: 900000
+      - key: RATE_LIMIT_MAX
+        value: 200

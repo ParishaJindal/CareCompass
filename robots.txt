@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+# Googlebot specific rules
+User-agent: Googlebot
+Allow: /
+Allow: /css/
+Allow: /js/
+Allow: /assets/
+Allow: /pages/
+
+# Sitemap location
+Sitemap: https://carecompass-app.web.app/sitemap.xml

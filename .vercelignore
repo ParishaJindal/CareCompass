@@ -1,0 +1,16 @@
+# Files and directories ignored by Vercel frontend deployments
+backend/
+database/
+data/
+ml/
+scripts/
+*.db
+*.csv
+*.py
+*.yaml
+*.conf
+Dockerfile
+DEPLOYMENT_GOOGLE.md
+.firebaserc
+firebase.json
+.DS_Store

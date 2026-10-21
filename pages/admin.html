@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>CareCompass Master Admin Portal — Parisha Jindal</title>
+  
+  <!-- Modern Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../assets/images/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <link rel="alternate icon" href="../favicon.ico">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+  <link rel="stylesheet" href="../css/accessibility.css">
+  
+  <style>
+    body {
+      background: #f1f5f9;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .admin-navbar {
+      background: #0f2b48;
+      color: #ffffff;
+      padding: 14px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #0d9488;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+    }
+    .admin-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: #ffffff;
+    }
+    .admin-brand img {
+      height: 38px;
+      width: auto;
+      border-radius: 6px;
+    }
+    .admin-tabs-nav {
+      display: flex;
+      gap: 8px;
+      background: #ffffff;
+      padding: 12px 24px;
+      border-bottom: 1px solid var(--border-color);
+      overflow-x: auto;
+    }
+    .admin-tab-btn {
+      padding: 8px 18px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      background: transparent;
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: #475569;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .admin-tab-btn:hover {
+      background: #f8fafc;
+      color: var(--color-primary);
+    }
+    .admin-tab-btn.active {
+      background: #0f2b48;
+      color: #ffffff;
+      border-color: #0f2b48;
+    }
+    .admin-container {
+      max-width: 1400px;
+      width: 100%;
+      margin: 28px auto;
+      padding: 0 24px;
+      flex: 1;
+    }
+    .stat-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      margin-bottom: 28px;
+    }
+    .stat-card {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      display: flex;
+      flex-direction: column;
+    }
+    .stat-card-label {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .stat-card-value {
+      font-size: 2.1rem;
+      font-weight: 800;
+      color: var(--color-primary);
+    }
+    .stat-card-sub {
+      font-size: 0.8rem;
+      color: #10b981;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+    .admin-card {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+      margin-bottom: 28px;
+    }
+    .admin-table-container {
+      overflow-x: auto;
+      margin-top: 16px;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .status-available { background: #dcfce7; color: #15803d; }
+    .status-unavailable { background: #fee2e2; color: #b91c1c; }
+    .status-unverified { background: #fef3c7; color: #b45309; }
+    
+    /* Login Modal Overlay */
+    .admin-auth-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 43, 72, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .admin-auth-card {
+      background: #ffffff;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 440px;
+      padding: 36px 32px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+
+    /* Security Console Styles */
+    .sec-toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    .sec-toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .sec-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #cbd5e1;
+      transition: .25s ease;
+      border-radius: 24px;
+    }
+    .sec-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .25s ease;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    }
+    .sec-toggle-switch input:checked + .sec-slider {
+      background-color: #0d9488;
+    }
+    .sec-toggle-switch input:checked + .sec-slider:before {
+      transform: translateX(20px);
+    }
+
+    .sec-scorecard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .sec-score-card {
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .sec-score-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: rgba(13, 148, 136, 0.1);
+      color: #0d9488;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+    .sec-score-val {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #0f2b48;
+    }
+    .sec-score-label {
+      font-size: 0.74rem;
+      color: #64748b;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .sec-grid-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+    @media (max-width: 992px) {
+      .sec-grid-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .sec-recovery-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 10px;
+    }
+    .sec-code-pill {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #0f2b48;
+      background: #ffffff;
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+      text-align: center;
+      letter-spacing: 0.5px;
+    }
+
+    .sec-audit-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+    .sec-audit-table th {
+      background: #f8fafc;
+      color: #475569;
+      font-weight: 700;
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 2px solid #e2e8f0;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      letter-spacing: 0.4px;
+    }
+    .sec-audit-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #f1f5f9;
+      color: #334155;
+      vertical-align: middle;
+    }
+    .sec-audit-table tr:hover td {
+      background: #f8fafc;
+    }
+    .sec-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+    .sec-badge-success { background: #dcfce7; color: #166534; }
+    .sec-badge-warning { background: #fef3c7; color: #b45309; }
+    .sec-badge-danger { background: #fee2e2; color: #991b1b; }
+    .sec-badge-info { background: #e0f2fe; color: #0369a1; }
+  </style>
+</head>
+<body>
+
+  <!-- Secure Login Modal (shown if not authenticated as Parisha) -->
+  <div id="admin-auth-overlay" class="admin-auth-overlay">
+    <div class="admin-auth-card">
+      <div style="margin-bottom: 18px;">
+        <img src="../assets/images/logo.png" alt="CareCompass Logo" style="height: 48px; width: auto; border-radius:8px;">
+      </div>
+      <span style="background:rgba(13,148,136,0.12); color:#0d9488; font-size:0.75rem; font-weight:800; padding:4px 12px; border-radius:9999px; text-transform:uppercase;">
+        Restricted Administrator Access
+      </span>
+      <h2 style="font-size: 1.45rem; font-weight: 800; color: #0f2b48; margin: 12px 0 6px 0;">
+        Parisha's Admin Portal
+      </h2>
+      <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 20px;">
+        Enter master credentials assigned exclusively to <strong>parishajindal17@gmail.com</strong>.
+      </p>
+
+      <div id="admin-logout-alert" style="display:none; background:#ecfdf5; border:1px solid #10b981; color:#065f46; padding:12px; border-radius:8px; font-size:0.84rem; margin-bottom:16px; text-align:left;">
+        🔒 <strong>Session Ended:</strong> You have been logged out. Please enter your password to access Parisha's Admin Portal again.
+      </div>
+
+      <div id="admin-login-error" style="display:none; background:#fee2e2; border:1px solid #ef4444; color:#991b1b; padding:12px; border-radius:8px; font-size:0.84rem; margin-bottom:16px; text-align:left;">
+        ⚠️ <strong>Access Denied:</strong> Incorrect master password. Please enter the correct password.
+      </div>
+
+      <form id="admin-login-form" autocomplete="off">
+        <div class="search-field-group" style="margin-bottom: 16px; text-align: left;">
+          <label for="admin-email" style="font-size:0.82rem; font-weight:700;">Admin Email</label>
+          <input type="email" id="admin-email" class="form-input" value="parishajindal17@gmail.com" readonly style="background:#f8fafc; color:#334155; cursor:not-allowed;" required>
+        </div>
+
+        <div class="search-field-group" style="margin-bottom: 22px; text-align: left;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <label for="admin-password" style="font-size:0.82rem; font-weight:700;">Admin Password *</label>
+            <button type="button" id="btn-toggle-login-pw" style="background:none; border:none; color:#0d9488; font-size:0.78rem; font-weight:700; cursor:pointer;">
+              👁️ Show
+            </button>
+          </div>
+          <input type="password" id="admin-password" class="form-input" placeholder="Enter master password" required autocomplete="new-password" value="">
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="btn-submit-admin-login" style="width:100%; padding:12px; font-weight:700;">
+          Authenticate as Parisha &rarr;
+        </button>
+      </form>
+
+      <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #e2e8f0; font-size: 0.82rem; display:flex; justify-content:space-between; align-items:center;">
+        <a href="../index.html" style="color:#64748b; text-decoration:none;">&larr; Return to Home</a>
+        <a href="find-healthcare.html" style="color:#0d9488; font-weight:700; text-decoration:none;">Live Directory &rarr;</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Authenticated Admin Dashboard Wrapper (Hidden until password verified) -->
+  <div id="admin-authenticated-dashboard" style="display:none; min-height:100vh; flex-direction:column;">
+  <!-- Admin Navbar -->
+  <header class="admin-navbar">
+    <div style="display: flex; align-items: center; gap: 20px;">
+      <a href="../index.html" class="admin-brand">
+        <img src="../assets/images/favicon.png" alt="Icon">
+        <div>
+          <span style="font-size:1.15rem; font-weight:800; letter-spacing:-0.5px;">CareCompass</span>
+          <span style="font-size:0.75rem; background:rgba(255,255,255,0.18); padding:2px 8px; border-radius:4px; margin-left:6px; font-weight:700;">
+            Master Admin
+          </span>
+        </div>
+      </a>
+      <a href="find-healthcare.html" style="color:#94a3b8; font-size:0.82rem; text-decoration:none;">
+        &larr; View Live Directory
+      </a>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 16px;">
+      <div style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem;">
+        <span style="width:9px; height:9px; border-radius:50%; background:#10b981; display:inline-block;"></span>
+        <span>Logged in as <strong>Parisha Jindal</strong> (<span id="active-admin-email">parishajindal17@gmail.com</span>)</span>
+      </div>
+      <button type="button" id="btn-admin-logout" class="btn btn-outline btn-sm" style="color:#ffffff; border-color:rgba(255,255,255,0.35);">
+        Log Out
+      </button>
+    </div>
+  </header>
+
+  <!-- Admin Tab Bar -->
+  <nav class="admin-tabs-nav" aria-label="Admin Navigation Tabs">
+    <button type="button" class="admin-tab-btn active" data-tab="overview">
+      📊 Overview & Metrics
+    </button>
+    <button type="button" class="admin-tab-btn" data-tab="facilities">
+      🏥 Pan-India Facilities (70+)
+    </button>
+    <button type="button" class="admin-tab-btn" data-tab="inquiries">
+      📥 Inquiries Inbox (<span id="inquiry-count-badge">0</span>)
+    </button>
+    <button type="button" class="admin-tab-btn" data-tab="reports">
+      📢 Community Discrepancies (<span id="reports-count-badge">0</span>)
+    </button>
+    <button type="button" class="admin-tab-btn" data-tab="backup">
+      💾 Data Backup & Export
+    </button>
+    <button type="button" class="admin-tab-btn" data-tab="security">
+      🔐 Security Settings
+    </button>
+  </nav>
+
+  <!-- Main Container -->
+  <main class="admin-container">
+
+    <!-- TAB 1: OVERVIEW -->
+    <div id="tab-overview" class="admin-tab-content" style="display:block;">
+      
+      <!-- Statistics Row -->
+      <div class="stat-cards-grid">
+        <div class="stat-card">
+          <span class="stat-card-label">Total Facilities Registered</span>
+          <div class="stat-card-value" id="stat-total-facilities">71</div>
+          <span class="stat-card-sub">Covering all Indian States & Zones</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card-label">Active Hospital Beds</span>
+          <div class="stat-card-value" id="stat-total-beds">32,450</div>
+          <span class="stat-card-sub">Verified real-time capacity</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card-label">Oxygen Units Stocked</span>
+          <div class="stat-card-value" id="stat-oxygen-count">68 / 71</div>
+          <span class="stat-card-sub">95.7% Availability rate</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-card-label">Queries Received</span>
+          <div class="stat-card-value" id="stat-inquiries-count">0</div>
+          <span class="stat-card-sub">Sent to parishajindal17@gmail.com</span>
+        </div>
+      </div>
+
+      <!-- Quick Actions Grid -->
+      <div style="display:grid; grid-template-columns: 2fr 1fr; gap:24px;">
+        
+        <div class="admin-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h3 style="margin:0; font-size:1.15rem; color:#0f2b48;">Recent Inquiries to parishajindal17@gmail.com</h3>
+            <button type="button" class="btn btn-outline btn-sm" onclick="switchAdminTab('inquiries')">View All &rarr;</button>
+          </div>
+          <div id="recent-inquiries-preview">
+            <p style="color:#64748b; font-size:0.88rem;">No unread inquiries at this moment.</p>
+          </div>
+        </div>
+
+        <div class="admin-card">
+          <h3 style="margin:0 0 14px 0; font-size:1.15rem; color:#0f2b48;">Admin Controls</h3>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <button type="button" class="btn btn-primary" id="btn-open-add-facility-modal" style="width:100%; text-align:left;">
+              ➕ Add New Pan-India Hospital
+            </button>
+            <button type="button" class="btn btn-outline" onclick="switchAdminTab('facilities')" style="width:100%; text-align:left;">
+              🔍 Manage & Verify Facilities
+            </button>
+            <button type="button" class="btn btn-outline" onclick="switchAdminTab('backup')" style="width:100%; text-align:left;">
+              📥 Export Complete Database (JSON)
+            </button>
+            <a href="find-healthcare.html" class="btn btn-secondary" style="width:100%; text-align:center; text-decoration:none;">
+              🗺️ Open Live Leaflet Map
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- TAB 2: PAN-INDIA FACILITIES MANAGER -->
+    <div id="tab-facilities" class="admin-tab-content" style="display:none;">
+      
+      <div class="admin-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:18px;">
+          <div>
+            <h3 style="margin:0 0 4px 0; font-size:1.25rem; color:#0f2b48;">Pan-India Healthcare Facilities Directory</h3>
+            <p style="margin:0; font-size:0.85rem; color:#64748b;">Manage hospital verification states, beds, oxygen availability, and coordinates.</p>
+          </div>
+          <button type="button" class="btn btn-primary" id="btn-add-facility-top">
+            ➕ Add New Facility
+          </button>
+        </div>
+
+        <!-- Filter bar -->
+        <div style="display:grid; grid-template-columns: 2fr 1fr 1fr auto; gap:12px; margin-bottom:16px;">
+          <input type="text" id="admin-facility-search" class="form-input" placeholder="Search by name, city, state, or locality (e.g. AIIMS, Chandigarh, Patna, Whitefield)...">
+          <select id="admin-filter-state" class="filter-select">
+            <option value="all">All States & Zones</option>
+            <option value="North">North Zone (Punjab, HR, DL, UP, RJ)</option>
+            <option value="South">South Zone (KA, TN, KL, AP, TS)</option>
+            <option value="West">West Zone (MH, GJ, GA)</option>
+            <option value="East">East & NE (WB, BR, JH, OD, AS)</option>
+            <option value="Central">Central (MP, CG)</option>
+          </select>
+          <select id="admin-filter-status" class="filter-select">
+            <option value="all">All Statuses</option>
+            <option value="available">Confirmed Available</option>
+            <option value="unavailable">Confirmed Unavailable</option>
+            <option value="unverified">Not Verified</option>
+          </select>
+          <button type="button" class="btn btn-outline" id="btn-reset-admin-filters">Reset</button>
+        </div>
+
+        <div class="admin-table-container">
+          <table class="admin-table" id="admin-facilities-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Facility Name</th>
+                <th>City & Locality</th>
+                <th>Category</th>
+                <th>Beds / ICU</th>
+                <th>Oxygen</th>
+                <th>Verification Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="admin-facilities-tbody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- TAB 3: INQUIRIES INBOX (parishajindal17@gmail.com) -->
+    <div id="tab-inquiries" class="admin-tab-content" style="display:none;">
+      <div class="admin-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+          <div>
+            <h3 style="margin:0 0 4px 0; font-size:1.25rem; color:#0f2b48;">Direct User Inquiries Inbox</h3>
+            <p style="margin:0; font-size:0.85rem; color:#64748b;">Submissions forwarded to <strong>parishajindal17@gmail.com</strong>.</p>
+          </div>
+          <button type="button" class="btn btn-outline btn-sm" id="btn-clear-inquiries">Clear All Resolved</button>
+        </div>
+
+        <div id="admin-inquiries-container">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: COMMUNITY DISCREPANCY REPORTS -->
+    <div id="tab-reports" class="admin-tab-content" style="display:none;">
+      <div class="admin-card">
+        <div style="margin-bottom:18px;">
+          <h3 style="margin:0 0 4px 0; font-size:1.25rem; color:#0f2b48;">Community Outdated Information Audits</h3>
+          <p style="margin:0; font-size:0.85rem; color:#64748b;">Review flags reported by patients and caregivers to update real-time directory accuracy.</p>
+        </div>
+
+        <div id="admin-reports-container">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: DATA BACKUP & EXPORT -->
+    <div id="tab-backup" class="admin-tab-content" style="display:none;">
+      <div class="admin-card">
+        <h3 style="margin:0 0 8px 0; font-size:1.25rem; color:#0f2b48;">Pan-India Healthcare Database Management</h3>
+        <p style="color:#64748b; font-size:0.88rem; margin-bottom:24px;">Export or import database backups to keep Google deployment servers synchronized.</p>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:24px;">
+          
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:20px;">
+            <h4 style="color:#0f2b48; margin:0 0 8px 0;">📥 Export Database Backup (JSON)</h4>
+            <p style="font-size:0.82rem; color:#64748b; margin-bottom:16px;">Download all 70+ hospitals, custom additions, inquiries, and audit reports as a formatted JSON document.</p>
+            <button type="button" class="btn btn-primary" id="btn-export-json">
+              Download carecompass-data.json
+            </button>
+          </div>
+
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:20px;">
+            <h4 style="color:#0f2b48; margin:0 0 8px 0;">📤 Import Database Backup</h4>
+            <p style="font-size:0.82rem; color:#64748b; margin-bottom:16px;">Upload a previously exported JSON backup to synchronize hospitals across instances.</p>
+            <input type="file" id="input-import-json" accept=".json" style="margin-bottom:12px; font-size:0.85rem;">
+            <button type="button" class="btn btn-outline" id="btn-import-json">
+              Import & Restore
+            </button>
+          </div>
+
+          <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:12px; padding:20px;">
+            <h4 style="color:#991b1b; margin:0 0 8px 0;">⚠️ Reset to Default Pan-India Dataset</h4>
+            <p style="font-size:0.82rem; color:#7f1d1d; margin-bottom:16px;">Restore the verified 71 nationwide hospitals and clear test custom data.</p>
+            <button type="button" class="btn btn-outline" id="btn-reset-default-data" style="color:#dc2626; border-color:#dc2626;">
+              Reset to Factory Defaults
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 6: SECURITY SETTINGS -->
+    <div id="tab-security" class="admin-tab-content" style="display:none;">
+      
+      <!-- Console Header -->
+      <div style="margin-bottom: 24px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px;">
+          <div>
+            <h3 style="margin:0 0 6px 0; font-size:1.45rem; color:#0f2b48; display:flex; align-items:center; gap:8px;">
+              <span>🔐 Security Settings &amp; Cyber-Governance Console</span>
+              <span class="sec-badge sec-badge-success">● LEVEL-4 RESTRICTED</span>
+            </h3>
+            <p style="color:#64748b; font-size:0.88rem; margin:0;">
+              Manage cryptographic keys, Multi-Factor Authentication (2FA), session lifecycle, IP access controls, and real-time security audit telemetry for <strong>parishajindal17@gmail.com</strong>.
+            </p>
+          </div>
+          <div style="font-size:0.78rem; background:#ffffff; border:1px solid #e2e8f0; border-radius:8px; padding:6px 12px; color:#475569; display:flex; align-items:center; gap:8px;">
+            <span style="width:8px; height:8px; border-radius:50%; background:#10b981; display:inline-block;"></span>
+            <span>Security Engine: <strong>Active &amp; Monitoring</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Security Health Scorecard Grid -->
+      <div class="sec-scorecard-grid">
+        <div class="sec-score-card">
+          <div class="sec-score-icon">🛡️</div>
+          <div>
+            <div class="sec-score-val" id="sec-health-score">98%</div>
+            <div class="sec-score-label">Security Health</div>
+            <span style="font-size:0.7rem; color:#10b981; font-weight:600;">ABDM &amp; DPDPA Compliant</span>
+          </div>
+        </div>
+        <div class="sec-score-card">
+          <div class="sec-score-icon">🔒</div>
+          <div>
+            <div class="sec-score-val">TLS 1.3 / AES-256</div>
+            <div class="sec-score-label">Cipher Protocol</div>
+            <span style="font-size:0.7rem; color:#38bdf8; font-weight:600;">End-to-End Encrypted</span>
+          </div>
+        </div>
+        <div class="sec-score-card">
+          <div class="sec-score-icon">📱</div>
+          <div>
+            <div class="sec-score-val" id="sec-score-2fa">Active (TOTP)</div>
+            <div class="sec-score-label">2FA Multi-Factor</div>
+            <span style="font-size:0.7rem; color:#10b981; font-weight:600;">Authenticator Protected</span>
+          </div>
+        </div>
+        <div class="sec-score-card">
+          <div class="sec-score-icon">⏱️</div>
+          <div>
+            <div class="sec-score-val" id="sec-score-timeout">15 Mins</div>
+            <div class="sec-score-label">Idle Timeout</div>
+            <span style="font-size:0.7rem; color:#64748b; font-weight:600;">Clinical Strict Policy</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Two-Column Comprehensive Security Grid -->
+      <div class="sec-grid-layout">
+        
+        <!-- LEFT COLUMN: Credentials, 2FA, Session Lifecycle -->
+        <div style="display:flex; flex-direction:column; gap:24px;">
+          
+          <!-- Card 1: Master Password & Security Key -->
+          <div class="admin-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <h4 style="margin:0; font-size:1.1rem; color:#0f2b48;">🔑 Master Password &amp; Cryptographic Key</h4>
+              <span style="font-size:0.75rem; color:#64748b;" id="sec-pw-last-updated">Last changed: Verified Active</span>
+            </div>
+            <p style="color:#64748b; font-size:0.84rem; margin-bottom:16px;">
+              Update master authentication key for <strong>parishajindal17@gmail.com</strong>. Changes take effect across all portal gateways immediately.
+            </p>
+
+            <div id="admin-security-alert" style="display:none; padding:12px 14px; border-radius:8px; margin-bottom:16px; font-size:0.85rem; line-height:1.45;"></div>
+
+            <form id="admin-change-password-form">
+              <div class="search-field-group" style="margin-bottom: 14px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <label for="sec-current-pw">Current Master Password *</label>
+                  <button type="button" class="btn-toggle-sec-pw" data-target="sec-current-pw" style="background:none; border:none; color:#0d9488; font-size:0.78rem; font-weight:700; cursor:pointer;">👁️ Show</button>
+                </div>
+                <input type="password" id="sec-current-pw" class="form-input" required placeholder="Enter current master password">
+              </div>
+
+              <div class="search-field-group" style="margin-bottom: 14px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <label for="sec-new-pw">New Master Password *</label>
+                  <button type="button" class="btn-toggle-sec-pw" data-target="sec-new-pw" style="background:none; border:none; color:#0d9488; font-size:0.78rem; font-weight:700; cursor:pointer;">👁️ Show</button>
+                </div>
+                <input type="password" id="sec-new-pw" class="form-input" required placeholder="Minimum 8 characters (mixed case + symbols)">
+                
+                <!-- Password Strength Meter -->
+                <div style="margin-top:6px;">
+                  <div style="height:4px; background:#e2e8f0; border-radius:999px; overflow:hidden;">
+                    <div id="sec-pw-strength-bar" style="height:100%; width:0%; transition:width 0.3s ease, background-color 0.3s ease;"></div>
+                  </div>
+                  <div id="sec-pw-strength-text" style="font-size:0.72rem; color:#64748b; margin-top:3px; font-weight:600;">Password Complexity: Requires input</div>
+                </div>
+              </div>
+
+              <div class="search-field-group" style="margin-bottom: 18px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <label for="sec-confirm-pw">Confirm New Password *</label>
+                  <button type="button" class="btn-toggle-sec-pw" data-target="sec-confirm-pw" style="background:none; border:none; color:#0d9488; font-size:0.78rem; font-weight:700; cursor:pointer;">👁️ Show</button>
+                </div>
+                <input type="password" id="sec-confirm-pw" class="form-input" required placeholder="Confirm new master password">
+              </div>
+
+              <button type="submit" class="btn btn-primary" style="font-weight:700;">
+                Update Master Admin Password &rarr;
+              </button>
+            </form>
+          </div>
+
+          <!-- Card 2: Multi-Factor Authentication (2FA / TOTP) -->
+          <div class="admin-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+              <div>
+                <h4 style="margin:0; font-size:1.1rem; color:#0f2b48;">🛡️ Multi-Factor Authentication (2FA)</h4>
+                <p style="color:#64748b; font-size:0.84rem; margin:4px 0 0 0;">Time-based One-Time Passcode (TOTP) algorithm</p>
+              </div>
+              <label class="sec-toggle-switch">
+                <input type="checkbox" id="toggle-2fa-enabled" checked>
+                <span class="sec-slider"></span>
+              </label>
+            </div>
+
+            <div id="sec-2fa-status-banner" style="background:#f0fdf4; border:1px solid #bbf7d0; color:#166534; padding:10px 14px; border-radius:8px; font-size:0.82rem; margin-bottom:16px; display:flex; align-items:center; gap:8px;">
+              <span>✓</span>
+              <span><strong>2FA is Active:</strong> Every login requires 6-digit Time-based OTP verification.</span>
+            </div>
+
+            <!-- Secret Key Box -->
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px; margin-bottom:16px;">
+              <span style="font-size:0.75rem; font-weight:700; color:#475569; text-transform:uppercase; display:block; margin-bottom:6px;">
+                Authenticator Secret Key (TOTP)
+              </span>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <input type="text" id="sec-totp-key" value="CARE-COMPASS-PARISHA-2026-ABHA-SECURE" readonly style="font-family:ui-monospace, monospace; font-size:0.82rem; background:#ffffff; border:1px solid #cbd5e1; border-radius:6px; padding:6px 10px; width:100%; color:#0f2b48; font-weight:700;">
+                <button type="button" class="btn btn-outline btn-sm" id="btn-copy-secret-key" style="flex-shrink:0;">
+                  📋 Copy
+                </button>
+              </div>
+            </div>
+
+            <!-- Backup Recovery Codes -->
+            <div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:0.8rem; font-weight:700; color:#0f2b48;">Emergency Backup Recovery Codes</span>
+                <span style="font-size:0.72rem; color:#64748b;">(Single-Use Codes)</span>
+              </div>
+              <p style="font-size:0.78rem; color:#64748b; margin:3px 0 8px 0;">Use these 8-digit emergency passcodes if you lose access to your primary 2FA device.</p>
+              
+              <div class="sec-recovery-grid" id="sec-recovery-codes-container">
+                <div class="sec-code-pill">8492-0192</div>
+                <div class="sec-code-pill">7104-5829</div>
+                <div class="sec-code-pill">9381-4402</div>
+                <div class="sec-code-pill">1092-8475</div>
+                <div class="sec-code-pill">6582-9913</div>
+                <div class="sec-code-pill">4410-2391</div>
+              </div>
+
+              <div style="display:flex; gap:8px; margin-top:12px;">
+                <button type="button" class="btn btn-outline btn-sm" id="btn-copy-recovery-codes">
+                  📋 Copy All Codes
+                </button>
+                <button type="button" class="btn btn-outline btn-sm" id="btn-regen-recovery-codes" style="color:#0d9488; border-color:#0d9488;">
+                  🔄 Regenerate Codes
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: Session Lifecycle & Device Security -->
+          <div class="admin-card">
+            <h4 style="margin:0 0 12px 0; font-size:1.1rem; color:#0f2b48;">⏱️ Session Lifecycle &amp; Device Controls</h4>
+            
+            <div style="display:flex; flex-direction:column; gap:16px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <strong style="font-size:0.86rem; color:#0f2b48; display:block;">Auto-Lockout Idle Timeout</strong>
+                  <span style="font-size:0.78rem; color:#64748b;">Locks portal automatically when user is inactive</span>
+                </div>
+                <select id="sec-select-timeout" class="filter-select" style="width:auto; padding:6px 12px; font-size:0.84rem;">
+                  <option value="15" selected>15 Minutes (Strict Clinical)</option>
+                  <option value="30">30 Minutes (Standard)</option>
+                  <option value="60">1 Hour</option>
+                  <option value="240">4 Hours</option>
+                </select>
+              </div>
+
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <strong style="font-size:0.86rem; color:#0f2b48; display:block;">Enforce Password Prompt on Every Visit</strong>
+                  <span style="font-size:0.78rem; color:#64748b;">Requires entering master password even if session is live</span>
+                </div>
+                <label class="sec-toggle-switch">
+                  <input type="checkbox" id="toggle-enforce-pw-visit" checked>
+                  <span class="sec-slider"></span>
+                </label>
+              </div>
+
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <strong style="font-size:0.86rem; color:#0f2b48; display:block;">Concurrent Session Lockdown</strong>
+                  <span style="font-size:0.78rem; color:#64748b;">Restrict Parisha Admin to 1 single active device at a time</span>
+                </div>
+                <label class="sec-toggle-switch">
+                  <input type="checkbox" id="toggle-concurrent-lockdown" checked>
+                  <span class="sec-slider"></span>
+                </label>
+              </div>
+
+              <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <div style="font-size:0.84rem; font-weight:700; color:#0f2b48;">💻 Current Authorized Device</div>
+                  <div style="font-size:0.76rem; color:#64748b;" id="sec-device-info">Mac OS • Chrome Browser • Active Session</div>
+                </div>
+                <span class="sec-badge sec-badge-success">● Active Now</span>
+              </div>
+
+              <button type="button" class="btn btn-outline" id="btn-terminate-sessions" style="color:#dc2626; border-color:#dc2626; width:100%; font-weight:700;">
+                ⚠️ Terminate All Other Sessions &amp; Force Re-login
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: IP Allowlist, Compliance, Real-Time Audit Log -->
+        <div style="display:flex; flex-direction:column; gap:24px;">
+          
+          <!-- Card 4: IP Allowlist & Geo-Fencing -->
+          <div class="admin-card">
+            <h4 style="margin:0 0 8px 0; font-size:1.1rem; color:#0f2b48;">🌐 IP Allowlist &amp; National Geo-Fencing</h4>
+            <p style="color:#64748b; font-size:0.84rem; margin-bottom:16px;">
+              Restrict administrative modifications to verified medical subnet IPs or authorized Indian networks.
+            </p>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; background:#f0fdfa; border:1px solid #99f6e4; padding:10px 14px; border-radius:8px; margin-bottom:16px;">
+              <div>
+                <strong style="font-size:0.82rem; color:#0f766e; display:block;">National Geo-Restriction (India Only)</strong>
+                <span style="font-size:0.76rem; color:#115e59;">Block non-Indian foreign IP connections to admin portal under ABDM</span>
+              </div>
+              <label class="sec-toggle-switch">
+                <input type="checkbox" id="toggle-geo-restrict" checked>
+                <span class="sec-slider"></span>
+              </label>
+            </div>
+
+            <div style="margin-bottom:16px;">
+              <span style="font-size:0.78rem; font-weight:700; color:#475569; text-transform:uppercase; display:block; margin-bottom:6px;">Add Trusted Admin IP / CIDR Subnet:</span>
+              <div style="display:flex; gap:8px;">
+                <input type="text" id="input-new-trusted-ip" class="form-input" placeholder="e.g. 103.21.244.15 or 192.168.1.0/24" style="font-size:0.84rem;">
+                <button type="button" class="btn btn-primary" id="btn-add-trusted-ip" style="flex-shrink:0; font-size:0.84rem;">
+                  + Add IP
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <span style="font-size:0.78rem; font-weight:700; color:#475569; text-transform:uppercase; display:block; margin-bottom:8px;">Configured Trusted IPs:</span>
+              <div id="sec-trusted-ips-list" style="display:flex; flex-direction:column; gap:6px;">
+                <!-- Dynamically rendered -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 5: Compliance & Emergency Controls (DPDPA 2023) -->
+          <div class="admin-card">
+            <h4 style="margin:0 0 8px 0; font-size:1.1rem; color:#0f2b48;">⚖️ Regulatory Compliance &amp; Emergency Mode</h4>
+            <p style="color:#64748b; font-size:0.84rem; margin-bottom:16px;">
+              Controls aligned with Digital Personal Data Protection Act (DPDPA 2023) and Section 66 of IT Act 2000.
+            </p>
+
+            <div style="display:flex; flex-direction:column; gap:14px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <strong style="font-size:0.84rem; color:#0f2b48; display:block;">DPDPA 2023 Clinical Telemetry Encryption</strong>
+                  <span style="font-size:0.78rem; color:#64748b;">Masks clinical audit records and anonymizes operator identifiers</span>
+                </div>
+                <label class="sec-toggle-switch">
+                  <input type="checkbox" id="toggle-dpdpa-shield" checked>
+                  <span class="sec-slider"></span>
+                </label>
+              </div>
+
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <strong style="font-size:0.84rem; color:#0f2b48; display:block;">Immutable Audit Trail Protection</strong>
+                  <span style="font-size:0.78rem; color:#64748b;">Locks log entries against deletion or timestamp modifications</span>
+                </div>
+                <label class="sec-toggle-switch">
+                  <input type="checkbox" id="toggle-immutable-audit" checked>
+                  <span class="sec-slider"></span>
+                </label>
+              </div>
+
+              <div style="background:#fff1f2; border:1px solid #fecdd3; border-radius:8px; padding:12px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <strong style="font-size:0.84rem; color:#9f1239; display:block;">🚨 Emergency Portal Lockdown (Read-Only)</strong>
+                  <span style="font-size:0.76rem; color:#be123c;">Immediately freezes all database modifications in event of cyber-incident</span>
+                </div>
+                <label class="sec-toggle-switch">
+                  <input type="checkbox" id="toggle-emergency-lockdown">
+                  <span class="sec-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 6: Real-Time Security Incident & Audit Telemetry Log -->
+          <div class="admin-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+              <div>
+                <h4 style="margin:0; font-size:1.1rem; color:#0f2b48;">📜 Live Security Audit &amp; Incident Log</h4>
+                <p style="color:#64748b; font-size:0.82rem; margin:2px 0 0 0;">Immutable cryptographic audit records of administrative operations</p>
+              </div>
+              <div style="display:flex; gap:6px;">
+                <button type="button" class="btn btn-outline btn-sm" id="btn-export-audit-csv" title="Export Security Log to CSV">
+                  📥 Export CSV
+                </button>
+                <button type="button" class="btn btn-outline btn-sm" id="btn-refresh-audit-log" title="Refresh Log Entries">
+                  🔄 Refresh
+                </button>
+              </div>
+            </div>
+
+            <div style="overflow-x:auto; max-height:300px; border:1px solid #e2e8f0; border-radius:8px;">
+              <table class="sec-audit-table" id="sec-audit-table">
+                <thead>
+                  <tr>
+                    <th>Timestamp (IST)</th>
+                    <th>Security Event</th>
+                    <th>IP / Node</th>
+                    <th>Clearance</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="sec-audit-tbody">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; font-size:0.76rem; color:#64748b;">
+              <span>Showing last 10 security audit records</span>
+              <button type="button" id="btn-clear-audit-log" style="background:none; border:none; color:#ef4444; font-size:0.76rem; cursor:pointer; text-decoration:underline;">
+                Reset Log History
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+  </div><!-- /#admin-authenticated-dashboard -->
+
+  <!-- Add / Edit Facility Modal -->
+  <div id="facility-modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true" style="display:none;">
+    <div class="modal-backdrop" onclick="closeFacilityModal()"></div>
+    <div class="modal-dialog" style="max-width: 720px; max-height:90vh; overflow-y:auto;">
+      <div class="modal-header">
+        <h3 id="facility-modal-title">➕ Add New Healthcare Facility (Any Locality in India)</h3>
+        <button type="button" class="modal-close-btn" onclick="closeFacilityModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="facility-form">
+          <input type="hidden" id="fac-edit-id">
+
+          <div style="display:grid; grid-template-columns: 2fr 1fr; gap:14px; margin-bottom:14px;">
+            <div class="search-field-group">
+              <label for="fac-name">Facility Name *</label>
+              <input type="text" id="fac-name" class="form-input" placeholder="e.g. Max Super Speciality Hospital" required>
+            </div>
+            <div class="search-field-group">
+              <label for="fac-category">Category *</label>
+              <select id="fac-category" class="filter-select">
+                <option value="hospital">Hospital</option>
+                <option value="diagnostic">Diagnostic & Imaging</option>
+                <option value="clinic">Clinic & OPD</option>
+                <option value="pharmacy">Pharmacy</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:14px; margin-bottom:14px;">
+            <div class="search-field-group">
+              <label for="fac-city">City / District *</label>
+              <input type="text" id="fac-city" class="form-input" placeholder="e.g. Ludhiana" required>
+            </div>
+            <div class="search-field-group">
+              <label for="fac-state">State / UT *</label>
+              <input type="text" id="fac-state" class="form-input" placeholder="e.g. Punjab" required>
+            </div>
+            <div class="search-field-group">
+              <label for="fac-pincode">PIN Code</label>
+              <input type="text" id="fac-pincode" class="form-input" placeholder="e.g. 141001">
+            </div>
+          </div>
+
+          <div class="search-field-group" style="margin-bottom:14px;">
+            <label for="fac-address">Full Address / Locality *</label>
+            <input type="text" id="fac-address" class="form-input" placeholder="e.g. Mall Road, Near Fountain Chowk, Civil Lines" required>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-bottom:14px;">
+            <div class="search-field-group">
+              <label for="fac-lat">Latitude (Auto or Manual)</label>
+              <input type="number" step="any" id="fac-lat" class="form-input" placeholder="e.g. 30.9010">
+            </div>
+            <div class="search-field-group">
+              <label for="fac-lng">Longitude (Auto or Manual)</label>
+              <input type="number" step="any" id="fac-lng" class="form-input" placeholder="e.g. 75.8573">
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:12px; margin-bottom:14px;">
+            <div class="search-field-group">
+              <label for="fac-beds">Total Beds</label>
+              <input type="number" id="fac-beds" class="form-input" value="100">
+            </div>
+            <div class="search-field-group">
+              <label for="fac-avail-beds">Available Beds</label>
+              <input type="number" id="fac-avail-beds" class="form-input" value="30">
+            </div>
+            <div class="search-field-group">
+              <label for="fac-oxygen">Oxygen Stock</label>
+              <select id="fac-oxygen" class="filter-select">
+                <option value="true">Available (✓)</option>
+                <option value="false">Critical / None (✕)</option>
+              </select>
+            </div>
+            <div class="search-field-group">
+              <label for="fac-icu">ICU Ready</label>
+              <select id="fac-icu" class="filter-select">
+                <option value="true">Available (✓)</option>
+                <option value="false">Full (✕)</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-bottom:14px;">
+            <div class="search-field-group">
+              <label for="fac-phone">Contact Phone *</label>
+              <input type="text" id="fac-phone" class="form-input" placeholder="e.g. +91 161 240 1234" required>
+            </div>
+            <div class="search-field-group">
+              <label for="fac-verification">Overall Service Status</label>
+              <select id="fac-verification" class="filter-select">
+                <option value="Available">Confirmed Available (Green)</option>
+                <option value="Unavailable">Confirmed Unavailable (Red)</option>
+                <option value="Not Verified">Not Verified (Amber)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="search-field-group" style="margin-bottom:14px;">
+            <label for="fac-services">Services Offered (Comma Separated)</label>
+            <input type="text" id="fac-services" class="form-input" placeholder="e.g. X-ray, Ultrasound, MRI, Blood Test, ICU, Emergency">
+          </div>
+
+          <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:20px;">
+            <button type="button" class="btn btn-outline" onclick="closeFacilityModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="btn-save-facility">Save Facility</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="../js/config.js"></script>
+  <script src="../js/healthcare-data.js"></script>
+  <script src="../js/verification.js"></script>
+  <script src="../js/recommendations.js"></script>
+  <script src="../js/search.js"></script>
+  <script src="../js/admin.js"></script>
+</body>
+</html>

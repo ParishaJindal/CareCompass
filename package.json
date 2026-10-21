@@ -1,0 +1,25 @@
+{
+  "name": "carecompass",
+  "version": "2.0.0",
+  "description": "CareCompass — Healthcare Navigation for Everyone (Vercel + Render + Supabase)",
+  "scripts": {
+    "start": "npm --prefix backend start",
+    "dev": "npm --prefix backend run dev",
+    "start:backend": "npm --prefix backend start",
+    "dev:backend": "npm --prefix backend run dev",
+    "install:all": "npm --prefix backend install",
+    "db:import": "node database/import/import_to_supabase.js",
+    "db:import:dry": "node database/import/import_to_supabase.js --dry-run",
+    "test:health": "curl -s http://localhost:10000/api/health"
+  },
+  "keywords": [
+    "carecompass",
+    "healthcare",
+    "vercel",
+    "render",
+    "supabase",
+    "postgresql"
+  ],
+  "author": "Parisha Jindal",
+  "license": "MIT"
+}
