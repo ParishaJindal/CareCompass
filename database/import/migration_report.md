@@ -1,8 +1,8 @@
 # CareCompass — Supabase PostgreSQL Data Migration Report
 
-**Migration Run Date:** 2026-10-21T09:15:21.105Z  
-**Execution Mode:** DRY RUN (Validation & Schema Check)  
-**Execution Duration:** 0.8 seconds  
+**Migration Run Date:** 2026-10-21T16:34:08.187Z  
+**Execution Mode:** LIVE SUPABASE DATABASE IMPORT  
+**Execution Duration:** 242.8 seconds  
 **Source Dataset:** `data/hospitals_master.csv`  
 
 ---

@@ -52,7 +52,7 @@ const DATASET_PATH = fileArg
   ? path.resolve(fileArg.split('=')[1])
   : path.join(__dirname, '..', '..', 'data', 'hospitals_master.csv');
 
-const BATCH_SIZE = batchArg ? parseInt(batchArg.split('=')[1], 10) : 250;
+const BATCH_SIZE = batchArg ? parseInt(batchArg.split('=')[1], 10) : 100;
 const MAX_LIMIT = limitArg ? parseInt(limitArg.split('=')[1], 10) : Infinity;
 const REPORT_PATH = path.join(__dirname, 'migration_report.md');
 
@@ -181,20 +181,27 @@ async function runMigration() {
     }
 
     // Coordinates
-    let lat = raw.latitude ? parseFloat(raw.latitude) : null;
-    let lng = raw.longitude ? parseFloat(raw.longitude) : null;
+    let lat = (raw.latitude && !isNaN(parseFloat(raw.latitude))) ? parseFloat(raw.latitude) : null;
+    let lng = (raw.longitude && !isNaN(parseFloat(raw.longitude))) ? parseFloat(raw.longitude) : null;
     if (lat != null && lng != null) {
       if (!isValidIndiaCoords(lat, lng)) {
         flaggedReview++;
         lat = null;
         lng = null;
       }
+    } else {
+      lat = null;
+      lng = null;
     }
 
     // PIN code
-    let pinCode = raw.pin_code;
-    if (pinCode && !isValidPinCode(pinCode)) {
-      flaggedReview++;
+    let pinCode = raw.pin_code ? String(raw.pin_code).trim() : null;
+    if (pinCode) {
+      if (!isValidPinCode(pinCode)) {
+        flaggedReview++;
+        pinCode = null;
+      }
+    } else {
       pinCode = null;
     }
 
@@ -334,61 +341,58 @@ async function runMigration() {
   }
 }
 
+const INSERT_COLUMNS = [
+  'hospital_id', 'source_record_id', 'hospital_name', 'alternate_name',
+  'facility_type', 'ownership_type', 'healthcare_category', 'address',
+  'locality', 'village', 'subdistrict_or_taluka', 'district', 'state',
+  'state_code', 'country', 'pin_code', 'latitude', 'longitude',
+  'phone', 'alternate_phone', 'email', 'website', 'official_website',
+  'specializations', 'services', 'available_specializations', 'available_services',
+  'emergency_availability', 'emergency_service_status', 'operating_hours',
+  'accessibility_features', 'verification_status', 'data_confidence',
+  'missing_fields', 'duplicate_group_id', 'last_verified_at',
+  'source_name', 'source_url', 'source_license'
+];
+
 async function insertBatch(pool, batch) {
+  if (!batch || batch.length === 0) return;
   const client = await pool.connect();
   try {
-    await client.query('BEGIN');
+    const valuesPlaceholders = [];
+    const flatParams = [];
+    let paramIdx = 1;
 
     for (const r of batch) {
-      const sql = `
-        INSERT INTO hospitals (
-          hospital_id, source_record_id, hospital_name, alternate_name,
-          facility_type, ownership_type, healthcare_category, address,
-          locality, village, subdistrict_or_taluka, district, state,
-          state_code, country, pin_code, latitude, longitude,
-          phone, alternate_phone, email, website, official_website,
-          specializations, services, available_specializations, available_services,
-          emergency_availability, emergency_service_status, operating_hours,
-          accessibility_features, verification_status, data_confidence,
-          missing_fields, duplicate_group_id, last_verified_at,
-          source_name, source_url, source_license
-        ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-          $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
-          $21, $22, $23, $24, $25, $26, $27, $28, $29, $30,
-          $31, $32, $33, $34, $35, $36, $37, $38, $39
-        )
-        ON CONFLICT (hospital_id) DO UPDATE SET
-          hospital_name = EXCLUDED.hospital_name,
-          address = EXCLUDED.address,
-          phone = COALESCE(EXCLUDED.phone, hospitals.phone),
-          latitude = COALESCE(EXCLUDED.latitude, hospitals.latitude),
-          longitude = COALESCE(EXCLUDED.longitude, hospitals.longitude),
-          specializations = EXCLUDED.specializations,
-          services = EXCLUDED.services,
-          verification_status = EXCLUDED.verification_status,
-          updated_at = CURRENT_TIMESTAMP
-        WHERE hospitals.verification_status != 'Verified';
-      `;
-
-      await client.query(sql, [
-        r.hospital_id, r.source_record_id, r.hospital_name, r.alternate_name,
-        r.facility_type, r.ownership_type, r.healthcare_category, r.address,
-        r.locality, r.village, r.subdistrict_or_taluka, r.district, r.state,
-        r.state_code, r.country, r.pin_code, r.latitude, r.longitude,
-        r.phone, r.alternate_phone, r.email, r.website, r.official_website,
-        r.specializations, r.services, r.available_specializations, r.available_services,
-        r.emergency_availability, r.emergency_service_status, r.operating_hours,
-        r.accessibility_features, r.verification_status, r.data_confidence,
-        r.missing_fields, r.duplicate_group_id, r.last_verified_at,
-        r.source_name, r.source_url, r.source_license
-      ]);
+      const rowPlaceholders = [];
+      for (const col of INSERT_COLUMNS) {
+        rowPlaceholders.push(`$${paramIdx++}`);
+        flatParams.push(r[col]);
+      }
+      valuesPlaceholders.push(`(${rowPlaceholders.join(', ')})`);
     }
 
+    const sql = `
+      INSERT INTO hospitals (${INSERT_COLUMNS.join(', ')})
+      VALUES ${valuesPlaceholders.join(',\n')}
+      ON CONFLICT (hospital_id) DO UPDATE SET
+        hospital_name = EXCLUDED.hospital_name,
+        address = EXCLUDED.address,
+        phone = COALESCE(EXCLUDED.phone, hospitals.phone),
+        latitude = COALESCE(EXCLUDED.latitude, hospitals.latitude),
+        longitude = COALESCE(EXCLUDED.longitude, hospitals.longitude),
+        specializations = EXCLUDED.specializations,
+        services = EXCLUDED.services,
+        verification_status = EXCLUDED.verification_status,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE hospitals.verification_status != 'Verified';
+    `;
+
+    await client.query('BEGIN');
+    await client.query(sql, flatParams);
     await client.query('COMMIT');
   } catch (err) {
-    await client.query('ROLLBACK');
-    console.error('Batch insert transaction error:', err.message);
+    try { await client.query('ROLLBACK'); } catch (_) {}
+    console.error('\nBatch insert transaction error:', err.message);
     throw err;
   } finally {
     client.release();
