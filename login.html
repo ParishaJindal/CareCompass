@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sign In or Create an Account on CareCompass. Access verified healthcare facility updates, save accessible locations, and manage hospital service statuses.">
+  <title>Sign In & Sign Up — CareCompass</title>
+  
+  <!-- Open Graph & Twitter Cards for Google / Social Previews -->
+  <meta property="og:title" content="Sign In & Sign Up — CareCompass">
+  <meta property="og:description" content="Sign In or Create an Account on CareCompass. Access verified healthcare facility updates, save accessible locations, and manage hospital service statuses.">
+  <meta property="og:image" content="../assets/images/logo.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="../assets/images/logo.png">
+
+  <!-- Modern Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../assets/images/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <link rel="alternate icon" href="../favicon.ico">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="../css/style.css?v=confidential_2026_v4">
+  <link rel="stylesheet" href="../css/responsive.css?v=confidential_2026_v4">
+  <link rel="stylesheet" href="../css/accessibility.css?v=confidential_2026_v4">
+</head>
+<body>
+
+  <!-- Accessible Skip to Content Link -->
+  <a href="#login-main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Emergency Notice Ribbon -->
+  <aside class="emergency-ribbon" id="emergency-ribbon" role="alert" aria-label="Emergency medical assistance notice">
+    <div class="emergency-ribbon-content">
+      <span class="emergency-badge">EMERGENCY SOS</span>
+      <span data-i18n="emergencyAlert">In an acute medical emergency, dial 108 / 102 (Ambulance) or 112 immediately.</span>
+    </div>
+    <button type="button" class="emergency-close-btn" id="emergency-ribbon-close" aria-label="Dismiss emergency notice">&times;</button>
+  </aside>
+
+  <!-- Navigation Bar -->
+  <header class="main-header" role="banner">
+    <div class="nav-container">
+      <a href="../index.html" class="brand-wrapper" aria-label="CareCompass Home">
+        <div class="brand-icon-box">
+          <img src="../assets/images/favicon.png" alt="CareCompass Icon" class="brand-icon-img">
+        </div>
+        <div class="brand-text-group">
+          <span class="brand-name" data-i18n="brandName">CareCompass</span>
+          <span class="brand-tagline">
+            <span data-i18n="brandTagline">Healthcare Navigation for Everyone</span>
+          </span>
+        </div>
+      </a>
+
+      <!-- Mobile Hamburger Button -->
+      <button type="button" class="mobile-menu-btn" id="mobile-menu-toggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="main-nav-links">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <!-- Nav Links -->
+      <nav class="main-nav" id="main-nav-links" role="navigation" aria-label="Main navigation">
+        <ul class="nav-links-list">
+          <li><a href="../index.html" class="nav-link" data-i18n="navHome">Home</a></li>
+          <li><a href="find-healthcare.html" class="nav-link" data-i18n="navFindCare">Find Healthcare</a></li>
+          <li><a href="../index.html#how-it-works" class="nav-link" data-i18n="navHowItWorks">How It Works</a></li>
+          <li><a href="about.html" class="nav-link" data-i18n="navAbout">About Us</a></li>
+          <li><a href="contact.html" class="nav-link" data-i18n="navContact">Contact</a></li>
+        </ul>
+
+        <div class="nav-actions">
+          <button type="button" class="btn btn-outline btn-sm trigger-accessibility-modal" id="nav-btn-a11y" aria-label="Open accessibility settings">
+            ♿ <span data-i18n="navAccessibilityBtn">Accessibility</span>
+          </button>
+
+          <div class="lang-switcher" role="group" aria-label="Language selection">
+            <button type="button" class="lang-switch-btn active" data-lang="en" aria-pressed="true">EN</button>
+            <button type="button" class="lang-switch-btn" data-lang="hi" aria-pressed="false">हिंदी</button>
+          </div>
+
+          <a href="find-healthcare.html" class="btn btn-primary btn-sm" data-i18n="navFindCareBtn">
+            Find Care
+          </a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Login/Signup Main Content -->
+  <main id="login-main-content" class="login-page-layout">
+    
+    <!-- Top Confidential Classification Ribbon -->
+    <div class="confidential-classification-bar" role="region" aria-label="Security Clearance Classification">
+      <span class="confidential-tag-badge">
+        <span class="pulse-dot-green"></span> LEVEL-4 RESTRICTED
+      </span>
+      <span class="confidential-tag-text">
+        RESTRICTED ACCESS // OFFICIAL HEALTHCARE &amp; CLINICAL VERIFICATION GATEWAY // 256-BIT ENCRYPTION
+      </span>
+    </div>
+
+    <div class="login-card-wrapper">
+      
+      <!-- Left Panel: Security Branding & Telemetry Vault -->
+      <div class="login-brand-panel">
+        <div class="lb-header">
+          <div class="lb-security-status-badge">
+            <span class="pulse-dot-green"></span>
+            <span>GATEWAY ONLINE • TLS 1.3 PROTOCOL ACTIVE</span>
+          </div>
+
+          <img src="../assets/images/logo.png" alt="CareCompass Logo" style="max-height: 48px; width: auto; margin-bottom: 14px; border-radius: 6px; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4));">
+          
+          <h2>Confidential Access &amp; Clinical Verification</h2>
+          <p>
+            CareCompass is India's verified healthcare directory network. Authorized medical personnel, credentialed hospital managers, and verified citizens access protected registries through this encrypted gateway.
+          </p>
+
+          <ul class="lb-benefits-list">
+            <li>
+              <div class="lb-icon-box">🛡️</div>
+              <div>
+                <strong>Statutory Compliance:</strong>
+                <span>Governed under Digital Personal Data Protection Act (DPDPA 2023) and Section 66, IT Act 2000.</span>
+              </div>
+            </li>
+            <li>
+              <div class="lb-icon-box">🔐</div>
+              <div>
+                <strong>Role-Based Cryptographic Tiers:</strong>
+                <span>Isolated sessions for Citizens, Clinical Staff, and Parisha Master Administration.</span>
+              </div>
+            </li>
+            <li>
+              <div class="lb-icon-box">⚡</div>
+              <div>
+                <strong>Continuous Verification Telemetry:</strong>
+                <span>Diagnostic machinery logs, ICU availability, and radiologist rosters tracked with immutable timestamps.</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Security Terminal Console Box -->
+        <div class="security-terminal-box" aria-label="Gateway Security Telemetry">
+          <div class="st-line">
+            <span class="st-label">CIPHER SUITE</span>
+            <span class="st-val">TLS_AES_256_GCM_SHA384</span>
+          </div>
+          <div class="st-line">
+            <span class="st-label">GATEWAY NODE</span>
+            <span class="st-val">IN-DELHI-ZONE // ABHA CONNECT</span>
+          </div>
+          <div class="st-line">
+            <span class="st-label">SECURITY AUDIT</span>
+            <span class="st-val green">● ACTIVE MONITORING</span>
+          </div>
+          <div class="st-line">
+            <span class="st-label">TIMESTAMP (IST)</span>
+            <span class="st-val" id="telemetry-timestamp">2026-10-17 17:05:00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Panel: Interactive Sign In / Sign Up Form -->
+      <div class="login-form-panel">
+        
+        <!-- Statutory Warning Notice -->
+        <div class="confidential-legal-notice" role="alert">
+          <span class="cln-icon">⚠️</span>
+          <div>
+            <strong>RESTRICTED ACCESS WARNING:</strong> This system contains sensitive healthcare directory infrastructure. All access attempts, IP addresses, and operational updates are monitored under the IT Act, 2000 &amp; DPDPA 2023.
+          </div>
+        </div>
+
+        <!-- Tab Switcher -->
+        <div class="auth-tabs-row" role="tablist">
+          <button type="button" class="auth-tab-btn active" id="page-tab-login" role="tab" aria-selected="true">
+            🔒 Secure Sign In
+          </button>
+          <button type="button" class="auth-tab-btn" id="page-tab-register" role="tab" aria-selected="false">
+            📝 Create Account
+          </button>
+        </div>
+
+        <!-- Notification Message Banner -->
+        <div id="page-auth-alert" class="alert-notice" style="display:none; margin-bottom: 18px;"></div>
+
+        <!-- Clearance Level / Role Selector Pills (Instant autofill & clearance tier) -->
+        <div class="clearance-selector-group" id="clearance-selector-section">
+          <div class="clearance-label">
+            <span>Select Clearance Tier / Profile:</span>
+            <span style="color:#0d9488; font-weight:700;">Role Profiles</span>
+          </div>
+          <div class="clearance-pills-row">
+            <button type="button" class="clearance-pill active" id="pill-tier-patient" data-role="patient" title="Tier-1: Priya Sharma (Family Caregiver)">
+              <span class="cp-tier">Tier-1 Public</span>
+              <span>👤 Patient</span>
+            </button>
+            <button type="button" class="clearance-pill" id="pill-tier-staff" data-role="staff" title="Tier-2: Dr. S. Rao (CityCare Radiology Admin)">
+              <span class="cp-tier">Tier-2 Staff</span>
+              <span>🏥 Clinical Staff</span>
+            </button>
+            <button type="button" class="clearance-pill" id="pill-tier-parisha" data-role="parisha" title="Tier-3: Parisha Master Administrator (Password Required Before Login)">
+              <span class="cp-tier" style="color:#b45309; font-weight:800;">Tier-3 • Password Req.</span>
+              <span>🔐 Parisha Admin</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ==============================================
+             SIGN IN FORM
+             ============================================== -->
+        <form id="page-login-form" style="display: block;">
+          <div class="search-field-group" style="margin-bottom: 16px;">
+            <label for="page-login-email" id="login-email-label">Authorized Identity / Email *</label>
+            <div class="input-with-icon">
+              <span class="input-icon">✉️</span>
+              <input type="email" id="page-login-email" class="form-input" 
+                     placeholder="name@example.com" value="patient@demo.com" required autocomplete="email">
+            </div>
+          </div>
+
+          <div class="search-field-group" style="margin-bottom: 14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <label for="page-login-password" id="login-password-label">Cryptographic Password / Key *</label>
+              <a href="#" onclick="alert('Confidential recovery token sent to your registered healthcare contact.'); return false;" style="font-size:0.8rem; color:var(--color-secondary); font-weight:600;">Forgot key?</a>
+            </div>
+            <div class="input-with-icon password-input-wrapper">
+              <span class="input-icon">🔒</span>
+              <input type="password" id="page-login-password" class="form-input" 
+                     placeholder="••••••••" value="password123" required autocomplete="current-password" style="padding-right: 44px;">
+              <button type="button" class="btn-toggle-password" id="btn-toggle-login-pass" aria-label="Toggle password visibility">
+                👁️
+              </button>
+            </div>
+            <div class="caps-lock-warning" id="login-caps-warning">
+              ⚠️ Warning: Caps Lock is active
+            </div>
+          </div>
+
+          <!-- Multi-Factor Authentication (2FA OTP) -->
+          <div class="two-factor-auth-box" id="two-factor-container">
+            <div class="tfa-header">
+              <label class="tfa-toggle-label" for="enable-2fa-checkbox">
+                <input type="checkbox" id="enable-2fa-checkbox">
+                <span>🛡️ Enable Multi-Factor Authentication (2FA OTP)</span>
+              </label>
+              <span style="font-size:0.72rem; color:#64748b; font-weight:700;">RECOMMENDED</span>
+            </div>
+            <div class="tfa-otp-container" id="tfa-otp-section">
+              <div style="font-size:0.76rem; color:#475569; margin-bottom: 6px;">
+                Enter 6-digit Time-based OTP token (Simulated code: <strong style="color:#0f2b48; font-family:monospace;">849201</strong>):
+              </div>
+              <div class="otp-inputs-row">
+                <input type="text" maxlength="1" class="otp-box" value="8" data-idx="0">
+                <input type="text" maxlength="1" class="otp-box" value="4" data-idx="1">
+                <input type="text" maxlength="1" class="otp-box" value="9" data-idx="2">
+                <input type="text" maxlength="1" class="otp-box" value="2" data-idx="3">
+                <input type="text" maxlength="1" class="otp-box" value="0" data-idx="4">
+                <input type="text" maxlength="1" class="otp-box" value="1" data-idx="5">
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom: 20px; font-size:0.86rem;">
+            <label style="display:inline-flex; align-items:center; gap:8px; color:var(--text-muted); cursor:pointer;">
+              <input type="checkbox" id="page-login-remember" checked>
+              <span>Maintain secure session token</span>
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-lg" style="width: 100%; font-weight:700; display:flex; justify-content:center; align-items:center; gap:8px;" id="btn-page-submit-login">
+            <span>Authenticate &amp; Access Dashboard</span>
+            <span>&rarr;</span>
+          </button>
+        </form>
+
+        <!-- ==============================================
+             SIGN UP / REGISTER FORM
+             ============================================== -->
+        <form id="page-register-form" style="display: none;">
+          <div class="search-field-group" style="margin-bottom: 14px;">
+            <label for="page-reg-name">Full Name / Official Identifier *</label>
+            <div class="input-with-icon">
+              <span class="input-icon">👤</span>
+              <input type="text" id="page-reg-name" class="form-input" placeholder="e.g. Ramesh Kumar" required>
+            </div>
+          </div>
+
+          <div class="search-field-group" style="margin-bottom: 14px;">
+            <label for="page-reg-email">Verified Email Address *</label>
+            <div class="input-with-icon">
+              <span class="input-icon">✉️</span>
+              <input type="email" id="page-reg-email" class="form-input" placeholder="name@example.com" required>
+            </div>
+          </div>
+
+          <div class="search-field-group" style="margin-bottom: 14px;">
+            <label for="page-reg-password">Create Secure Passkey *</label>
+            <div class="input-with-icon password-input-wrapper">
+              <span class="input-icon">🔒</span>
+              <input type="password" id="page-reg-password" class="form-input" placeholder="At least 6 characters" minlength="6" required style="padding-right: 44px;">
+              <button type="button" class="btn-toggle-password" id="btn-toggle-reg-pass" aria-label="Toggle password visibility">
+                👁️
+              </button>
+            </div>
+            <div class="caps-lock-warning" id="reg-caps-warning">
+              ⚠️ Warning: Caps Lock is active
+            </div>
+            <!-- Real-time Password Strength Meter -->
+            <div class="password-strength-container">
+              <div class="password-strength-bar">
+                <div class="strength-indicator" id="reg-strength-indicator"></div>
+              </div>
+              <div class="strength-label" id="reg-strength-label">Password strength: Empty</div>
+            </div>
+          </div>
+
+          <div class="search-field-group" style="margin-bottom: 14px;">
+            <label for="page-reg-role">Designated Access Tier *</label>
+            <select id="page-reg-role" class="filter-select">
+              <option value="patient">Patient / Family Caregiver (Tier-1)</option>
+              <option value="facility_admin">Healthcare Facility Staff / Doctor (Tier-2)</option>
+            </select>
+          </div>
+
+          <!-- Dynamic Facility Name Field for Staff -->
+          <div class="search-field-group" id="page-reg-facility-group" style="display:none; margin-bottom: 14px;">
+            <label for="page-reg-facility-select">Affiliated Healthcare Facility *</label>
+            <select id="page-reg-facility-select" class="filter-select">
+              <option value="fac-citycare">CityCare Hospital (Central District)</option>
+              <option value="fac-sunrise">Sunrise Diagnostic Centre (Central District)</option>
+              <option value="fac-greenvalley">Green Valley Clinic (Central District)</option>
+              <option value="fac-apex">Apex Super-Speciality Hospital (North District)</option>
+            </select>
+          </div>
+
+          <!-- Accessibility Preferences -->
+          <div style="background:var(--bg-card-muted); padding:12px; border-radius:8px; border:1px solid var(--border-light); margin-bottom:16px;">
+            <span style="font-size:0.8rem; font-weight:700; color:var(--color-primary); display:block; margin-bottom:8px;">
+              ♿ Default Accessibility Profile (Optional):
+            </span>
+            <label class="filter-checkbox-item" style="font-size:0.82rem; margin-bottom:4px;">
+              <input type="checkbox" id="reg-pref-ramp">
+              <span>Prioritize wheelchair ramp access</span>
+            </label>
+            <label class="filter-checkbox-item" style="font-size:0.82rem;">
+              <input type="checkbox" id="reg-pref-ground">
+              <span>Prioritize ground-floor services (no stairs)</span>
+            </label>
+          </div>
+
+          <div style="display:flex; align-items:flex-start; gap:8px; margin-bottom: 20px; font-size:0.82rem; color:var(--text-muted);">
+            <input type="checkbox" id="page-reg-agree" required style="margin-top:3px;">
+            <label for="page-reg-agree">
+              I consent to confidential verification terms under <a href="about.html#privacy-policy">Privacy Policy</a> and confirm that CareCompass is an operational healthcare navigation service.
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-secondary btn-lg" style="width: 100%; font-weight:700;" id="btn-page-submit-register">
+            Register Confidential Account &rarr;
+          </button>
+        </form>
+
+        <!-- Compliance & Security Certification Footer -->
+        <div class="security-compliance-footer">
+          <div class="compliance-badge-item">
+            <span>🔒</span> 256-Bit SSL/TLS
+          </div>
+          <div class="compliance-badge-item">
+            <span>⚖️</span> DPDPA 2023 Compliant
+          </div>
+          <div class="compliance-badge-item">
+            <span>🛡️</span> ISO 27001 Protocol
+          </div>
+          <div class="compliance-badge-item">
+            <span>🇮🇳</span> National Health Registry
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Accessibility Settings Modal -->
+  <div id="accessibility-modal" class="modal" role="dialog" aria-labelledby="access-modal-title" aria-modal="true" aria-hidden="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="access-modal-title" data-i18n="accessTitle">♿ Accessibility Settings</h3>
+        <button type="button" class="modal-close-btn" aria-label="Close accessibility settings">&times;</button>
+      </div>
+      <div class="modal-body">
+        
+        <div class="filter-group">
+          <label class="filter-label" data-i18n="accessTextSize">Text Size Scale</label>
+          <div class="view-mode-toggles">
+            <button type="button" class="view-toggle-btn" data-font-size="normal">Normal (100%)</button>
+            <button type="button" class="view-toggle-btn" data-font-size="large">Large (115%)</button>
+            <button type="button" class="view-toggle-btn" data-font-size="xlarge">Extra Large (130%)</button>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label" for="toggle-high-contrast" data-i18n="accessContrast">High Contrast Theme</label>
+          <label class="filter-checkbox-item">
+            <input type="checkbox" id="toggle-high-contrast">
+            <span>High Contrast Mode (Deep Navy & Vivid Yellow)</span>
+          </label>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label" for="toggle-simple-mode" data-i18n="accessSimpleMode">Simple Reading Mode</label>
+          <label class="filter-checkbox-item">
+            <input type="checkbox" id="toggle-simple-mode">
+            <span>Simplified text and high-legibility layout</span>
+          </label>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary modal-close-btn" data-i18n="accessClose">Save & Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="main-footer" role="contentinfo">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <img src="../assets/images/logo.png" alt="CareCompass Logo" class="footer-brand-logo">
+        <p>
+          A smart digital healthcare navigation platform providing verified service availability, timestamp tracking, and intelligent alternative recommendations.
+        </p>
+      </div>
+
+      <div class="footer-col">
+        <h4>Navigation</h4>
+        <ul class="footer-links">
+          <li><a href="../index.html">Home</a></li>
+          <li><a href="find-healthcare.html">Find Healthcare</a></li>
+          <li><a href="../index.html#how-it-works">How It Works</a></li>
+          <li><a href="about.html">About Us</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Verification & Trust</h4>
+        <ul class="footer-links">
+          <li><a href="about.html#verification-policy">Verification Methodology</a></li>
+          <li><a href="contact.html#report-form">Report Outdated Info</a></li>
+          <li><a href="about.html#accessibility-statement">Accessibility Commitment</a></li>
+          <li><a href="about.html#privacy-policy">Privacy & Data Policy</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Medical Disclaimer</h4>
+        <div class="footer-disclaimer-box" data-i18n="footerDisclaimer">
+          CareCompass provides directory and verified availability estimates based on recent audits. In life-threatening emergencies, dial 108 / 112 immediately.
+        </div>
+        <div style="margin-top: 14px;">
+          <a href="admin.html" style="display:inline-flex; align-items:center; gap:6px; font-size:0.8rem; color:#0d9488; font-weight:700; text-decoration:none; padding:4px 10px; background:rgba(13,148,136,0.08); border:1px solid rgba(13,148,136,0.25); border-radius:6px;">
+            🔐 Admin Portal (Parisha)
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2026 CareCompass. Developed for digital healthcare access, transparency, and accessibility.</p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="../js/healthcare-data.js"></script>
+  <script src="../js/verification.js"></script>
+  <script src="../js/recommendations.js"></script>
+  <script src="../js/translations.js"></script>
+  <script src="../js/accessibility.js"></script>
+  <script src="../js/search.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/app.js"></script>
+
+  <script>
+    // Tab switching logic for login.html
+    const tabLogin = document.getElementById("page-tab-login");
+    const tabRegister = document.getElementById("page-tab-register");
+    const formLogin = document.getElementById("page-login-form");
+    const formRegister = document.getElementById("page-register-form");
+    const alertBox = document.getElementById("page-auth-alert");
+
+    function setAuthMode(mode) {
+      alertBox.style.display = "none";
+      if (mode === "register" || mode === "signup") {
+        tabRegister.classList.add("active");
+        tabLogin.classList.remove("active");
+        formLogin.style.display = "none";
+        formRegister.style.display = "block";
+        document.title = "Create Confidential Account — CareCompass";
+      } else {
+        tabLogin.classList.add("active");
+        tabRegister.classList.remove("active");
+        formLogin.style.display = "block";
+        formRegister.style.display = "none";
+        document.title = "Confidential Sign In — CareCompass";
+      }
+    }
+
+    tabLogin.addEventListener("click", () => setAuthMode("login"));
+    tabRegister.addEventListener("click", () => setAuthMode("register"));
+
+    // Check URL parameters (e.g. ?mode=signup)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get("mode") === "signup" || urlParams.get("mode") === "register") {
+      setAuthMode("register");
+    }
+
+    // Role toggle in registration form
+    const roleSelect = document.getElementById("page-reg-role");
+    const facGroup = document.getElementById("page-reg-facility-group");
+    roleSelect.addEventListener("change", (e) => {
+      facGroup.style.display = e.target.value === "facility_admin" ? "block" : "none";
+    });
+
+    // Live Telemetry IST Clock
+    function updateTelemetryClock() {
+      const el = document.getElementById("telemetry-timestamp");
+      if (!el) return;
+      const now = new Date();
+      const pad = (n) => String(n).padStart(2, '0');
+      el.textContent = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())} IST`;
+    }
+    setInterval(updateTelemetryClock, 1000);
+    updateTelemetryClock();
+
+    // Clearance Tier / Role Selector Pills
+    const pillPatient = document.getElementById("pill-tier-patient");
+    const pillStaff = document.getElementById("pill-tier-staff");
+    const pillParisha = document.getElementById("pill-tier-parisha");
+    const loginEmailInput = document.getElementById("page-login-email");
+    const loginPassInput = document.getElementById("page-login-password");
+    const loginPassLabel = document.getElementById("login-password-label");
+    const loginSubmitBtn = document.getElementById("btn-page-submit-login");
+
+    // Purge any stale admin authentication token on login page load
+    sessionStorage.removeItem("carecompass_admin_auth");
+
+    function setActiveClearancePill(activePill, email, pass, isParishaAdmin = false) {
+      [pillPatient, pillStaff, pillParisha].forEach(p => p && p.classList.remove("active"));
+      if (activePill) activePill.classList.add("active");
+      if (formLogin.style.display === "none") {
+        setAuthMode("login");
+      }
+      loginEmailInput.value = email;
+      loginPassInput.value = pass;
+
+      if (isParishaAdmin) {
+        // ALWAYS REQUIRE AND ASK FOR ADMIN PORTAL PASSWORD
+        loginPassInput.placeholder = "Enter Parisha Admin Portal Password *";
+        loginPassInput.style.borderColor = "#f59e0b";
+        if (loginPassLabel) {
+          loginPassLabel.innerHTML = 'Admin Portal Password * <span style="color:#d97706; font-size:0.75rem; font-weight:800;">(Password Required Before Login)</span>';
+        }
+        if (loginSubmitBtn) {
+          loginSubmitBtn.innerHTML = `<span>Verify Password &amp; Access Admin Portal</span> <span>&rarr;</span>`;
+        }
+        alertBox.innerHTML = `🔐 <strong>Admin Security Clearance:</strong> Master Administrator Portal is protected. Please enter your Admin Portal Password before logging in.`;
+        alertBox.style.background = "#fffbeb";
+        alertBox.style.borderColor = "#f59e0b";
+        alertBox.style.color = "#92400e";
+        alertBox.style.display = "block";
+        setTimeout(() => loginPassInput.focus(), 80);
+      } else {
+        loginPassInput.placeholder = "••••••••";
+        loginPassInput.style.borderColor = "";
+        if (loginPassLabel) {
+          loginPassLabel.textContent = "Cryptographic Password / Key *";
+        }
+        if (loginSubmitBtn) {
+          loginSubmitBtn.innerHTML = `<span>Authenticate &amp; Access Dashboard</span> <span>&rarr;</span>`;
+        }
+        alertBox.style.display = "none";
+      }
+    }
+
+    if (pillPatient) {
+      pillPatient.addEventListener("click", () => {
+        setActiveClearancePill(pillPatient, "patient@demo.com", "password123", false);
+      });
+    }
+
+    if (pillStaff) {
+      pillStaff.addEventListener("click", () => {
+        setActiveClearancePill(pillStaff, "admin@citycare.org", "adminpassword", false);
+      });
+    }
+
+    if (pillParisha) {
+      pillParisha.addEventListener("click", () => {
+        // NEVER AUTOFILL ADMIN PASSWORD - STRICTLY PROMPT USER FOR PASSWORD
+        setActiveClearancePill(pillParisha, "parishajindal17@gmail.com", "", true);
+      });
+    }
+
+    // Monitor manual typing of parishajindal17@gmail.com
+    if (loginEmailInput) {
+      loginEmailInput.addEventListener("input", (e) => {
+        if (e.target.value.trim().toLowerCase() === "parishajindal17@gmail.com") {
+          [pillPatient, pillStaff, pillParisha].forEach(p => p && p.classList.remove("active"));
+          if (pillParisha) pillParisha.classList.add("active");
+          loginPassInput.placeholder = "Enter Parisha Admin Portal Password *";
+          loginPassInput.style.borderColor = "#f59e0b";
+          if (loginPassLabel) {
+            loginPassLabel.innerHTML = 'Admin Portal Password * <span style="color:#d97706; font-size:0.75rem; font-weight:800;">(Password Required Before Login)</span>';
+          }
+          alertBox.innerHTML = `🔐 <strong>Admin Portal Protected:</strong> Please enter your Master Administrator Password before logging in.`;
+          alertBox.style.background = "#fffbeb";
+          alertBox.style.borderColor = "#f59e0b";
+          alertBox.style.color = "#92400e";
+          alertBox.style.display = "block";
+        }
+      });
+    }
+
+    // Password Show/Hide Toggle
+    function setupPasswordToggle(btnId, inputId) {
+      const btn = document.getElementById(btnId);
+      const input = document.getElementById(inputId);
+      if (!btn || !input) return;
+
+      btn.addEventListener("click", () => {
+        const isPassword = input.type === "password";
+        input.type = isPassword ? "text" : "password";
+        btn.textContent = isPassword ? "🙈" : "👁️";
+        btn.setAttribute("aria-label", isPassword ? "Hide password" : "Show password");
+      });
+    }
+    setupPasswordToggle("btn-toggle-login-pass", "page-login-password");
+    setupPasswordToggle("btn-toggle-reg-pass", "page-reg-password");
+
+    // Caps Lock Sensor
+    function setupCapsLockSensor(inputId, warningId) {
+      const input = document.getElementById(inputId);
+      const warning = document.getElementById(warningId);
+      if (!input || !warning) return;
+
+      function checkCapsLock(e) {
+        if (e.getModifierState && e.getModifierState("CapsLock")) {
+          warning.style.display = "block";
+        } else {
+          warning.style.display = "none";
+        }
+      }
+
+      input.addEventListener("keydown", checkCapsLock);
+      input.addEventListener("keyup", checkCapsLock);
+      input.addEventListener("blur", () => { warning.style.display = "none"; });
+    }
+    setupCapsLockSensor("page-login-password", "login-caps-warning");
+    setupCapsLockSensor("page-reg-password", "reg-caps-warning");
+
+    // 2FA Authentication Toggle Box
+    const enable2faCheckbox = document.getElementById("enable-2fa-checkbox");
+    const twoFactorContainer = document.getElementById("two-factor-container");
+    const tfaOtpSection = document.getElementById("tfa-otp-section");
+
+    if (enable2faCheckbox && tfaOtpSection) {
+      enable2faCheckbox.addEventListener("change", (e) => {
+        if (e.target.checked) {
+          tfaOtpSection.style.display = "block";
+          twoFactorContainer.classList.add("active-2fa");
+        } else {
+          tfaOtpSection.style.display = "none";
+          twoFactorContainer.classList.remove("active-2fa");
+        }
+      });
+    }
+
+    // OTP Boxes Auto-advance
+    const otpBoxes = document.querySelectorAll(".otp-box");
+    otpBoxes.forEach((box, idx) => {
+      box.addEventListener("input", (e) => {
+        if (e.target.value.length === 1 && idx < otpBoxes.length - 1) {
+          otpBoxes[idx + 1].focus();
+        }
+      });
+      box.addEventListener("keydown", (e) => {
+        if (e.key === "Backspace" && !e.target.value && idx > 0) {
+          otpBoxes[idx - 1].focus();
+        }
+      });
+    });
+
+    // Real-Time Password Strength Meter for Registration
+    const regPasswordInput = document.getElementById("page-reg-password");
+    const strengthIndicator = document.getElementById("reg-strength-indicator");
+    const strengthLabel = document.getElementById("reg-strength-label");
+
+    if (regPasswordInput && strengthIndicator && strengthLabel) {
+      regPasswordInput.addEventListener("input", (e) => {
+        const val = e.target.value;
+        if (!val) {
+          strengthIndicator.style.width = "0%";
+          strengthIndicator.style.backgroundColor = "transparent";
+          strengthLabel.textContent = "Password strength: Empty";
+          strengthLabel.style.color = "#64748b";
+          return;
+        }
+
+        let score = 0;
+        if (val.length >= 6) score++;
+        if (val.length >= 10) score++;
+        if (/[A-Z]/.test(val) && /[a-z]/.test(val)) score++;
+        if (/\d/.test(val)) score++;
+        if (/[^A-Za-z0-9]/.test(val)) score++;
+
+        if (score <= 1) {
+          strengthIndicator.style.width = "25%";
+          strengthIndicator.style.backgroundColor = "#ef4444";
+          strengthLabel.textContent = "Password strength: Vulnerable (add symbols/numbers)";
+          strengthLabel.style.color = "#ef4444";
+        } else if (score === 2 || score === 3) {
+          strengthIndicator.style.width = "60%";
+          strengthIndicator.style.backgroundColor = "#f59e0b";
+          strengthLabel.textContent = "Password strength: Moderate (good for clinical use)";
+          strengthLabel.style.color = "#d97706";
+        } else {
+          strengthIndicator.style.width = "100%";
+          strengthIndicator.style.backgroundColor = "#10b981";
+          strengthLabel.textContent = "Password strength: Military-Grade & Encrypted ✓";
+          strengthLabel.style.color = "#059669";
+        }
+      });
+    }
+
+    // Sign In Form Submission
+    formLogin.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const email = document.getElementById("page-login-email").value.trim().toLowerCase();
+      const pass = document.getElementById("page-login-password").value;
+
+      // 2FA Verification check if active
+      if (enable2faCheckbox && enable2faCheckbox.checked) {
+        let code = "";
+        otpBoxes.forEach(b => { code += b.value.trim(); });
+        if (code.length < 6) {
+          alertBox.textContent = "Please enter the complete 6-digit Time-based One-Time Passcode (simulated: 849201).";
+          alertBox.style.background = "#fef2f2";
+          alertBox.style.borderColor = "#fca5a5";
+          alertBox.style.color = "#991b1b";
+          alertBox.style.display = "block";
+          return;
+        }
+      }
+
+      // Parisha Master Administrator Gate
+      // Parisha Master Administrator Gate
+      if (email === "parishajindal17@gmail.com") {
+        if (!pass || pass.trim() === "") {
+          alertBox.innerHTML = "⚠️ <strong>Admin Password Required:</strong> You must enter the Admin Portal password before logging in.";
+          alertBox.style.background = "#fef2f2";
+          alertBox.style.borderColor = "#fca5a5";
+          alertBox.style.color = "#991b1b";
+          alertBox.style.display = "block";
+          loginPassInput.focus();
+          return;
+        }
+
+        const adminPw = localStorage.getItem("carecompass_admin_password") || "ParishaCare@2026";
+        if (pass === adminPw) {
+          sessionStorage.setItem("carecompass_admin_auth", "true");
+          showSuccessAndRedirect({ name: "Parisha Jindal", email: "parishajindal17@gmail.com", role: "super_admin" }, "admin.html");
+          return;
+        } else {
+          alertBox.innerHTML = "⚠️ <strong>Authentication Failed:</strong> Incorrect Admin Portal password. Access denied.";
+          alertBox.style.background = "#fef2f2";
+          alertBox.style.borderColor = "#fca5a5";
+          alertBox.style.color = "#991b1b";
+          alertBox.style.display = "block";
+          loginPassInput.value = "";
+          loginPassInput.focus();
+          return;
+        }
+      }
+
+      const res = CareCompassAuth.login(email, pass);
+
+      if (!res.success) {
+        alertBox.textContent = res.message;
+        alertBox.style.background = "#fef2f2";
+        alertBox.style.borderColor = "#fca5a5";
+        alertBox.style.color = "#991b1b";
+        alertBox.style.display = "block";
+      } else {
+        const dest = res.user.role === "facility_admin" ? "facility-details.html?id=fac-citycare" : "find-healthcare.html";
+        showSuccessAndRedirect(res.user, dest);
+      }
+    });
+
+    // Register Form Submission
+    formRegister.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const name = document.getElementById("page-reg-name").value;
+      const email = document.getElementById("page-reg-email").value;
+      const password = document.getElementById("page-reg-password").value;
+      const role = document.getElementById("page-reg-role").value;
+      const facilitySelect = document.getElementById("page-reg-facility-select");
+      const facilityId = role === "facility_admin" ? facilitySelect.value : null;
+      const facilityName = role === "facility_admin" ? facilitySelect.options[facilitySelect.selectedIndex].text : null;
+
+      const res = CareCompassAuth.register({ name, email, password, role, facilityId, facilityName });
+
+      if (!res.success) {
+        alertBox.textContent = res.message;
+        alertBox.style.background = "#fef2f2";
+        alertBox.style.borderColor = "#fca5a5";
+        alertBox.style.color = "#991b1b";
+        alertBox.style.display = "block";
+      } else {
+        const dest = res.user.role === "facility_admin" ? `facility-details.html?id=${facilityId}` : "find-healthcare.html";
+        showSuccessAndRedirect(res.user, dest);
+      }
+    });
+
+    function showSuccessAndRedirect(user, destination) {
+      alertBox.innerHTML = `🛡️ <strong>Access Granted: Welcome, ${user.name}!</strong> Cryptographic identity verified. Redirecting to your secure healthcare portal...`;
+      alertBox.style.background = "#f0fdf4";
+      alertBox.style.borderColor = "#86efac";
+      alertBox.style.color = "#166534";
+      alertBox.style.display = "block";
+
+      setTimeout(() => {
+        window.location.href = destination;
+      }, 950);
+    }
+  </script>
+</body>
+</html>

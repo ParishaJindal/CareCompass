@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Search verified healthcare facilities, check medical service availability, and get smart alternative recommendations with CareCompass.">
+  <title>Find Healthcare — Directory & Service Verification | CareCompass</title>
+  
+  <!-- Open Graph & Twitter Cards for Google / Social Previews -->
+  <meta property="og:title" content="Find Healthcare — Directory & Service Verification | CareCompass">
+  <meta property="og:description" content="Search verified healthcare facilities, check medical service availability, and get smart alternative recommendations with CareCompass.">
+  <meta property="og:image" content="../assets/images/logo.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="../assets/images/logo.png">
+
+  <!-- Modern Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../assets/images/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <link rel="alternate icon" href="../favicon.ico">
+
+  <!-- Stylesheets -->
+  <!-- Leaflet CSS for Pan-India Interactive Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <link rel="stylesheet" href="../css/style.css?v=20261017c">
+  <link rel="stylesheet" href="../css/responsive.css?v=20261017c">
+  <link rel="stylesheet" href="../css/accessibility.css?v=20261017c">
+</head>
+<body>
+
+  <!-- Accessible Skip to Content Link -->
+  <a href="#directory-main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Emergency Notice Ribbon -->
+  <aside class="emergency-ribbon" id="emergency-ribbon" role="alert" aria-label="Emergency medical assistance notice">
+    <div class="emergency-ribbon-content">
+      <span class="emergency-badge">EMERGENCY SOS</span>
+      <span data-i18n="emergencyAlert">In an acute medical emergency, dial 108 / 102 (Ambulance) or 112 immediately.</span>
+    </div>
+    <button type="button" class="emergency-close-btn" id="emergency-ribbon-close" aria-label="Dismiss emergency notice">&times;</button>
+  </aside>
+
+  <!-- Navigation Bar -->
+  <header class="main-header" role="banner">
+    <div class="nav-container">
+      <a href="../index.html" class="brand-wrapper" aria-label="CareCompass Home">
+        <div class="brand-icon-box">
+          <img src="../assets/images/favicon.png" alt="CareCompass Icon" class="brand-icon-img">
+        </div>
+        <div class="brand-text-group">
+          <span class="brand-name" data-i18n="brandName">CareCompass</span>
+          <span class="brand-tagline">
+            <span data-i18n="brandTagline">Healthcare Navigation for Everyone</span>
+          </span>
+        </div>
+      </a>
+
+      <!-- Mobile Hamburger Button -->
+      <button type="button" class="mobile-menu-btn" id="mobile-menu-toggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="main-nav-links">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <!-- Nav Links -->
+      <nav class="main-nav" id="main-nav-links" role="navigation" aria-label="Main navigation">
+        <ul class="nav-links-list">
+          <li><a href="../index.html" class="nav-link" data-i18n="navHome">Home</a></li>
+          <li><a href="find-healthcare.html" class="nav-link active" data-i18n="navFindCare">Find Healthcare</a></li>
+          <li><a href="../index.html#how-it-works" class="nav-link" data-i18n="navHowItWorks">How It Works</a></li>
+          <li><a href="about.html" class="nav-link" data-i18n="navAbout">About Us</a></li>
+          <li><a href="contact.html" class="nav-link" data-i18n="navContact">Contact</a></li>
+        </ul>
+
+        <div class="nav-actions">
+          <div class="nav-auth-container">
+            <a href="login.html" class="btn btn-outline btn-sm" data-i18n="navSignIn">Sign In</a>
+          </div>
+
+          <button type="button" class="btn btn-outline btn-sm trigger-accessibility-modal" id="nav-btn-a11y" aria-label="Open accessibility settings">
+            ♿ <span data-i18n="navAccessibilityBtn">Accessibility</span>
+          </button>
+
+          <div class="lang-switcher" role="group" aria-label="Language selection">
+            <button type="button" class="lang-switch-btn active" data-lang="en" aria-pressed="true">EN</button>
+            <button type="button" class="lang-switch-btn" data-lang="hi" aria-pressed="false">हिंदी</button>
+          </div>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Directory Container -->
+  <main id="directory-main-content">
+
+    <!-- Top Search Bar Header -->
+    <section class="directory-search-header">
+      <div style="max-width: 1480px; margin: 0 auto;">
+        
+        <!-- Active Demo Scenario Banner -->
+        <div id="demo-scenario-active-banner" class="demo-scenario-callout" style="display:none; margin-bottom: 12px;">
+          <div class="demo-callout-text">
+            <h4 data-i18n="demoBannerTitle">🌟 Demonstration Scenario Active: X-ray Search in Central District</h4>
+            <p data-i18n="demoBannerDesc">
+              Notice: <strong>CityCare Hospital</strong> (closest at 0.8 km) has its X-ray service <strong>CONFIRMED UNAVAILABLE</strong> due to tube maintenance. CareCompass automatically recommends <strong>Sunrise Diagnostic Centre</strong> as the confirmed alternative, and flags <strong>Green Valley Clinic</strong> as unverified.
+            </p>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" id="btn-trigger-demo-scenario">
+            Re-run X-ray Scenario
+          </button>
+        </div>
+
+        <!-- Quick Demo Pill & Search Form -->
+        <form id="directory-search-form">
+          <div class="search-form-row directory-compact-bar" style="grid-template-columns: 1.5fr 1.2fr auto auto; gap: 12px; align-items: flex-end;">
+            
+            <div class="search-field-group">
+              <label for="search-service" style="font-size:0.76rem; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; color:#475569; margin-bottom:3px;">Medical Service or Hospital Name</label>
+              <div class="input-with-icon">
+                <span class="input-icon">🔍</span>
+                <input type="text" id="search-service" class="form-input" 
+                       placeholder="e.g. Civil Hospital, Cardiology, ICU, X-ray, Ultrasound..." 
+                       autocomplete="off" style="padding: 9px 12px 9px 38px; font-size: 0.88rem;">
+                <button type="button" class="input-action-btn" id="directory-mic-btn" aria-label="Search by voice" title="Voice Search" style="right:6px;">
+                  🎤
+                </button>
+              </div>
+              <ul class="autocomplete-dropdown" id="search-service-autocomplete" role="listbox"></ul>
+            </div>
+
+            <div class="search-field-group" style="position:relative;">
+              <label for="search-location" style="font-size:0.76rem; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; color:#475569; margin-bottom:3px;">Locality, City, District, or PIN</label>
+              <div class="input-with-icon">
+                <span class="input-icon">📍</span>
+                <input type="text" id="search-location" class="form-input" 
+                       placeholder="e.g. Ludhiana, Kharar, Delhi, 110001, Sector 22..." 
+                       value="" autocomplete="off" style="padding: 9px 12px 9px 38px; font-size: 0.88rem;">
+              </div>
+              <ul class="autocomplete-dropdown" id="search-location-autocomplete" role="listbox"></ul>
+            </div>
+
+            <div class="search-field-group">
+              <label class="sr-only">Search button</label>
+              <button type="submit" class="btn btn-primary" id="btn-directory-submit" style="padding: 9px 18px; font-size: 0.88rem; font-weight: 700; white-space: nowrap;">
+                🔍 Search
+              </button>
+            </div>
+
+            <div class="search-field-group">
+              <label class="sr-only">Demo shortcut</label>
+              <button type="button" class="btn btn-secondary" id="btn-quick-xray-demo" onclick="CareCompassApp.triggerXRayDemoScenario();" style="padding: 9px 14px; font-size: 0.84rem; font-weight: 600; white-space: nowrap;">
+                ⚡ Demo: X-ray
+              </button>
+            </div>
+
+          </div>
+
+          <!-- Quick Regions & Major Cities Bar across India with inline GPS utility -->
+          <div class="quick-city-bar" role="group" aria-label="Quick filter by region or city" style="margin-top:8px; display:flex; align-items:center; justify-content:space-between; flex-wrap:nowrap; gap:8px;">
+            <div style="display:flex; align-items:center; gap:6px; overflow-x:auto; scrollbar-width:none; flex:1; min-width:0;">
+              <span class="city-pill-label" style="flex-shrink:0;">🇮🇳 Zones:</span>
+              <button type="button" class="city-pill active" data-city="">Whole India</button>
+              <button type="button" class="city-pill" data-city="Chandigarh">Chandigarh</button>
+              <button type="button" class="city-pill" data-city="Delhi">Delhi NCR</button>
+              <button type="button" class="city-pill" data-city="Pune">Pune</button>
+              <button type="button" class="city-pill" data-city="Bangalore">Bengaluru</button>
+              <button type="button" class="city-pill" data-city="Mumbai">Mumbai</button>
+              <button type="button" class="city-pill" data-city="Hyderabad">Hyderabad</button>
+              <button type="button" class="city-pill" data-city="Kolkata">Kolkata</button>
+              <button type="button" class="city-pill" data-city="Chennai">Chennai</button>
+              <button type="button" class="city-pill" data-city="Lucknow">Lucknow</button>
+              <button type="button" class="city-pill" data-city="Central District">Demo Zone</button>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
+              <button type="button" class="btn-use-location" id="btn-dir-use-location" style="font-size:0.8rem; background:#f0fdfa; color:#0f766e; padding:3px 8px; border-radius:6px; border:1px solid #99f6e4; font-weight:700;">
+                🎯 GPS
+              </button>
+              <span style="font-size:0.76rem; background:#ecfdf5; color:#065f46; padding:3px 8px; border-radius:6px; border:1px solid #a7f3d0; font-weight:700; white-space:nowrap;">
+                ✓ 42,940+ Facilities
+              </span>
+            </div>
+          </div>
+        </form>
+
+      </div>
+    </section>
+
+    <!-- Two-Column Layout: Sidebar Filters + Results / Map -->
+    <div class="directory-layout">
+
+      <!-- Left Sidebar: Comprehensive Filter Panel -->
+      <aside class="directory-filter-panel" aria-label="Directory search filters">
+        <div class="filter-panel-title">
+          <span>Refine Results</span>
+          <button type="button" class="btn-link" id="btn-reset-filters" style="font-size:0.78rem;">
+            Reset All
+          </button>
+        </div>
+
+        <!-- Prominent Top Apply Filters Button -->
+        <button type="button" class="btn btn-primary btn-apply-filters" id="btn-apply-filters-top" style="width:100%; margin: 4px 0 14px 0; padding: 10px 14px; font-weight: 700; font-size: 0.88rem; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 8px; box-shadow: 0 2px 6px rgba(13,148,136,0.25); background: #0d9488; color: #ffffff; border: none; cursor: pointer;">
+          <span>✓ Apply Filters & Submit</span>
+        </button>
+
+        <!-- Filter 1: Facility Ownership (Govt / Private) -->
+        <div class="filter-group">
+          <label class="filter-label" for="filter-ownership">Facility Ownership</label>
+          <select id="filter-ownership" class="filter-select">
+            <option value="all">All Ownerships (Govt & Private)</option>
+            <option value="Government">🏛️ Government (Public / Ayushman Bharat)</option>
+            <option value="Private">🏢 Private Hospitals & Clinics</option>
+            <option value="Public-Sector">🏥 Public-Sector & Autonomous</option>
+          </select>
+        </div>
+
+        <!-- Filter 2: State / Union Territory (All 37) -->
+        <div class="filter-group">
+          <label class="filter-label" for="filter-state">State / Union Territory</label>
+          <select id="filter-state" class="filter-select">
+            <option value="all">All India (37 States & UTs)</option>
+            <option value="Andhra Pradesh">Andhra Pradesh</option>
+            <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+            <option value="Assam">Assam</option>
+            <option value="Bihar">Bihar</option>
+            <option value="Chandigarh">Chandigarh</option>
+            <option value="Chhattisgarh">Chhattisgarh</option>
+            <option value="Delhi">Delhi</option>
+            <option value="Goa">Goa</option>
+            <option value="Gujarat">Gujarat</option>
+            <option value="Haryana">Haryana</option>
+            <option value="Himachal Pradesh">Himachal Pradesh</option>
+            <option value="Jammu and Kashmir">Jammu and Kashmir</option>
+            <option value="Jharkhand">Jharkhand</option>
+            <option value="Karnataka">Karnataka</option>
+            <option value="Kerala">Kerala</option>
+            <option value="Ladakh">Ladakh</option>
+            <option value="Madhya Pradesh">Madhya Pradesh</option>
+            <option value="Maharashtra">Maharashtra</option>
+            <option value="Manipur">Manipur</option>
+            <option value="Meghalaya">Meghalaya</option>
+            <option value="Mizoram">Mizoram</option>
+            <option value="Nagaland">Nagaland</option>
+            <option value="Odisha">Odisha</option>
+            <option value="Puducherry">Puducherry</option>
+            <option value="Punjab">Punjab</option>
+            <option value="Rajasthan">Rajasthan</option>
+            <option value="Sikkim">Sikkim</option>
+            <option value="Tamil Nadu">Tamil Nadu</option>
+            <option value="Telangana">Telangana</option>
+            <option value="Tripura">Tripura</option>
+            <option value="Uttar Pradesh">Uttar Pradesh</option>
+            <option value="Uttarakhand">Uttarakhand</option>
+            <option value="West Bengal">West Bengal</option>
+          </select>
+        </div>
+
+        <!-- Filter 3: Facility Category -->
+        <div class="filter-group">
+          <label class="filter-label" for="filter-facility-type" data-i18n="filterFacilityType">Facility Category</label>
+          <select id="filter-facility-type" class="filter-select">
+            <option value="all" data-i18n="filterAllTypes">All Categories</option>
+            <option value="General Hospital">General Hospital</option>
+            <option value="Multispecialty Hospital">Multispecialty Hospital</option>
+            <option value="Medical College Hospital">Medical College Hospital</option>
+            <option value="District Hospital">District Hospital</option>
+            <option value="Community Health Centre (CHC)">Community Health Centre (CHC)</option>
+            <option value="Primary Health Centre (PHC)">Primary Health Centre (PHC)</option>
+            <option value="Sub-District Hospital">Sub-District Hospital</option>
+            <option value="Maternity & Child Hospital">Maternity & Child Hospital</option>
+            <option value="Eye Hospital">Eye / Specialty Hospital</option>
+            <option value="Clinic & OPD">Clinic & OPD</option>
+            <option value="Diagnostic & Imaging Centre">Diagnostic & Imaging Centre</option>
+          </select>
+        </div>
+
+        <!-- Filter 4: Verification Status -->
+        <div class="filter-group">
+          <label class="filter-label" for="filter-verification">Verification Tier</label>
+          <select id="filter-verification" class="filter-select">
+            <option value="all">All Verification Tiers</option>
+            <option value="Verified">✓ Verified (MoHFW Registry)</option>
+            <option value="Partially Verified">⚡ Partially Verified (Active Facility)</option>
+            <option value="Not Verified">○ Not Verified</option>
+          </select>
+        </div>
+
+        <!-- Filter 5: Service Availability Status -->
+        <div class="filter-group">
+          <label class="filter-label" for="filter-availability" data-i18n="filterAvailability">Availability Status</label>
+          <select id="filter-availability" class="filter-select">
+            <option value="all" data-i18n="filterAll">All Statuses</option>
+            <option value="available_only" data-i18n="filterConfirmedAvailable">Confirmed Available Only</option>
+            <option value="exclude_unavailable">Exclude Confirmed Unavailable</option>
+            <option value="unverified_only">Not Verified Only</option>
+          </select>
+        </div>
+
+        <!-- Filter 6: Maximum Distance Radius -->
+        <div class="filter-group">
+          <label class="filter-label" for="filter-distance" data-i18n="filterDistance">Distance Radius</label>
+          <select id="filter-distance" class="filter-select">
+            <option value="any" data-i18n="filterDistanceAny">Any Distance</option>
+            <option value="2">Within 2 km</option>
+            <option value="5">Within 5 km</option>
+            <option value="10">Within 10 km</option>
+          </select>
+        </div>
+
+        <!-- Filter 7: Operating Hours -->
+        <div class="filter-group">
+          <label class="filter-label" data-i18n="filterOpenNow">Operating Status</label>
+          <label class="filter-checkbox-item">
+            <input type="checkbox" id="filter-open-now">
+            <span>Open Now Only</span>
+          </label>
+        </div>
+
+        <!-- Filter 8: Accessibility Features (WCAG Friendly) -->
+        <div class="filter-group">
+          <label class="filter-label" data-i18n="filterAccessibility">Accessibility Needs</label>
+          <label class="filter-checkbox-item">
+            <input type="checkbox" id="pref-wheelchair">
+            <span data-i18n="filterWheelchair">♿ Wheelchair Ramp</span>
+          </label>
+          <label class="filter-checkbox-item">
+            <input type="checkbox" id="pref-elevator">
+            <span data-i18n="filterElevator">🛗 Elevator / Lift</span>
+          </label>
+          <label class="filter-checkbox-item">
+            <input type="checkbox" id="pref-ground-floor">
+            <span data-i18n="filterGroundFloor">🚶 Ground Floor</span>
+          </label>
+          <label class="filter-checkbox-item">
+            <input type="checkbox" id="pref-restroom">
+            <span data-i18n="filterRestroom">🚻 Accessible Restroom</span>
+          </label>
+        </div>
+
+        <!-- Filter Action Buttons Footer -->
+        <div class="filter-actions-footer" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 8px;">
+          <button type="button" class="btn btn-primary btn-apply-filters" id="btn-apply-filters-bottom" style="width:100%; padding: 10px 14px; font-weight: 700; font-size: 0.88rem; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 8px; box-shadow: var(--shadow-sm); background: #0d9488; color: #ffffff; border: none; cursor: pointer;">
+            <span>✓ Apply Filters & Submit</span>
+          </button>
+          <button type="button" class="btn btn-outline btn-sm" id="btn-reset-filters-bottom" style="width:100%; padding: 7px; font-size: 0.8rem; font-weight: 600; text-align: center;">
+            ↺ Reset Filters
+          </button>
+        </div>
+      </aside>
+
+      <!-- Right Main Content: Results & Interactive Map -->
+      <section class="directory-results-container" aria-label="Healthcare facilities results">
+        
+        <!-- Controls Bar: Results count, Sorting, View Mode toggles -->
+        <div class="results-content-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid #f1f5f9; flex-wrap:wrap; gap:10px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <h2 style="font-size: 1.18rem; font-weight: 800; color: var(--color-primary); margin:0;">
+              Healthcare Facilities
+            </h2>
+            <span id="results-count-badge" style="font-size:0.78rem; color:#475569; font-weight:700; background:#f1f5f9; padding:2px 8px; border-radius:9999px; border:1px solid #e2e8f0;">
+              Loading facilities...
+            </span>
+          </div>
+
+          <div style="display:flex; align-items:center; gap: 10px; flex-wrap: wrap;">
+            
+            <!-- Sort dropdown -->
+            <div style="display:flex; align-items:center; gap:6px;">
+              <label for="sort-by" style="font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; color:#475569;" data-i18n="sortBy">Sort:</label>
+              <select id="sort-by" class="filter-select" style="width:auto; padding:5px 8px; font-size:0.8rem;">
+                <option value="suitable" data-i18n="sortSuitable">Most Suitable</option>
+                <option value="distance" data-i18n="sortNearest">Nearest Distance</option>
+                <option value="available_first" data-i18n="sortAvailableFirst">Available First</option>
+                <option value="name">Alphabetical</option>
+              </select>
+            </div>
+
+            <!-- View Mode Switcher -->
+            <div class="view-mode-toggles" role="group" aria-label="Directory view options">
+              <button type="button" class="view-toggle-btn active" id="btn-view-split" data-view="split">Split View</button>
+              <button type="button" class="view-toggle-btn" id="btn-view-list" data-view="list">List Only</button>
+              <button type="button" class="view-toggle-btn" id="btn-view-map" data-view="map">Map Only</button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Spotlight: Smart Alternative Recommendation Box -->
+        <div id="alternative-recommendation-spotlight" style="display:none;"></div>
+
+        <!-- Split View: Facilities List + Interactive Map -->
+        <div class="directory-split-view">
+          
+          <!-- Facility Cards Column -->
+          <div id="directory-results-column">
+            <div id="facilities-results-container" role="feed" aria-label="Healthcare facility results list"></div>
+
+            <!-- Nationwide Directory Pagination Controls -->
+            <div id="directory-pagination" class="pagination-bar" style="display:none;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <label for="pagination-per-page" style="font-size:0.82rem; font-weight:600; color:var(--text-muted);">Per page:</label>
+                <select id="pagination-per-page" class="filter-select" style="width:auto; padding:4px 8px; font-size:0.82rem;">
+                  <option value="12">12</option>
+                  <option value="24" selected>24</option>
+                  <option value="48">48</option>
+                  <option value="96">96</option>
+                </select>
+              </div>
+
+              <div id="pagination-info" style="font-size:0.86rem; font-weight:700; color:var(--color-primary);">
+                Page 1 of 1
+              </div>
+
+              <div style="display:flex; align-items:center; gap:8px;">
+                <button type="button" class="btn btn-outline btn-sm" id="btn-pagination-prev" disabled>
+                  &larr; Prev
+                </button>
+                <button type="button" class="btn btn-outline btn-sm" id="btn-pagination-next" disabled>
+                  Next &rarr;
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Interactive Live India Map Column -->
+          <div class="map-column" id="directory-map-column">
+            <div class="map-wrapper" style="display:flex; flex-direction:column; border-radius:12px; overflow:hidden; border:1px solid var(--border-color); box-shadow:var(--shadow-md); background:#ffffff;">
+              
+              <!-- Map Controls Header -->
+              <div class="india-map-header-bar" style="display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:#f8fafc; border-bottom:1px solid var(--border-color); flex-wrap:wrap; gap:8px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <span style="font-size:1.1rem;">🇮🇳</span>
+                  <strong style="font-size:0.9rem; color:var(--color-primary);">Whole Map of India</strong>
+                  <span id="map-counter-badge" style="font-size:0.75rem; background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:9999px; font-weight:700;">
+                    71 Facilities
+                  </span>
+                </div>
+                <div style="display:flex; align-items:center; gap:6px;">
+                  <button type="button" class="btn btn-outline btn-sm" id="btn-map-fit-india" style="padding:4px 8px; font-size:0.75rem;" title="Show full India map">
+                    🇮🇳 All India
+                  </button>
+                  <button type="button" class="btn btn-outline btn-sm" id="btn-map-fit-results" style="padding:4px 8px; font-size:0.75rem;" title="Zoom into filtered results">
+                    🎯 Fit Results
+                  </button>
+                </div>
+              </div>
+
+              <!-- Quick Locality Jump Bar for Any Indian Town / Village -->
+              <div style="display:flex; padding:8px 12px; background:#ffffff; border-bottom:1px solid #e2e8f0; gap:8px; align-items:center;">
+                <div style="flex:1; position:relative;">
+                  <input type="text" id="map-locality-jump-input" class="form-input" 
+                         style="padding:6px 10px 6px 30px; font-size:0.82rem; height:34px; width:100%; border:1px solid #cbd5e1; border-radius:6px;"
+                         placeholder="Jump to ANY locality, village, or PIN in India (e.g. Alwar, Hoshiarpur, Whitefield)...">
+                  <span style="position:absolute; left:8px; top:8px; font-size:0.85rem; color:#64748b;">🔍</span>
+                </div>
+                <button type="button" class="btn btn-primary btn-sm" id="btn-map-locality-jump" style="padding:6px 12px; font-size:0.8rem; height:34px;">
+                  Go
+                </button>
+              </div>
+
+              <!-- Real Leaflet Map Container -->
+              <div id="simulated-map-canvas" style="height: 520px; width: 100%; position: relative; background: #e5e7eb;"></div>
+
+              <!-- Map Legend Bar -->
+              <div style="display:flex; justify-content:space-around; align-items:center; padding:8px 12px; background:#f8fafc; border-top:1px solid var(--border-color); font-size:0.75rem; font-weight:600;">
+                <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:10px; height:10px; border-radius:50%; background:#16a34a; display:inline-block;"></span> Confirmed Available</span>
+                <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:10px; height:10px; border-radius:50%; background:#dc2626; display:inline-block;"></span> Unavailable / Broken</span>
+                <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:10px; height:10px; border-radius:50%; background:#d97706; display:inline-block;"></span> Not Verified (Call)</span>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+    </div>
+
+  </main>
+
+  <!-- Accessibility Settings Modal -->
+  <div id="accessibility-modal" class="modal" role="dialog" aria-labelledby="access-modal-title" aria-modal="true" aria-hidden="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="access-modal-title" data-i18n="accessTitle">♿ Accessibility Settings</h3>
+        <button type="button" class="modal-close-btn" aria-label="Close accessibility settings">&times;</button>
+      </div>
+      <div class="modal-body">
+        
+        <div class="filter-group">
+          <label class="filter-label" data-i18n="accessTextSize">Text Size Scale</label>
+          <div class="view-mode-toggles">
+            <button type="button" class="view-toggle-btn" data-font-size="normal">Normal (100%)</button>
+            <button type="button" class="view-toggle-btn" data-font-size="large">Large (115%)</button>
+            <button type="button" class="view-toggle-btn" data-font-size="xlarge">Extra Large (130%)</button>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label" for="toggle-high-contrast" data-i18n="accessContrast">High Contrast Theme</label>
+          <label class="filter-checkbox-item">
+            <input type="checkbox" id="toggle-high-contrast">
+            <span>High Contrast Mode (Deep Navy & Vivid Yellow)</span>
+          </label>
+        </div>
+
+        <div class="filter-group">
+          <label class="filter-label" for="toggle-simple-mode" data-i18n="accessSimpleMode">Simple Reading Mode</label>
+          <label class="filter-checkbox-item">
+            <input type="checkbox" id="toggle-simple-mode">
+            <span>Simplified text and high-legibility layout</span>
+          </label>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary modal-close-btn" data-i18n="accessClose">Save & Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Report Outdated Information Modal -->
+  <div id="report-modal" class="modal" role="dialog" aria-labelledby="report-modal-title" aria-modal="true" aria-hidden="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="report-modal-title">📢 Report Outdated or Inaccurate Information</h3>
+        <button type="button" class="modal-close-btn" aria-label="Close report dialog">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="report-success-message" style="display: none;" class="alert-notice">
+          <strong>Thank you!</strong> Your verification discrepancy has been recorded in the community audit queue. Our team reviews submissions within 2 hours.
+        </div>
+
+        <form id="report-outdated-form">
+          <div class="search-field-group" style="margin-bottom: 14px;">
+            <label for="report-facility-name">Facility Name</label>
+            <input type="text" id="report-facility-name" class="form-input" required readonly>
+          </div>
+
+          <div class="search-field-group" style="margin-bottom: 14px;">
+            <label for="report-service-name">Medical Service</label>
+            <input type="text" id="report-service-name" class="form-input" placeholder="e.g. X-ray, Ultrasound">
+          </div>
+
+          <div class="search-field-group" style="margin-bottom: 14px;">
+            <label for="report-observed-status">Observed Status</label>
+            <select id="report-observed-status" class="filter-select">
+              <option value="service_broken">Service is Down / Equipment Broken</option>
+              <option value="specialist_absent">Doctor / Specialist Not on Duty</option>
+              <option value="service_active">Service is Actually Available (False Negative)</option>
+              <option value="changed_hours">Operating Hours Have Changed</option>
+              <option value="incorrect_phone">Incorrect Phone Number</option>
+            </select>
+          </div>
+
+          <div class="search-field-group" style="margin-bottom: 14px;">
+            <label for="report-comments">Additional Details</label>
+            <textarea id="report-comments" class="form-input" rows="3" placeholder="Describe what you observed (e.g. receptionist mentioned machine will be fixed on Monday)..." style="height: auto;"></textarea>
+          </div>
+
+          <div class="search-field-group" style="margin-bottom: 16px;">
+            <label for="report-email">Your Contact Email (Optional, for verification credit)</label>
+            <input type="email" id="report-email" class="form-input" placeholder="name@example.com">
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%;">
+            Submit Verification Report
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="main-footer" role="contentinfo">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <img src="../assets/images/logo.png" alt="CareCompass Logo" class="footer-brand-logo">
+        <p>
+          A smart digital healthcare navigation platform providing verified service availability, timestamp tracking, and intelligent alternative recommendations.
+        </p>
+      </div>
+
+      <div class="footer-col">
+        <h4>Navigation</h4>
+        <ul class="footer-links">
+          <li><a href="../index.html">Home</a></li>
+          <li><a href="find-healthcare.html">Find Healthcare</a></li>
+          <li><a href="../index.html#how-it-works">How It Works</a></li>
+          <li><a href="about.html">About Us</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Verification & Trust</h4>
+        <ul class="footer-links">
+          <li><a href="about.html#verification-policy">Verification Methodology</a></li>
+          <li><a href="contact.html#report-form">Report Outdated Info</a></li>
+          <li><a href="about.html#accessibility-statement">Accessibility Commitment</a></li>
+          <li><a href="about.html#privacy-policy">Privacy & Data Policy</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Medical Disclaimer</h4>
+        <div class="footer-disclaimer-box" data-i18n="footerDisclaimer">
+          CareCompass provides directory and verified availability estimates based on recent audits. In life-threatening emergencies, dial 108 / 112 immediately.
+        </div>
+        <div style="margin-top: 14px;">
+          <a href="admin.html" style="display:inline-flex; align-items:center; gap:6px; font-size:0.8rem; color:#0d9488; font-weight:700; text-decoration:none; padding:4px 10px; background:rgba(13,148,136,0.08); border:1px solid rgba(13,148,136,0.25); border-radius:6px;">
+            🔐 Admin Portal (Parisha)
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2026 CareCompass. Developed for digital healthcare access, transparency, and accessibility.</p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <!-- Leaflet JS for Pan-India Map -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="../js/healthcare-data.js"></script>
+  <script src="../js/verification.js"></script>
+  <script src="../js/recommendations.js"></script>
+  <script src="../js/translations.js"></script>
+  <script src="../js/accessibility.js"></script>
+  <script src="../js/search.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/app.js?v=20261017c"></script>
+</body>
+</html>
