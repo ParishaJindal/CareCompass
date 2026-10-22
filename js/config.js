@@ -4,6 +4,9 @@
  */
 
 window.CARECOMPASS_CONFIG = (function () {
+  // Official live production Render backend for CareCompass
+  const PRODUCTION_API_URL = 'https://carecompass-9jng.onrender.com';
+
   // 1. Detect environment variables, window overrides, or localStorage
   const envApiUrl = (typeof process !== 'undefined' && process.env && process.env.VITE_API_BASE_URL)
     || window.__CARECOMPASS_API_BASE_URL__
@@ -11,25 +14,27 @@ window.CARECOMPASS_CONFIG = (function () {
 
   // 2. Resolve default backend URL based on host environment
   const isLocalhost = Boolean(
-    window.location.hostname === 'localhost' ||
-    window.location.hostname === '127.0.0.1' ||
-    window.location.hostname === '0.0.0.0'
+    typeof window !== 'undefined' && window.location && (
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname === '0.0.0.0'
+    )
   );
 
   let defaultBaseUrl;
   if (envApiUrl && envApiUrl.trim() !== '') {
     defaultBaseUrl = envApiUrl.trim();
   } else if (isLocalhost) {
-    // Local development defaults to the local Render backend port
-    defaultBaseUrl = 'http://localhost:10000';
+    // In local development: use local port if __USE_LOCAL_BACKEND__ is set, otherwise use live production API
+    defaultBaseUrl = window.__USE_LOCAL_BACKEND__ ? 'http://localhost:10000' : PRODUCTION_API_URL;
   } else {
-    // Production Vercel deployment points to Render backend service
-    // Replace with your actual Render service URL if customized
-    defaultBaseUrl = 'https://carecompass-api.onrender.com';
+    // Production Vercel deployment points directly to live Render backend
+    defaultBaseUrl = PRODUCTION_API_URL;
   }
 
   return {
     apiBaseUrl: defaultBaseUrl,
+    productionApiUrl: PRODUCTION_API_URL,
 
     /**
      * Resolves complete URL for any backend API endpoint
@@ -53,7 +58,7 @@ window.CARECOMPASS_CONFIG = (function () {
         const res = await fetch(url, {
           method: 'GET',
           headers: { 'Accept': 'application/json' },
-          signal: typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(6000) : undefined
+          signal: typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined
         });
         if (!res.ok) {
           return { online: false, status: res.status };
@@ -61,6 +66,19 @@ window.CARECOMPASS_CONFIG = (function () {
         const data = await res.json();
         return { online: true, ...data };
       } catch (err) {
+        // If local backend was attempted and failed, try falling back to production Render backend
+        if (this.apiBaseUrl !== PRODUCTION_API_URL) {
+          try {
+            const fallbackRes = await fetch(`${PRODUCTION_API_URL}/api/health`, {
+              headers: { 'Accept': 'application/json' }
+            });
+            if (fallbackRes.ok) {
+              const fbData = await fallbackRes.json();
+              this.apiBaseUrl = PRODUCTION_API_URL;
+              return { online: true, fallback: true, ...fbData };
+            }
+          } catch (_) {}
+        }
         return { online: false, error: err.message };
       }
     },

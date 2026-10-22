@@ -395,7 +395,7 @@ const CareCompassApp = (function() {
     // Separate independent scrolling is managed natively via CSS overscroll-behavior: contain
 
     // Run initial search
-    if (isDemo || (initialService.toLowerCase().includes("x-ray") || initialService.toLowerCase().includes("xray"))) {
+    if (isDemo) {
       triggerXRayDemoScenario();
     } else {
       executeDirectorySearch();

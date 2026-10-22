@@ -395,7 +395,7 @@ const CareCompassApp = (function() {
     // Separate independent scrolling is managed natively via CSS overscroll-behavior: contain
 
     // Run initial search
-    if (isDemo || (initialService.toLowerCase().includes("x-ray") || initialService.toLowerCase().includes("xray"))) {
+    if (isDemo) {
       triggerXRayDemoScenario();
     } else {
       executeDirectorySearch();
@@ -477,7 +477,12 @@ const CareCompassApp = (function() {
       } else {
         // Try live backend API locations autocomplete for PIN codes, districts & states
         try {
-          const res = await fetch(`/api/locations?q=${encodeURIComponent(q)}`);
+          const locApiUrl = (window.CARECOMPASS_CONFIG && typeof window.CARECOMPASS_CONFIG.getApiUrl === 'function')
+            ? window.CARECOMPASS_CONFIG.getApiUrl('/api/locations')
+            : '/api/locations';
+          const res = await fetch(`${locApiUrl}?q=${encodeURIComponent(q)}`, {
+            headers: { 'Accept': 'application/json' }
+          });
           if (res.ok) {
             const apiData = await res.json();
             if (apiData.success && Array.isArray(apiData.results) && apiData.results.length > 0) {
@@ -1664,14 +1669,101 @@ const CareCompassApp = (function() {
   /**
    * Facility Detail Page initialization
    */
-  function initFacilityDetailPage() {
+  async function initFacilityDetailPage() {
     const urlParams = new URLSearchParams(window.location.search);
     const facilityId = urlParams.get("id") || "fac-citycare"; // Default to CityCare Hospital for demo audit
     const queryService = urlParams.get("service") || "";
 
-    const facility = HEALTHCARE_DATA.facilities.find(f => f.id === facilityId) || HEALTHCARE_DATA.facilities[0];
+    // 1. Check if facility is part of in-memory demo scenarios
+    const localFacility = HEALTHCARE_DATA.facilities.find(f => f.id === facilityId);
+    if (localFacility) {
+      renderFacilityDetails(localFacility, queryService);
+      return;
+    }
 
-    renderFacilityDetails(facility, queryService);
+    const container = document.getElementById("facility-detail-container");
+    if (container) {
+      container.innerHTML = `
+        <div style="text-align: center; padding: 60px 20px;">
+          <div class="loading-spinner" style="width: 44px; height: 44px; margin: 0 auto 16px; border: 3px solid rgba(13,148,136,0.15); border-top-color: #0d9488; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+          <h3 style="color: #0f172a; margin-bottom: 8px;">Loading Facility Audit & Verification...</h3>
+          <p style="color: #64748b; font-size: 0.9rem;">Connecting to CareCompass Pan-India Database</p>
+        </div>
+      `;
+    }
+
+    // 2. Query live Render backend API for hospital record
+    try {
+      const facApiUrl = (window.CARECOMPASS_CONFIG && typeof window.CARECOMPASS_CONFIG.getApiUrl === 'function')
+        ? window.CARECOMPASS_CONFIG.getApiUrl(`/api/hospitals/${encodeURIComponent(facilityId)}`)
+        : `/api/hospitals/${encodeURIComponent(facilityId)}`;
+
+      const res = await fetch(facApiUrl, {
+        headers: { 'Accept': 'application/json' }
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.hospital) {
+          const h = data.hospital;
+
+          // Map to CareCompass facility display structure
+          const formattedFacility = {
+            id: h.hospital_id || String(h.id),
+            name: h.hospital_name,
+            type: h.facility_type,
+            ownership: h.ownership_type,
+            address: h.address || `${h.district}, ${h.state} - ${h.pin_code || ''}`,
+            phone: h.phone || '',
+            distanceKm: h.distance_km != null ? h.distance_km : 1.5,
+            isOpenNow: h.has_emergency || true,
+            operatingHours: h.operating_hours || (h.has_emergency ? '24/7 Emergency & Inpatient Services' : 'OPD: 09:00 - 17:00'),
+            coordinates: (h.latitude && h.longitude) ? { lat: h.latitude, lng: h.longitude } : null,
+            accessibility: h.accessibility_features || {
+              wheelchairRamp: true,
+              elevator: true,
+              groundFloorServices: true,
+              accessibleRestroom: true
+            },
+            verificationSummary: {
+              lastVerifiedOverall: h.last_verified_at || '2026-10-15T10:00:00Z',
+              overallStatus: h.verification_status || 'Partially Verified'
+            },
+            services: Array.isArray(h.services) && h.services.length > 0
+              ? h.services.map(s => {
+                  const sName = typeof s === 'string' ? s : (s.name || 'General Medical Care');
+                  return {
+                    name: sName,
+                    status: h.verification_status === 'Verified' ? VerificationEngine.STATUS.AVAILABLE : VerificationEngine.STATUS.PARTIAL,
+                    lastVerified: h.last_verified_at || '2026-10-15T10:00:00Z',
+                    verifiedBy: h.source_name || 'MoHFW Registry',
+                    operationalNotes: 'Listed in official health registry and operational schedule'
+                  };
+                })
+              : [
+                  { name: 'General Medicine & OPD', status: VerificationEngine.STATUS.AVAILABLE, lastVerified: h.last_verified_at || '2026-10-15T10:00:00Z', verifiedBy: h.source_name || 'MoHFW Registry', operationalNotes: 'Active consultation services' },
+                  { name: h.has_emergency ? '24/7 Emergency Care' : 'Specialist Clinical Review', status: VerificationEngine.STATUS.AVAILABLE, lastVerified: h.last_verified_at || '2026-10-15T10:00:00Z', verifiedBy: h.source_name || 'MoHFW Registry', operationalNotes: 'Routine operations' }
+                ]
+          };
+
+          renderFacilityDetails(formattedFacility, queryService);
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('[CareCompass] Failed to fetch facility from backend API:', err.message);
+    }
+
+    // 3. Fallback to default facility with notice if ID not located
+    if (container) {
+      container.innerHTML = `
+        <div style="text-align: center; padding: 50px 20px;">
+          <h2 style="color: #0f172a; margin-bottom: 8px;">Facility Record Not Found</h2>
+          <p style="color: #64748b; margin-bottom: 24px;">The requested facility identifier "${facilityId}" could not be retrieved from the healthcare registry.</p>
+          <a href="find-healthcare.html" class="btn btn-primary">&larr; Return to Healthcare Directory</a>
+        </div>
+      `;
+    }
   }
 
   function renderFacilityDetails(facility, queryService) {

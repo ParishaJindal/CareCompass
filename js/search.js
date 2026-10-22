@@ -360,11 +360,8 @@ const SearchEngine = (function() {
    * Seamlessly falls back to local in-memory SearchEngine.search if offline or server unreachable.
    */
   async function searchAsync(params = {}) {
-    const isDemoQuery = (params.serviceQuery || '').toLowerCase().includes('x-ray') && 
-                        (params.locationQuery || '').toLowerCase().includes('central');
-
-    // If running demo scenario, use deterministic local engine
-    if (params.isDemo || isDemoQuery) {
+    // If explicitly running demonstration scenario, use local deterministic demo engine
+    if (params.isDemo) {
       return search(params);
     }
 

@@ -360,11 +360,8 @@ const SearchEngine = (function() {
    * Seamlessly falls back to local in-memory SearchEngine.search if offline or server unreachable.
    */
   async function searchAsync(params = {}) {
-    const isDemoQuery = (params.serviceQuery || '').toLowerCase().includes('x-ray') && 
-                        (params.locationQuery || '').toLowerCase().includes('central');
-
-    // If running demo scenario, use deterministic local engine
-    if (params.isDemo || isDemoQuery) {
+    // If explicitly running demonstration scenario, use local deterministic demo engine
+    if (params.isDemo) {
       return search(params);
     }
 
@@ -394,9 +391,14 @@ const SearchEngine = (function() {
         if (params.maxDistanceKm) qParams.set('distance', params.maxDistanceKm);
       }
 
-      // Call API
-      const apiUrl = `/api/hospitals?${qParams.toString()}`;
-      const response = await fetch(apiUrl);
+      // Call Render API Backend (via CARECOMPASS_CONFIG or fallback to relative URL)
+      const baseEndpoint = (window.CARECOMPASS_CONFIG && typeof window.CARECOMPASS_CONFIG.getApiUrl === 'function')
+        ? window.CARECOMPASS_CONFIG.getApiUrl('/api/hospitals')
+        : '/api/hospitals';
+      const apiUrl = `${baseEndpoint}?${qParams.toString()}`;
+      const response = await fetch(apiUrl, {
+        headers: { 'Accept': 'application/json' }
+      });
       if (!response.ok) {
         throw new Error(`API response status ${response.status}`);
       }
