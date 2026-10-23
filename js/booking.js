@@ -333,8 +333,7 @@ window.CareCompassBooking = (function () {
               <label class="consent-checkbox-label">
                 <input type="checkbox" id="req-privacy-consent" ${state.patient.consent ? 'checked' : ''} required>
                 <span>
-                  I consent to sharing this request with <strong>${escapeHtml(name)}</strong> 
-                  to schedule this consultation.
+                  I understand this request is recorded on CareCompass as an inquiry, and I may contact <strong>${escapeHtml(name)}</strong> directly to confirm scheduling.
                 </span>
               </label>
               <span class="field-error-msg" id="err-req-consent"></span>
@@ -459,10 +458,13 @@ window.CareCompassBooking = (function () {
         <div class="confirmation-success-hero">
           <div class="success-animated-icon" style="background: #f59e0b; color: #fff;">⏳</div>
           <span class="badge-confirmed-live" style="background: #fef3c7; color: #92400e; border-color: #fde68a;">
-            ● PENDING HOSPITAL CONFIRMATION
+            ● PENDING CONFIRMATION
           </span>
-          <h3>Appointment Request Submitted!</h3>
-          <p>Your request has been routed to <strong>${escapeHtml(b.hospitalName)}</strong>.</p>
+          <h3>Appointment Request Recorded!</h3>
+          <p>Your inquiry for <strong>${escapeHtml(b.hospitalName)}</strong> has been recorded on CareCompass.</p>
+          <div style="font-size: 0.83rem; color: #78350f; background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 10px 14px; margin: 12px 0; text-align: left; line-height: 1.4;">
+            ℹ️ <strong>Please note:</strong> This hospital does not currently have automated scheduling integration with CareCompass. The hospital has <strong>not yet received or confirmed</strong> this appointment. Please contact the hospital directly or present this reference code at their OPD registration counter.
+          </div>
         </div>
 
         <!-- Reference Code Card -->
@@ -474,7 +476,7 @@ window.CareCompassBooking = (function () {
               📋 Copy
             </button>
           </div>
-          <p class="brc-hint">Save this reference code to track appointment acceptance status.</p>
+          <p class="brc-hint">Save this reference code to track or reference your inquiry.</p>
         </div>
 
         <!-- Details Card -->
@@ -497,7 +499,7 @@ window.CareCompassBooking = (function () {
           </div>
           <div class="cit-row">
             <span class="cit-lbl">Status:</span>
-            <span class="cit-val"><strong style="color: #d97706;">Pending Confirmation</strong> by Hospital Scheduling Desk</span>
+            <span class="cit-val"><strong style="color: #d97706;">Pending Confirmation</strong> (Inquiry recorded on CareCompass)</span>
           </div>
           <div class="cit-row">
             <span class="cit-lbl">Payment Mode:</span>

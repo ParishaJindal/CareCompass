@@ -6,6 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const appointmentController = require('../controllers/appointmentController');
+const { lookupLimiter } = require('../middleware/rateLimiter');
 
 // Appointment Configuration (Pay at Hospital mode, policies)
 router.get('/config', appointmentController.getConfig);
@@ -25,10 +26,10 @@ router.post('/book', appointmentController.bookAppointment);
 // Appointment Request for Non-Partner Hospitals (Pending Confirmation, Pay at Hospital)
 router.post('/request', appointmentController.requestAppointment);
 
-// Secure Patient Appointment Lookup (Reference + Phone)
-router.post('/lookup', appointmentController.lookupAppointment);
+// Secure Patient Appointment Lookup (Reference + Phone, rate limited)
+router.post('/lookup', lookupLimiter, appointmentController.lookupAppointment);
 
-// Cancellation Request
-router.post('/cancel', appointmentController.cancelAppointment);
+// Cancellation Request (rate limited)
+router.post('/cancel', lookupLimiter, appointmentController.cancelAppointment);
 
 module.exports = router;

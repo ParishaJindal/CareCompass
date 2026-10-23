@@ -419,6 +419,15 @@
               </div>
 
               <!-- Notice & Cancellation Rules -->
+              ${appt.bookingStatus === 'pending_confirmation' ? `
+                <div class="arc-pending-banner" style="background: #fffbeb; border: 1.5px solid #f59e0b; border-radius: 8px; padding: 14px 16px; margin: 16px 0; color: #92400e;">
+                  <strong>⏳ Inquiry Recorded on CareCompass (Not Confirmed by Hospital)</strong>
+                  <p style="margin: 6px 0 0; font-size: 0.85rem; color: #78350f;">
+                    This facility does not currently have automated scheduling integration. The hospital has <strong>not yet received or confirmed</strong> this appointment. Please contact the hospital directly using the phone button above or present this reference code at their OPD registration counter.
+                  </p>
+                </div>
+              ` : ''}
+
               ${appt.bookingStatus === 'confirmed' ? `
                 <div class="arc-cancellation-info">
                   ${appt.isCancellable ? `

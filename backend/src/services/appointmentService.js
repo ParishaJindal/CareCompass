@@ -14,7 +14,7 @@ const db = require('../db/supabase');
  */
 function generateBookingReference() {
   const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-  const randomSuffix = crypto.randomInt(1000, 9999).toString();
+  const randomSuffix = crypto.randomBytes(3).toString('hex').toUpperCase();
   return `CC-${dateStr}-${randomSuffix}`;
 }
 
@@ -47,8 +47,8 @@ function getPublicConfig() {
     companyName: 'CareCompass Healthcare',
     themeColor: '#0d9488',
     serviceFee: 0.00,
-    supportEmail: process.env.SUPPORT_EMAIL || 'parishajindal17@gmail.com',
-    supportPhone: process.env.SUPPORT_PHONE || '112 / 108 (National Emergency)'
+    supportEmail: process.env.SUPPORT_EMAIL || null,
+    supportPhone: process.env.SUPPORT_PHONE || null
   };
 }
 
@@ -447,9 +447,9 @@ async function createAppointmentRequest({
     patientName: appointment.patient_name,
     patientPhone: cleanPhone,
     patientEmail: appointment.patient_email,
-    hospitalConfirmationStatus: 'Pending Hospital Review (Not Confirmed)',
+    hospitalConfirmationStatus: 'Inquiry Recorded on CareCompass (Not Confirmed by Hospital)',
     isConfirmed: false,
-    paymentInstructions: 'Your appointment request has been submitted to the hospital desk. Please note: This appointment has NOT yet been confirmed by the hospital. Hospital scheduling staff will contact you via telephone to confirm doctor availability and your final time slot. Consultation charges apply as per hospital tariff on arrival.'
+    paymentInstructions: 'Your appointment inquiry has been recorded on CareCompass. Please note: This facility does not currently have automated scheduling integration, so this request has NOT been received or confirmed by the hospital. Please call the hospital directly using the phone number listed or present this inquiry reference at their OPD registration counter on arrival.'
   };
 }
 
