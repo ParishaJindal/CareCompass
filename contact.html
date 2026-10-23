@@ -9,10 +9,10 @@
   <!-- Open Graph & Twitter Cards for Google / Social Previews -->
   <meta property="og:title" content="Contact & Feedback — CareCompass">
   <meta property="og:description" content="Contact CareCompass, report outdated healthcare information, or view emergency helpline numbers.">
-  <meta property="og:image" content="assets/images/logo.png">
+  <meta property="og:image" content="../assets/images/logo.png">
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:image" content="assets/images/logo.png">
+  <meta name="twitter:image" content="../assets/images/logo.png">
 
   <!-- Modern Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,16 +20,16 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   
   <!-- Favicon -->
-  <link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="assets/images/favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../assets/images/favicon-16x16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
   <link rel="icon" type="image/svg+xml" href="../favicon.svg">
   <link rel="alternate icon" href="../favicon.ico">
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/responsive.css">
-  <link rel="stylesheet" href="css/accessibility.css">
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+  <link rel="stylesheet" href="../css/accessibility.css">
 </head>
 <body>
 
@@ -48,9 +48,9 @@
   <!-- Navigation Bar -->
   <header class="main-header" role="banner">
     <div class="nav-container">
-      <a href="index.html" class="brand-wrapper" aria-label="CareCompass Home">
+      <a href="../index.html" class="brand-wrapper" aria-label="CareCompass Home">
         <div class="brand-icon-box">
-          <img src="assets/images/favicon.png" alt="CareCompass Icon" class="brand-icon-img">
+          <img src="../assets/images/favicon.png" alt="CareCompass Icon" class="brand-icon-img">
         </div>
         <div class="brand-text-group">
           <span class="brand-name" data-i18n="brandName">CareCompass</span>
@@ -70,9 +70,10 @@
       <!-- Nav Links -->
       <nav class="main-nav" id="main-nav-links" role="navigation" aria-label="Main navigation">
         <ul class="nav-links-list">
-          <li><a href="index.html" class="nav-link" data-i18n="navHome">Home</a></li>
+          <li><a href="../index.html" class="nav-link" data-i18n="navHome">Home</a></li>
           <li><a href="find-healthcare.html" class="nav-link" data-i18n="navFindCare">Find Healthcare</a></li>
-          <li><a href="index.html#how-it-works" class="nav-link" data-i18n="navHowItWorks">How It Works</a></li>
+          <li><a href="my-appointments.html" class="nav-link">My Appointments</a></li>
+          <li><a href="../index.html#how-it-works" class="nav-link" data-i18n="navHowItWorks">How It Works</a></li>
           <li><a href="about.html" class="nav-link" data-i18n="navAbout">About Us</a></li>
           <li><a href="contact.html" class="nav-link active" data-i18n="navContact">Contact</a></li>
         </ul>
@@ -112,7 +113,7 @@
     </div>
 
     <!-- Emergency Numbers Ribbon Box -->
-    <div style="background: #fef2f2; border: 1.5px solid #f87171; border-radius: 12px; padding: 20px; margin-bottom: 36px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; text-align: center;">
+    <div class="emergency-numbers-grid" style="background: #fef2f2; border: 1.5px solid #f87171; border-radius: 12px; padding: 20px; margin-bottom: 36px; display: grid; gap: 16px; text-align: center;">
       <div>
         <span style="font-size: 0.8rem; font-weight: 700; color: #991b1b; text-transform: uppercase;">Medical Ambulance</span>
         <div style="font-size: 1.4rem; font-weight: 800; color: #b91c1c;">Dial 108 / 102</div>
@@ -132,12 +133,12 @@
     </div>
 
     <!-- Official Coordinator Email Banner -->
-    <div style="background: linear-gradient(135deg, #0f2b48, #0d9488); color:#ffffff; padding: 24px 28px; border-radius: 14px; margin-bottom: 32px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; box-shadow: 0 10px 25px rgba(15,43,72,0.15);">
+    <div class="coordinator-banner" style="background: linear-gradient(135deg, #0f2b48, #0d9488); color:#ffffff; padding: 24px 28px; border-radius: 14px; margin-bottom: 32px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; box-shadow: 0 10px 25px rgba(15,43,72,0.15);">
       <div>
         <span style="background:rgba(255,255,255,0.2); font-size:0.75rem; font-weight:700; padding:3px 12px; border-radius:9999px; text-transform:uppercase; letter-spacing:0.5px;">
           Direct Queries Desk
         </span>
-        <h3 style="margin:10px 0 4px 0; font-size:1.35rem; color:#ffffff; font-weight:800;">
+        <h3 style="margin:10px 0 4px 0; font-size:1.35rem; color:#ffffff; font-weight:800; word-break:break-word;">
           parishajindal17@gmail.com
         </h3>
         <p style="margin:0; font-size:0.88rem; color:#e0f2fe; max-width:620px;">
@@ -149,7 +150,7 @@
       </a>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 32px;" class="contact-grid">
+    <div class="contact-grid">
       
       <!-- General Contact Form -->
       <section class="detail-section">
@@ -331,7 +332,7 @@
   <footer class="main-footer" role="contentinfo">
     <div class="footer-top">
       <div class="footer-brand">
-        <img src="assets/images/logo.png" alt="CareCompass Logo" class="footer-brand-logo">
+        <img src="../assets/images/logo.png" alt="CareCompass Logo" class="footer-brand-logo">
         <p>
           A smart digital healthcare navigation platform providing verified service availability, timestamp tracking, and intelligent alternative recommendations.
         </p>
@@ -340,9 +341,9 @@
       <div class="footer-col">
         <h4>Navigation</h4>
         <ul class="footer-links">
-          <li><a href="index.html">Home</a></li>
+          <li><a href="../index.html">Home</a></li>
           <li><a href="find-healthcare.html">Find Healthcare</a></li>
-          <li><a href="index.html#how-it-works">How It Works</a></li>
+          <li><a href="../index.html#how-it-works">How It Works</a></li>
           <li><a href="about.html">About Us</a></li>
           <li><a href="contact.html">Contact</a></li>
         </ul>
@@ -377,15 +378,15 @@
   </footer>
 
   <!-- Scripts -->
-<script src="js/config.js"></script>
-  <script src="js/healthcare-data.js"></script>
-  <script src="js/verification.js"></script>
-  <script src="js/recommendations.js"></script>
-  <script src="js/translations.js"></script>
-  <script src="js/accessibility.js"></script>
-  <script src="js/search.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/app.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/healthcare-data.js"></script>
+  <script src="../js/verification.js"></script>
+  <script src="../js/recommendations.js"></script>
+  <script src="../js/translations.js"></script>
+  <script src="../js/accessibility.js"></script>
+  <script src="../js/search.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/app.js"></script>
 
   <script>
     // General Contact Form Submission connected to parishajindal17@gmail.com

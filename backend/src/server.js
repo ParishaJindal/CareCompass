@@ -10,6 +10,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 
 const hospitalsRouter = require('./routes/hospitals');
+const appointmentsRouter = require('./routes/appointments');
 const healthRouter = require('./routes/health');
 const hospitalController = require('./controllers/hospitalController');
 const { apiLimiter } = require('./middleware/rateLimiter');
@@ -115,6 +116,9 @@ app.use('/api/', apiLimiter);
 
 // Hospital endpoints: /api/hospitals, /api/hospitals/search, /api/hospitals/:id
 app.use('/api/hospitals', hospitalsRouter);
+
+// Appointment & Razorpay payment endpoints: /api/appointments/*
+app.use('/api/appointments', appointmentsRouter);
 
 // Autocomplete endpoint: /api/locations?q=...
 app.get('/api/locations', hospitalController.getLocations);

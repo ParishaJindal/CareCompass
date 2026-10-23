@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Manage your CareCompass hospital appointments, check live confirmation status, view Razorpay payment receipts, and request cancellations or rescheduling.">
+  <title>My Hospital Appointments & Receipts — CareCompass</title>
+
+  <!-- Open Graph & Meta -->
+  <meta property="og:title" content="My Hospital Appointments — CareCompass">
+  <meta property="og:description" content="View confirmed hospital appointment details, receipts, and cancellation management.">
+  <meta property="og:image" content="../assets/images/logo.png">
+  <meta property="og:type" content="website">
+
+  <!-- Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../assets/images/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <link rel="alternate icon" href="../favicon.ico">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+  <link rel="stylesheet" href="../css/accessibility.css">
+</head>
+<body>
+
+  <!-- Skip link -->
+  <a href="#appointments-main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Emergency Notice Ribbon -->
+  <aside class="emergency-ribbon" id="emergency-ribbon" role="alert" aria-label="Emergency medical assistance notice">
+    <div class="emergency-ribbon-content">
+      <span class="emergency-badge">EMERGENCY SOS</span>
+      <span>In an acute medical emergency, dial 108 / 102 (Ambulance) or 112 immediately.</span>
+    </div>
+    <button type="button" class="emergency-close-btn" id="emergency-ribbon-close" aria-label="Dismiss emergency notice">&times;</button>
+  </aside>
+
+  <!-- Navigation Bar -->
+  <header class="main-header" role="banner">
+    <div class="nav-container">
+      <a href="../index.html" class="brand-wrapper" aria-label="CareCompass Home">
+        <div class="brand-icon-box">
+          <img src="../assets/images/favicon.png" alt="CareCompass Icon" class="brand-icon-img">
+        </div>
+        <div class="brand-text-group">
+          <span class="brand-name">CareCompass</span>
+          <span class="brand-tagline">Healthcare Navigation for Everyone</span>
+        </div>
+      </a>
+
+      <!-- Mobile Hamburger Button -->
+      <button type="button" class="mobile-menu-btn" id="mobile-menu-toggle" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="main-nav-links">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <!-- Nav Links -->
+      <nav class="main-nav" id="main-nav-links" role="navigation" aria-label="Main navigation">
+        <ul class="nav-links-list">
+          <li><a href="../index.html" class="nav-link">Home</a></li>
+          <li><a href="find-healthcare.html" class="nav-link">Find Healthcare</a></li>
+          <li><a href="my-appointments.html" class="nav-link active">My Appointments</a></li>
+          <li><a href="../index.html#how-it-works" class="nav-link">How It Works</a></li>
+          <li><a href="about.html" class="nav-link">About Us</a></li>
+          <li><a href="contact.html" class="nav-link">Contact</a></li>
+        </ul>
+
+        <div class="nav-actions">
+          <div class="nav-auth-container">
+            <a href="login.html" class="btn btn-outline btn-sm">Sign In</a>
+          </div>
+
+          <button type="button" class="btn btn-outline btn-sm trigger-accessibility-modal" id="nav-btn-a11y" aria-label="Open accessibility settings">
+            ♿ <span>Accessibility</span>
+          </button>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main id="appointments-main-content" class="my-appointments-page">
+    <div class="my-appointments-container">
+
+      <!-- Header Hero -->
+      <div class="appointments-hero-section">
+        <span class="badge-partner-verified">🔒 Verified Patient Portal</span>
+        <h1 class="hero-title">My Hospital Appointments</h1>
+        <p class="hero-subtitle">
+          Look up your verified booking details, check live hospital acceptance status, download payment receipts, or manage cancellations.
+        </p>
+      </div>
+
+      <!-- Secure Lookup Card -->
+      <div class="appointment-lookup-card">
+        <div class="lookup-card-header">
+          <h3>Find Your Appointment</h3>
+          <p>Enter the booking reference code provided upon payment along with your registered mobile number.</p>
+        </div>
+
+        <form id="appointment-lookup-form" class="lookup-form" novalidate>
+          <div class="lookup-fields-grid">
+            <div class="lookup-field-group">
+              <label for="lookup-reference">Booking Reference Number <span class="required-star">*</span></label>
+              <input type="text" id="lookup-reference" class="form-input" placeholder="e.g. CC-20261023-7492" required autocomplete="off" autocapitalize="characters">
+              <span class="field-hint">Found in your booking confirmation screen or receipt.</span>
+            </div>
+
+            <div class="lookup-field-group">
+              <label for="lookup-phone">Registered Mobile Number <span class="required-star">*</span></label>
+              <div class="phone-input-group">
+                <span class="country-prefix">+91</span>
+                <input type="tel" id="lookup-phone" class="form-input" placeholder="98765 43210" maxlength="10" required autocomplete="tel">
+              </div>
+              <span class="field-hint">10-digit mobile number used during booking.</span>
+            </div>
+          </div>
+
+          <!-- Stored Recent Bookings Quick Pick -->
+          <div id="recent-bookings-bar" class="recent-bookings-bar" style="display: none;">
+            <span class="rbb-title">Recent Bookings on this device:</span>
+            <div id="recent-bookings-chips" class="recent-chips-container"></div>
+          </div>
+
+          <div class="lookup-action-row">
+            <button type="submit" class="btn btn-primary btn-lookup" id="btn-submit-lookup">
+              🔍 Look Up Appointment
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Loading Indicator -->
+      <div id="lookup-loading-spinner" class="lookup-loading" style="display: none;" role="status">
+        <div class="loading-spinner-circle"></div>
+        <p>Retrieving verified booking records from hospital gateway...</p>
+      </div>
+
+      <!-- Error / Notice Box -->
+      <div id="lookup-alert-box" class="lookup-alert-box" style="display: none;" role="alert"></div>
+
+      <!-- Appointment Record Display Section -->
+      <div id="appointment-result-section" class="appointment-result-section" style="display: none;">
+        <!-- Dynamically injected appointment card -->
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Cancellation Confirmation Dialog -->
+  <div id="cancel-dialog-modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="cancel-modal-title">
+    <div class="modal-backdrop" id="cancel-modal-backdrop"></div>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="cancel-modal-title">⚠️ Confirm Appointment Cancellation</h3>
+        <button type="button" class="modal-close-btn" id="btn-close-cancel-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to cancel your appointment with <strong id="cancel-hospital-name"></strong>?</p>
+
+        <div class="booking-policy-box" style="margin: 16px 0;">
+          <p><strong>Refund Policy:</strong> If eligible, your consultation fee of <strong id="cancel-refund-amount"></strong> will be automatically refunded through Razorpay to your original payment method within 3–5 banking days.</p>
+        </div>
+
+        <div class="search-field-group">
+          <label for="cancel-reason-select">Reason for Cancellation</label>
+          <select id="cancel-reason-select" class="filter-select">
+            <option value="Patient personal rescheduling">Need to reschedule to a later date</option>
+            <option value="Resolved symptoms / Consulted elsewhere">Resolved / Consulted elsewhere</option>
+            <option value="Travel or transportation constraint">Travel or transportation constraint</option>
+            <option value="Other medical reason">Other medical reason</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" id="btn-dismiss-cancel">Keep Appointment</button>
+        <button type="button" class="btn btn-primary" id="btn-confirm-cancel" style="background: #dc2626; border-color: #dc2626;">
+          Confirm Cancellation & Refund
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="main-footer" role="contentinfo">
+    <div class="footer-container">
+      <div class="footer-col">
+        <div class="footer-brand">
+          <span class="footer-brand-name">CareCompass</span>
+        </div>
+        <p class="footer-desc">
+          Connecting patients across India with genuine hospital records, live availability audits, and authorized appointment scheduling.
+        </p>
+      </div>
+
+      <div class="footer-col">
+        <h4>Platform Navigation</h4>
+        <ul class="footer-links">
+          <li><a href="../index.html">Home</a></li>
+          <li><a href="find-healthcare.html">Find Healthcare Directory</a></li>
+          <li><a href="my-appointments.html">My Appointments</a></li>
+          <li><a href="about.html">About CareCompass</a></li>
+          <li><a href="contact.html">Contact Support</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Emergency Notice</h4>
+        <div class="footer-disclaimer-box">
+          CareCompass facilitates outpatient consultation scheduling. In life-threatening acute emergencies, call 108 / 112 immediately.
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2026 CareCompass. Developed for digital healthcare access, transparency, and accessibility.</p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="../js/config.js"></script>
+  <script src="../js/accessibility.js"></script>
+  <script>
+    (function() {
+      'use strict';
+
+      function getApiUrl(endpoint) {
+        if (window.CARECOMPASS_CONFIG && typeof window.CARECOMPASS_CONFIG.getApiUrl === 'function') {
+          return window.CARECOMPASS_CONFIG.getApiUrl(endpoint);
+        }
+        return endpoint;
+      }
+
+      let currentActiveAppointment = null;
+
+      // Elements
+      const lookupForm = document.getElementById('appointment-lookup-form');
+      const refInput = document.getElementById('lookup-reference');
+      const phoneInput = document.getElementById('lookup-phone');
+      const loadingSpinner = document.getElementById('lookup-loading-spinner');
+      const alertBox = document.getElementById('lookup-alert-box');
+      const resultSection = document.getElementById('appointment-result-section');
+      const recentBar = document.getElementById('recent-bookings-bar');
+      const recentChips = document.getElementById('recent-bookings-chips');
+
+      // Cancellation modal elements
+      const cancelModal = document.getElementById('cancel-dialog-modal');
+      const cancelHospName = document.getElementById('cancel-hospital-name');
+      const cancelRefundAmt = document.getElementById('cancel-refund-amount');
+      const cancelReasonSelect = document.getElementById('cancel-reason-select');
+      const btnCloseCancel = document.getElementById('btn-close-cancel-modal');
+      const btnDismissCancel = document.getElementById('btn-dismiss-cancel');
+      const btnConfirmCancel = document.getElementById('btn-confirm-cancel');
+      const cancelBackdrop = document.getElementById('cancel-modal-backdrop');
+
+      // Initialize from URL parameters (e.g. from booking confirmation)
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlRef = urlParams.get('ref');
+      const urlPhone = urlParams.get('phone');
+
+      if (urlRef) refInput.value = urlRef.trim();
+      if (urlPhone) phoneInput.value = urlPhone.trim();
+
+      // Render local recent bookings if available
+      loadRecentBookings();
+
+      if (urlRef && urlPhone) {
+        performLookup(urlRef, urlPhone);
+      }
+
+      // Lookup form submission
+      lookupForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const ref = (refInput.value || '').trim();
+        const phone = (phoneInput.value || '').replace(/\D/g, '');
+
+        if (!ref) {
+          showAlert('Please enter your Booking Reference Number (e.g. CC-20261023-XXXX).', 'error');
+          refInput.focus();
+          return;
+        }
+
+        if (phone.length !== 10) {
+          showAlert('Please enter a valid 10-digit registered mobile number.', 'error');
+          phoneInput.focus();
+          return;
+        }
+
+        performLookup(ref, phone);
+      });
+
+      async function performLookup(ref, phone) {
+        showAlert('', 'none');
+        loadingSpinner.style.display = 'block';
+        resultSection.style.display = 'none';
+
+        try {
+          const res = await fetch(getApiUrl('/api/appointments/lookup'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reference: ref, phone: phone })
+          });
+
+          const data = await res.json();
+          loadingSpinner.style.display = 'none';
+
+          if (!data || !data.success || !data.appointment) {
+            showAlert(data?.error || 'No appointment found with the provided details.', 'error');
+            return;
+          }
+
+          currentActiveAppointment = data.appointment;
+          renderAppointmentCard(data.appointment);
+        } catch (err) {
+          loadingSpinner.style.display = 'none';
+          showAlert(`Lookup failed: ${err.message}. Please check your connection.`, 'error');
+        }
+      }
+
+      function renderAppointmentCard(appt) {
+        resultSection.style.display = 'block';
+
+        let statusClass = 'status-confirmed';
+        let statusLabel = 'CONFIRMED';
+        if (appt.bookingStatus === 'cancelled') {
+          statusClass = 'status-cancelled';
+          statusLabel = 'CANCELLED';
+        } else if (appt.bookingStatus === 'completed') {
+          statusClass = 'status-completed';
+          statusLabel = 'COMPLETED';
+        } else if (appt.paymentStatus === 'pending') {
+          statusClass = 'status-pending';
+          statusLabel = 'PAYMENT PENDING';
+        }
+
+        resultSection.innerHTML = `
+          <div class="appointment-record-card">
+            
+            <!-- Top Status Bar -->
+            <div class="arc-header">
+              <div class="arc-ref-group">
+                <span class="arc-ref-label">Booking Reference:</span>
+                <span class="arc-ref-value">${escapeHtml(appt.bookingReference)}</span>
+              </div>
+              <span class="arc-status-badge ${statusClass}">
+                ● ${statusLabel}
+              </span>
+            </div>
+
+            <!-- Main Hospital Info -->
+            <div class="arc-body">
+              <div class="arc-hosp-title-row">
+                <div>
+                  <h2 class="arc-hospital-name">${escapeHtml(appt.hospitalName)}</h2>
+                  <p class="arc-hospital-addr">📍 ${escapeHtml(appt.hospitalAddress || 'Hospital Main Campus')}</p>
+                </div>
+                ${appt.hospitalPhone ? `
+                  <a href="tel:${escapeHtml(appt.hospitalPhone)}" class="btn btn-outline btn-sm">
+                    📞 Call Hospital: ${escapeHtml(appt.hospitalPhone)}
+                  </a>
+                ` : ''}
+              </div>
+
+              <!-- Details Grid -->
+              <div class="arc-details-grid">
+                <div class="arc-col">
+                  <span class="arc-col-lbl">Department / Specialty</span>
+                  <strong class="arc-col-val">${escapeHtml(appt.departmentName)}</strong>
+                  ${appt.doctorName ? `<span class="arc-doctor-name">Doctor: Dr. ${escapeHtml(appt.doctorName)}</span>` : ''}
+                </div>
+
+                <div class="arc-col">
+                  <span class="arc-col-lbl">Scheduled Date & Time</span>
+                  <strong class="arc-col-val">📅 ${formatReadableDate(appt.appointmentDate)}</strong>
+                  <span class="arc-time-slot">⏰ ${appt.startTime} - ${appt.endTime}</span>
+                </div>
+
+                <div class="arc-col">
+                  <span class="arc-col-lbl">Patient Details</span>
+                  <strong class="arc-col-val">${escapeHtml(appt.patientName)}</strong>
+                  <span class="arc-patient-phone">+91 ${escapeHtml(appt.patientPhone)}</span>
+                </div>
+
+                <div class="arc-col">
+                  <span class="arc-col-lbl">Payment Status</span>
+                  <strong class="arc-col-val"><span class="badge-paid">PAID ₹${appt.totalAmount.toFixed(2)}</span></strong>
+                  <span class="arc-pay-method">via Razorpay ${appt.paymentId ? `(#${appt.paymentId.slice(-8)})` : ''}</span>
+                </div>
+              </div>
+
+              <!-- Transparent Price Receipt -->
+              <div class="arc-receipt-box">
+                <h4>Payment Receipt Summary</h4>
+                <div class="receipt-row">
+                  <span>Hospital Outpatient Consultation Fee</span>
+                  <span>₹${appt.consultationFee.toFixed(2)}</span>
+                </div>
+                <div class="receipt-row">
+                  <span>CareCompass Platform Convenience Fee</span>
+                  <span>₹0.00 (Zero markup)</span>
+                </div>
+                <div class="receipt-divider"></div>
+                <div class="receipt-row total-row">
+                  <strong>Total Paid</strong>
+                  <strong>₹${appt.totalAmount.toFixed(2)}</strong>
+                </div>
+              </div>
+
+              <!-- Notice & Cancellation Rules -->
+              ${appt.bookingStatus === 'confirmed' ? `
+                <div class="arc-cancellation-info">
+                  ${appt.isCancellable ? `
+                    <p class="cancellation-eligible-note">
+                      ✓ Free cancellation is available until 4 hours before the appointment.
+                    </p>
+                  ` : `
+                    <p class="cancellation-ineligible-note">
+                      ℹ️ Cancellation window has closed (appointments can only be cancelled at least 4 hours in advance).
+                    </p>
+                  `}
+                </div>
+              ` : ''}
+
+              ${appt.bookingStatus === 'cancelled' ? `
+                <div class="arc-cancelled-banner">
+                  <strong>This appointment has been cancelled.</strong>
+                  <p>Payment Status: <strong>${appt.paymentStatus.toUpperCase()}</strong>. Any eligible refund is credited via Razorpay.</p>
+                </div>
+              ` : ''}
+
+              <!-- Actions Bar -->
+              <div class="arc-actions-bar">
+                <button type="button" class="btn btn-outline" id="btn-print-appt-receipt">
+                  🖨️ Print / Save Receipt
+                </button>
+
+                ${appt.isCancellable ? `
+                  <button type="button" class="btn btn-danger" id="btn-open-cancel-dialog">
+                    Cancel Appointment
+                  </button>
+                ` : ''}
+
+                <a href="find-healthcare.html" class="btn btn-secondary">
+                  Book Another Appointment
+                </a>
+              </div>
+
+            </div>
+
+          </div>
+        `;
+
+        // Attach action handlers
+        resultSection.querySelector('#btn-print-appt-receipt')?.addEventListener('click', () => {
+          window.print();
+        });
+
+        resultSection.querySelector('#btn-open-cancel-dialog')?.addEventListener('click', openCancellationModal);
+      }
+
+      function openCancellationModal() {
+        if (!currentActiveAppointment) return;
+        cancelHospName.textContent = currentActiveAppointment.hospitalName;
+        cancelRefundAmt.textContent = `₹${currentActiveAppointment.totalAmount.toFixed(2)}`;
+        cancelModal.classList.add('active');
+        cancelModal.setAttribute('aria-hidden', 'false');
+      }
+
+      function closeCancellationModal() {
+        cancelModal.classList.remove('active');
+        cancelModal.setAttribute('aria-hidden', 'true');
+      }
+
+      btnCloseCancel?.addEventListener('click', closeCancellationModal);
+      btnDismissCancel?.addEventListener('click', closeCancellationModal);
+      cancelBackdrop?.addEventListener('click', closeCancellationModal);
+
+      btnConfirmCancel?.addEventListener('click', async function() {
+        if (!currentActiveAppointment) return;
+
+        btnConfirmCancel.setAttribute('disabled', 'true');
+        btnConfirmCancel.textContent = 'Processing Cancellation & Refund...';
+
+        try {
+          const reason = cancelReasonSelect.value;
+          const res = await fetch(getApiUrl('/api/appointments/cancel'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              reference: currentActiveAppointment.bookingReference,
+              phone: currentActiveAppointment.patientPhone,
+              reason: reason
+            })
+          });
+
+          const data = await res.json();
+          closeCancellationModal();
+          btnConfirmCancel.removeAttribute('disabled');
+          btnConfirmCancel.textContent = 'Confirm Cancellation & Refund';
+
+          if (!data || !data.success) {
+            alert(data?.error || 'Cancellation request failed.');
+            return;
+          }
+
+          alert('Your appointment has been cancelled successfully. Your refund has been processed.');
+          performLookup(currentActiveAppointment.bookingReference, currentActiveAppointment.patientPhone);
+        } catch (err) {
+          closeCancellationModal();
+          btnConfirmCancel.removeAttribute('disabled');
+          btnConfirmCancel.textContent = 'Confirm Cancellation & Refund';
+          alert(`Cancellation error: ${err.message}`);
+        }
+      });
+
+      function loadRecentBookings() {
+        try {
+          const stored = JSON.parse(localStorage.getItem('carecompass_user_bookings') || '[]');
+          if (Array.isArray(stored) && stored.length > 0) {
+            recentBar.style.display = 'block';
+            recentChips.innerHTML = stored.map(item => `
+              <button type="button" class="recent-chip-btn" data-ref="${escapeHtml(item.reference)}" data-phone="${escapeHtml(item.phone)}">
+                🔖 ${escapeHtml(item.reference)}
+              </button>
+            `).join('');
+
+            recentChips.querySelectorAll('.recent-chip-btn').forEach(btn => {
+              btn.addEventListener('click', () => {
+                const ref = btn.getAttribute('data-ref');
+                const phone = btn.getAttribute('data-phone');
+                refInput.value = ref;
+                phoneInput.value = phone;
+                performLookup(ref, phone);
+              });
+            });
+          }
+        } catch (e) {}
+      }
+
+      function showAlert(msg, type = 'error') {
+        if (!msg) {
+          alertBox.style.display = 'none';
+          alertBox.textContent = '';
+          return;
+        }
+        alertBox.style.display = 'block';
+        alertBox.className = `lookup-alert-box alert-${type}`;
+        alertBox.textContent = msg;
+      }
+
+      function formatReadableDate(dateStr) {
+        if (!dateStr) return '';
+        try {
+          const d = new Date(`${dateStr}T00:00:00`);
+          return d.toLocaleDateString('en-IN', {
+            weekday: 'short',
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric'
+          });
+        } catch (e) {
+          return dateStr;
+        }
+      }
+
+      function escapeHtml(str) {
+        if (typeof str !== 'string') return str || '';
+        return str
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+    })();
+  </script>
+</body>
+</html>

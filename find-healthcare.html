@@ -9,10 +9,10 @@
   <!-- Open Graph & Twitter Cards for Google / Social Previews -->
   <meta property="og:title" content="Find Healthcare — Directory & Service Verification | CareCompass">
   <meta property="og:description" content="Search verified healthcare facilities, check medical service availability, and get smart alternative recommendations with CareCompass.">
-  <meta property="og:image" content="assets/images/logo.png">
+  <meta property="og:image" content="../assets/images/logo.png">
   <meta property="og:type" content="website">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:image" content="assets/images/logo.png">
+  <meta name="twitter:image" content="../assets/images/logo.png">
 
   <!-- Modern Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,8 +20,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   
   <!-- Favicon -->
-  <link rel="icon" type="image/png" sizes="32x32" href="assets/images/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="assets/images/favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../assets/images/favicon-16x16.png">
   <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
   <link rel="icon" type="image/svg+xml" href="../favicon.svg">
   <link rel="alternate icon" href="../favicon.ico">
@@ -29,9 +29,9 @@
   <!-- Stylesheets -->
   <!-- Leaflet CSS for Pan-India Interactive Map -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-  <link rel="stylesheet" href="css/style.css?v=20261017c">
-  <link rel="stylesheet" href="css/responsive.css?v=20261017c">
-  <link rel="stylesheet" href="css/accessibility.css?v=20261017c">
+  <link rel="stylesheet" href="../css/style.css?v=20261017c">
+  <link rel="stylesheet" href="../css/responsive.css?v=20261017c">
+  <link rel="stylesheet" href="../css/accessibility.css?v=20261017c">
 </head>
 <body>
 
@@ -50,9 +50,9 @@
   <!-- Navigation Bar -->
   <header class="main-header" role="banner">
     <div class="nav-container">
-      <a href="index.html" class="brand-wrapper" aria-label="CareCompass Home">
+      <a href="../index.html" class="brand-wrapper" aria-label="CareCompass Home">
         <div class="brand-icon-box">
-          <img src="assets/images/favicon.png" alt="CareCompass Icon" class="brand-icon-img">
+          <img src="../assets/images/favicon.png" alt="CareCompass Icon" class="brand-icon-img">
         </div>
         <div class="brand-text-group">
           <span class="brand-name" data-i18n="brandName">CareCompass</span>
@@ -72,9 +72,10 @@
       <!-- Nav Links -->
       <nav class="main-nav" id="main-nav-links" role="navigation" aria-label="Main navigation">
         <ul class="nav-links-list">
-          <li><a href="index.html" class="nav-link" data-i18n="navHome">Home</a></li>
+          <li><a href="../index.html" class="nav-link" data-i18n="navHome">Home</a></li>
           <li><a href="find-healthcare.html" class="nav-link active" data-i18n="navFindCare">Find Healthcare</a></li>
-          <li><a href="index.html#how-it-works" class="nav-link" data-i18n="navHowItWorks">How It Works</a></li>
+          <li><a href="my-appointments.html" class="nav-link">My Appointments</a></li>
+          <li><a href="../index.html#how-it-works" class="nav-link" data-i18n="navHowItWorks">How It Works</a></li>
           <li><a href="about.html" class="nav-link" data-i18n="navAbout">About Us</a></li>
           <li><a href="contact.html" class="nav-link" data-i18n="navContact">Contact</a></li>
         </ul>
@@ -119,7 +120,7 @@
 
         <!-- Quick Demo Pill & Search Form -->
         <form id="directory-search-form">
-          <div class="search-form-row directory-compact-bar" style="grid-template-columns: 1.5fr 1.2fr auto auto; gap: 12px; align-items: flex-end;">
+          <div class="search-form-row directory-compact-bar">
             
             <div class="search-field-group">
               <label for="search-service" style="font-size:0.76rem; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; color:#475569; margin-bottom:3px;">Medical Service or Hospital Name</label>
@@ -196,14 +197,21 @@
     <!-- Two-Column Layout: Sidebar Filters + Results / Map -->
     <div class="directory-layout">
 
-      <!-- Left Sidebar: Comprehensive Filter Panel -->
-      <aside class="directory-filter-panel" aria-label="Directory search filters">
-        <div class="filter-panel-title">
-          <span>Refine Results</span>
-          <button type="button" class="btn-link" id="btn-reset-filters" style="font-size:0.78rem;">
-            Reset All
-          </button>
+      <!-- Left Sidebar: Comprehensive Filter Panel (Collapsible Drawer on Mobile) -->
+      <aside class="directory-filter-panel" id="directory-filter-drawer" aria-label="Directory search filters">
+        <!-- Mobile Drawer Header (Visible on Mobile) -->
+        <div class="mobile-filter-drawer-header">
+          <h3><span>⚡</span> Refine & Filter Facilities</h3>
+          <button type="button" class="mobile-filter-close-btn" id="mobile-filter-close-btn" aria-label="Close filters">&times;</button>
         </div>
+
+        <div class="mobile-filter-drawer-body">
+          <div class="filter-panel-title">
+            <span>Refine Results</span>
+            <button type="button" class="btn-link" id="btn-reset-filters" style="font-size:0.78rem;">
+              Reset All
+            </button>
+          </div>
 
         <!-- Prominent Top Apply Filters Button -->
         <button type="button" class="btn btn-primary btn-apply-filters" id="btn-apply-filters-top" style="width:100%; margin: 4px 0 14px 0; padding: 10px 14px; font-weight: 700; font-size: 0.88rem; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 8px; box-shadow: 0 2px 6px rgba(13,148,136,0.25); background: #0d9488; color: #ffffff; border: none; cursor: pointer;">
@@ -353,10 +361,26 @@
             ↺ Reset Filters
           </button>
         </div>
-      </aside>
+      </div><!-- End .mobile-filter-drawer-body -->
 
-      <!-- Right Main Content: Results & Interactive Map -->
-      <section class="directory-results-container" aria-label="Healthcare facilities results">
+      <!-- Mobile Drawer Fixed Bottom Bar (Visible on Mobile) -->
+      <div class="mobile-filter-drawer-footer">
+        <button type="button" class="btn btn-outline" id="btn-drawer-reset">Reset All</button>
+        <button type="button" class="btn btn-primary" id="btn-drawer-apply">Apply Filters</button>
+      </div>
+    </aside>
+
+    <!-- Right Main Content: Results & Interactive Map -->
+    <section class="directory-results-container" aria-label="Healthcare facilities results">
+      
+      <!-- Mobile Filter Trigger Button (Visible <= 768px) -->
+      <button type="button" class="mobile-filter-trigger-btn" id="mobile-filter-trigger" aria-label="Open filter options">
+        <div class="filter-btn-left">
+          <span>⚡ Filters & Refinements</span>
+          <span class="mobile-filter-count-badge" id="mobile-filter-count-badge" style="display:none;">0</span>
+        </div>
+        <span style="font-size:0.85rem; color:#0d9488;">Adjust &rarr;</span>
+      </button>
         
         <!-- Controls Bar: Results count, Sorting, View Mode toggles -->
         <div class="results-content-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid #f1f5f9; flex-wrap:wrap; gap:10px;">
@@ -585,7 +609,7 @@
   <footer class="main-footer" role="contentinfo">
     <div class="footer-top">
       <div class="footer-brand">
-        <img src="assets/images/logo.png" alt="CareCompass Logo" class="footer-brand-logo">
+        <img src="../assets/images/logo.png" alt="CareCompass Logo" class="footer-brand-logo">
         <p>
           A smart digital healthcare navigation platform providing verified service availability, timestamp tracking, and intelligent alternative recommendations.
         </p>
@@ -594,9 +618,9 @@
       <div class="footer-col">
         <h4>Navigation</h4>
         <ul class="footer-links">
-          <li><a href="index.html">Home</a></li>
+          <li><a href="../index.html">Home</a></li>
           <li><a href="find-healthcare.html">Find Healthcare</a></li>
-          <li><a href="index.html#how-it-works">How It Works</a></li>
+          <li><a href="../index.html#how-it-works">How It Works</a></li>
           <li><a href="about.html">About Us</a></li>
           <li><a href="contact.html">Contact</a></li>
         </ul>
@@ -633,14 +657,15 @@
   <!-- Scripts -->
   <!-- Leaflet JS for Pan-India Map -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-<script src="js/config.js"></script>
-  <script src="js/healthcare-data.js"></script>
-  <script src="js/verification.js"></script>
-  <script src="js/recommendations.js"></script>
-  <script src="js/translations.js"></script>
-  <script src="js/accessibility.js"></script>
-  <script src="js/search.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/app.js?v=20261017c"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/healthcare-data.js"></script>
+  <script src="../js/verification.js"></script>
+  <script src="../js/recommendations.js"></script>
+  <script src="../js/translations.js"></script>
+  <script src="../js/accessibility.js"></script>
+  <script src="../js/search.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/booking.js"></script>
+  <script src="../js/app.js?v=20261017c"></script>
 </body>
 </html>

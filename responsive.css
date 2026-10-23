@@ -2,8 +2,9 @@
  * CareCompass - Healthcare Navigation for Everyone
  * 
  * responsive.css
- * Mobile-first responsive breakpoints, mobile navigation menu,
- * stacked filter drawers, and touch-target optimizations.
+ * Comprehensive mobile-first responsive stylesheets, mobile drawer navigation,
+ * touch-target optimizations (>=44px), zero horizontal overflow, fluid clamp() typography,
+ * and high-performance native-feel responsive components.
  */
 
 /* ========================================================
@@ -30,13 +31,13 @@
 
   .directory-layout {
     grid-template-columns: 240px 1fr;
-    gap: 24px;
+    gap: 20px;
     padding: 0 20px;
   }
 
   .directory-split-view {
     grid-template-columns: 1.15fr 0.85fr;
-    gap: 20px;
+    gap: 18px;
   }
 }
 
@@ -45,7 +46,7 @@
    ======================================================== */
 @media (max-width: 1080px) {
   .hero-headline {
-    font-size: 2.35rem;
+    font-size: clamp(2rem, 3.5vw, 2.5rem);
   }
 
   .directory-split-view {
@@ -53,14 +54,14 @@
   }
 
   .map-column {
-    height: 420px;
+    height: 440px;
     position: relative;
     top: 0;
   }
 
   .steps-grid, .trust-grid {
     grid-template-columns: 1fr;
-    gap: 24px;
+    gap: 20px;
   }
 
   .footer-top {
@@ -74,275 +75,1067 @@
 }
 
 /* ========================================================
-   MOBILE BREAKPOINT (<= 768px)
+   PRIMARY MOBILE & TABLET PORTRAIT BREAKPOINT (<= 768px)
    ======================================================== */
 @media (max-width: 768px) {
+
+  /* 1. Global Touch, Scroll & iOS Zoom Prevention */
+  html, body {
+    overflow-x: hidden !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: auto;
+  }
+
+  /* Prevent iOS automatic zoom on text inputs: must be 16px */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="number"],
+  select,
+  textarea,
+  .form-input,
+  .filter-select {
+    font-size: 16px !important;
+    min-height: 44px;
+  }
+
+  /* Button text wrapping & 44px minimum touch targets */
+  .btn {
+    white-space: normal !important;
+    word-break: break-word;
+    text-align: center;
+    min-height: 44px;
+    padding: 10px 16px;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* 2. Mobile Header & Navigation Drawer */
+  .main-header {
+    position: sticky;
+    top: 0;
+    z-index: 999;
+  }
+
   .nav-container {
     padding: 10px 16px;
   }
 
-  .mobile-menu-btn {
-    display: flex;
+  .brand-icon-box {
+    width: 36px;
+    height: 36px;
   }
 
-  /* Mobile Navigation Drawer */
+  .brand-name {
+    font-size: 1.15rem;
+  }
+
+  .mobile-menu-btn {
+    display: flex !important;
+  }
+
+  /* Mobile Dropdown Drawer */
   .main-nav {
     display: none;
-    position: absolute;
-    top: 100%;
+    position: fixed;
+    top: 60px;
     left: 0;
     right: 0;
+    bottom: 0;
     background: #ffffff;
-    border-bottom: 2px solid var(--border-color);
-    box-shadow: var(--shadow-lg);
-    padding: 20px;
+    box-shadow: 0 16px 36px rgba(15, 43, 72, 0.2);
+    padding: 20px 18px 40px;
     flex-direction: column;
     align-items: stretch;
     gap: 16px;
     z-index: 9999;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    max-height: calc(100dvh - 60px);
+    border-bottom: 2px solid var(--border-color);
   }
 
   .main-nav.mobile-open {
-    display: flex;
+    display: flex !important;
+    animation: fadeInDown 0.22s ease-out;
+  }
+
+  @keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   .nav-links-list {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 14px;
+    align-items: stretch;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .nav-links-list li {
     width: 100%;
   }
 
   .nav-link {
-    font-size: 1.05rem;
-    padding: 8px 0;
+    font-size: 1.02rem;
+    font-weight: 600;
+    padding: 12px 14px;
     width: 100%;
+    border-radius: var(--radius-md);
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    transition: background 0.15s ease;
+  }
+
+  /* Remove desktop fixed-position underline glitch that overlaps next links */
+  .nav-link.active::after {
+    display: none !important;
+  }
+
+  .nav-link.active {
+    background: rgba(13, 148, 136, 0.1) !important;
+    color: var(--color-secondary) !important;
+    font-weight: 700;
+  }
+
+  .nav-link:hover {
+    background: #f1f5f9;
   }
 
   .nav-actions {
     flex-direction: column;
     align-items: stretch;
     width: 100%;
-    margin-top: 8px;
+    margin-top: 10px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color);
+    gap: 12px;
   }
 
   .nav-actions .btn {
     width: 100%;
+    min-height: 44px;
+    font-size: 0.95rem;
   }
 
   .lang-switcher {
-    justify-content: center;
-    margin-bottom: 8px;
+    width: 100%;
+    justify-content: stretch;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
   }
 
-  /* Hero Section Mobile */
+  .lang-switch-btn {
+    text-align: center;
+    padding: 10px 0;
+    font-size: 0.9rem;
+  }
+
+  /* Emergency Ribbon Mobile */
+  .emergency-ribbon {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+
+  .emergency-ribbon-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding-right: 28px;
+    margin: 0;
+  }
+
+  /* 3. Homepage Mobile Styling */
   .hero-section {
-    padding: 36px 16px;
+    padding: 28px 16px 36px;
+  }
+
+  .hero-container {
+    padding: 0;
   }
 
   .hero-headline {
-    font-size: 1.75rem;
+    font-size: clamp(1.65rem, 5.5vw, 2.3rem);
+    line-height: 1.25;
+    margin-bottom: 12px;
   }
 
   .hero-subhead {
-    font-size: 1rem;
-    margin-bottom: 24px;
+    font-size: 0.96rem;
+    margin-bottom: 20px;
+    line-height: 1.55;
   }
 
   .search-card-hero {
-    padding: 18px;
+    padding: 16px 14px;
+    border-radius: var(--radius-lg);
   }
 
   .search-form-row {
-    grid-template-columns: 1fr;
-    gap: 14px;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
   }
 
   .search-card-hero .btn-primary {
     width: 100%;
+    min-height: 48px;
   }
 
   .hero-search-footer {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .hero-search-footer .btn-use-location {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
   }
 
   .demo-scenario-callout {
     flex-direction: column;
     align-items: stretch;
+    padding: 18px 16px;
+    gap: 14px;
+    margin-top: 24px;
   }
 
   .demo-scenario-callout .btn {
     width: 100%;
-  }
-
-  /* Directory Layout Mobile */
-  .directory-layout {
-    grid-template-columns: 1fr;
-    margin: 16px auto;
-    padding: 0 16px;
-  }
-
-  .directory-filter-panel {
-    position: relative;
-    top: 0;
-    height: auto;
-    max-height: 400px;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    overscroll-behavior-y: contain;
-  }
-
-  #directory-results-column {
-    height: auto;
-    max-height: none;
-    overflow-y: visible;
-  }
-
-  .results-content-header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .view-mode-toggles {
-    justify-content: center;
-  }
-
-  .alt-body {
-    grid-template-columns: 1fr;
-  }
-
-  .alt-actions {
-    min-width: unset;
-  }
-
-  .facility-card {
-    padding: 18px;
-  }
-
-  .card-header {
-    flex-direction: column;
-    gap: 10px;
-  }
-
-  .card-actions-bar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .card-actions-bar .contact-links,
-  .card-actions-bar .nav-links {
-    width: 100%;
-  }
-
-  .card-actions-bar .btn {
-    width: 100%;
-  }
-
-  .detail-header-card {
-    flex-direction: column;
-    align-items: stretch;
-    padding: 20px;
-  }
-
-  .dh-actions {
-    width: 100%;
-  }
-
-  .dh-actions .btn {
-    width: 100%;
-  }
-
-  .footer-top {
-    grid-template-columns: 1fr;
-    gap: 28px;
-    padding: 40px 16px 24px;
-  }
-}
-
-/* ========================================================
-   SMALL MOBILE BREAKPOINT (<= 480px)
-   ======================================================== */
-@media (max-width: 480px) {
-  html {
-    font-size: 15px;
-  }
-
-  .btn {
-    min-height: 44px; /* Accessible Touch Target */
-  }
-
-  .hero-headline {
-    font-size: 1.55rem;
-  }
-
-  .category-card {
-    padding: 16px;
+    min-height: 44px;
   }
 
   .categories-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .category-card {
+    padding: 14px 12px;
+  }
+
+  .category-card h3 {
+    font-size: 0.95rem;
+  }
+
+  .category-card p {
+    font-size: 0.78rem;
+  }
+
+  /* 4. Find Healthcare Directory Page — CRITICAL */
+  
+  /* Compact Search Bar Stacking */
+  .directory-compact-bar,
+  .search-form-row.directory-compact-bar {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    align-items: stretch !important;
+  }
+
+  .directory-compact-bar .search-field-group {
+    width: 100% !important;
+  }
+
+  .directory-compact-bar .btn {
+    width: 100% !important;
+    min-height: 44px !important;
+  }
+
+  .autocomplete-dropdown {
+    width: 100% !important;
+    max-width: 100% !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 10002;
+  }
+
+  /* Quick Zones & GPS utility row */
+  .quick-city-bar {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    margin-top: 10px !important;
+    padding-top: 10px !important;
+  }
+
+  .quick-city-bar > div:first-child {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+    padding-bottom: 4px !important;
+    scrollbar-width: none;
+  }
+
+  .quick-city-bar > div:first-child::-webkit-scrollbar {
+    display: none;
+  }
+
+  .quick-city-bar > div:last-child {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    width: 100% !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Directory Main Grid Container */
+  .directory-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: 1fr !important;
+    margin: 12px auto !important;
+    padding: 0 14px !important;
+    gap: 12px !important;
+  }
+
+  /* Mobile Filters Trigger Button */
+  .mobile-filter-trigger-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 12px 16px;
+    background: #ffffff;
+    border: 1.5px solid var(--color-secondary);
+    border-radius: var(--radius-md);
+    color: var(--color-primary);
+    font-weight: 700;
+    font-size: 0.95rem;
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    min-height: 48px;
+    margin-bottom: 8px;
+    transition: background 0.15s ease;
+  }
+
+  .mobile-filter-trigger-btn:hover {
+    background: #f0fdfa;
+  }
+
+  .mobile-filter-trigger-btn .filter-btn-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .mobile-filter-count-badge {
+    background: var(--color-secondary);
+    color: #ffffff;
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-weight: 800;
+  }
+
+  /* Mobile Filter Collapsible Drawer / Sheet */
+  .directory-filter-panel {
+    display: none;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-height: 100dvh !important;
+    min-height: 100dvh !important;
+    background: #ffffff !important;
+    z-index: 10005 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    overscroll-behavior: auto !important;
+  }
+
+  .directory-filter-panel.drawer-open {
+    display: flex !important;
+    animation: drawerSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes drawerSlideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  .mobile-filter-drawer-header {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: #f8fafc;
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    flex-shrink: 0;
+  }
+
+  .mobile-filter-drawer-header h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    color: var(--color-primary);
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .mobile-filter-close-btn {
+    background: #e2e8f0;
+    border: none;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    color: var(--color-primary);
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .mobile-filter-drawer-body {
+    flex: 1;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: 16px 20px 100px;
+  }
+
+  .mobile-filter-drawer-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    padding: 14px 20px;
+    border-top: 1px solid var(--border-color);
+    box-shadow: 0 -4px 16px rgba(0,0,0,0.08);
+    display: flex;
     gap: 12px;
+    z-index: 20;
+  }
+
+  .mobile-filter-drawer-footer .btn {
+    flex: 1;
+    min-height: 48px;
+  }
+
+  /* Results Column — Free Un-trapped Vertical Touch Scrolling */
+  #directory-results-column {
+    height: auto !important;
+    max-height: none !important;
+    min-height: unset !important;
+    overflow-y: visible !important;
+    overscroll-behavior: auto !important;
+    padding-right: 0 !important;
+  }
+
+  .results-content-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    margin-bottom: 14px !important;
+  }
+
+  .results-content-header > div:last-child {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  .results-content-header .view-mode-toggles {
+    display: flex !important;
+    width: 100% !important;
+  }
+
+  /* On mobile phones, hide 'Split View' button — user toggles cleanly between List and Map! */
+  #btn-view-split {
+    display: none !important;
+  }
+
+  .view-toggle-btn {
+    flex: 1 !important;
+    text-align: center !important;
+    padding: 10px 8px !important;
+    font-size: 0.88rem !important;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Mobile Split View behavior */
+  .directory-split-view {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+
+  /* When mobile is in Map Only mode */
+  .directory-split-view.view-mode-map #directory-results-column {
+    display: none !important;
+  }
+
+  .directory-split-view.view-mode-map #directory-map-column {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  /* When mobile is in List Only mode (default on mobile) */
+  .directory-split-view.view-mode-list #directory-map-column,
+  .directory-split-view:not(.view-mode-map) #directory-map-column {
+    display: none !important;
+  }
+
+  .directory-split-view.view-mode-list #directory-results-column,
+  .directory-split-view:not(.view-mode-map) #directory-results-column {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  /* Dedicated Map Column when Map view is toggled */
+  #directory-map-column {
+    height: auto !important;
+    max-height: none !important;
+    min-height: unset !important;
+    position: static !important;
+    width: 100% !important;
+  }
+
+  #simulated-map-canvas {
+    height: calc(100dvh - 260px) !important;
+    min-height: 380px !important;
+    width: 100% !important;
+  }
+
+  /* 5. Hospital Cards on Mobile */
+  .facility-card {
+    padding: 16px !important;
+    border-radius: var(--radius-lg) !important;
+    margin-bottom: 14px !important;
+    box-sizing: border-box;
+  }
+
+  .card-top-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+
+  .card-tags-group {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    width: 100% !important;
+  }
+
+  .facility-name {
+    font-size: 1.12rem !important;
+    line-height: 1.35 !important;
+    overflow-wrap: break-word !important;
+    word-break: break-word !important;
+    hyphens: auto;
+  }
+
+  .facility-address {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 4px !important;
+    font-size: 0.84rem !important;
+    line-height: 1.45 !important;
+  }
+
+  .facility-services-strip {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    margin-top: 10px !important;
+  }
+
+  .service-verification-banner.compact {
+    padding: 10px 12px !important;
+  }
+
+  .card-actions-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    margin-top: 12px !important;
+    width: 100% !important;
+  }
+
+  .card-actions-bar .contact-links {
+    width: 100% !important;
+  }
+
+  .facility-phone-link {
+    display: inline-flex !important;
+    align-items: center !important;
+    min-height: 44px !important;
+    font-size: 0.9rem !important;
+    font-weight: 700 !important;
+    width: 100% !important;
+    word-break: break-word;
+  }
+
+  .card-actions-bar .nav-links {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+
+  .card-actions-bar .nav-links .btn {
+    width: 100% !important;
+    min-height: 44px !important;
+    font-size: 0.86rem !important;
+    padding: 10px 6px !important;
+  }
+
+  .facility-card-footer-info {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+    padding-top: 10px !important;
+  }
+
+  /* Pagination Bar on Mobile */
+  .pagination-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    padding: 16px 12px !important;
+  }
+
+  .pagination-bar > div {
+    justify-content: center !important;
+    width: 100% !important;
+  }
+
+  .pagination-bar .btn {
+    flex: 1 !important;
+    min-height: 44px !important;
+  }
+
+  /* 6. Facility Details Page Mobile Styling */
+  #facility-detail-content {
+    max-width: 100% !important;
+    padding: 0 16px !important;
+    margin: 16px auto 32px !important;
+  }
+
+  .detail-header-card {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    padding: 18px 14px !important;
+    gap: 16px !important;
+    border-radius: var(--radius-lg) !important;
+  }
+
+  .dh-title {
+    font-size: clamp(1.4rem, 4.5vw, 1.85rem) !important;
+    line-height: 1.3 !important;
+    overflow-wrap: break-word !important;
+    word-break: break-word !important;
+  }
+
+  .dh-address {
+    font-size: 0.88rem !important;
+    line-height: 1.5 !important;
+    overflow-wrap: break-word !important;
+  }
+
+  .dh-actions {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  .dh-actions .btn {
+    width: 100% !important;
+    min-height: 44px !important;
+    padding: 12px 14px !important;
+    white-space: normal !important;
+  }
+
+  /* Services Audit Table Container — Horizontal Touch Scroll */
+  .services-table-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    margin-top: 12px;
+  }
+
+  .services-audit-table {
+    min-width: 540px !important;
+    font-size: 0.84rem !important;
+  }
+
+  .services-audit-table th,
+  .services-audit-table td {
+    padding: 10px 12px !important;
+  }
+
+  .alternatives-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .alt-service-card {
+    padding: 16px !important;
+  }
+
+  .alt-service-card .asc-actions {
+    flex-direction: column !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .alt-service-card .asc-actions .btn {
+    width: 100% !important;
+    min-height: 44px !important;
+  }
+
+  .accessibility-checklist-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* 7. Contact Page Mobile Styling */
+  #contact-main-content {
+    max-width: 100% !important;
+    padding: 0 16px !important;
+    margin: 20px auto 36px !important;
+  }
+
+  #contact-main-content h1 {
+    font-size: clamp(1.5rem, 5vw, 2.1rem) !important;
+    line-height: 1.3 !important;
+  }
+
+  /* Override inline 2-column grid in contact.html */
+  .contact-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+    width: 100% !important;
+  }
+
+  /* Emergency Numbers Ribbon Box */
+  #contact-main-content > div:nth-of-type(2) {
+    grid-template-columns: 1fr 1fr !important;
+    padding: 16px 12px !important;
+    gap: 12px !important;
+  }
+
+  /* Direct Queries Banner */
+  #contact-main-content > div:nth-of-type(3) {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    padding: 20px 16px !important;
+    gap: 16px !important;
+  }
+
+  #contact-main-content > div:nth-of-type(3) .btn {
+    width: 100% !important;
+  }
+
+  /* 8. About Us Page Mobile Styling */
+  #about-main-content {
+    max-width: 100% !important;
+    padding: 0 16px !important;
+    margin: 20px auto 36px !important;
+  }
+
+  #about-main-content h1 {
+    font-size: clamp(1.6rem, 5vw, 2.3rem) !important;
+    line-height: 1.3 !important;
+  }
+
+  /* Override inline 2-column grids in about.html */
+  #about-main-content section div[style*="grid-template-columns"] {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  /* 9. Admin Portal Mobile Styling */
+  .admin-container {
+    max-width: 100% !important;
+    padding: 0 14px !important;
+    margin: 16px auto !important;
+  }
+
+  .admin-header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    padding: 14px 16px !important;
+  }
+
+  .admin-tabs-nav {
+    padding: 10px 14px !important;
+    gap: 6px !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    white-space: nowrap;
+  }
+
+  .stat-cards-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .admin-card {
+    padding: 16px 14px !important;
+    border-radius: var(--radius-md) !important;
+  }
+
+  .admin-tab-content div[style*="grid-template-columns"] {
+    display: flex !important;
+    flex-direction: column !important;
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .admin-table-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  .admin-auth-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 24px 16px !important;
+  }
+
+  /* 10. Modals & Dialogs on Mobile */
+  .modal {
+    padding: 12px !important;
   }
 
   .modal-dialog {
-    padding: 0;
+    max-width: 100% !important;
+    width: 100% !important;
+    max-height: calc(100dvh - 24px) !important;
+    border-radius: var(--radius-lg) !important;
   }
 
   .modal-header, .modal-body, .modal-footer {
-    padding: 16px;
+    padding: 16px 14px !important;
+  }
+
+  /* 11. Footer Layout on Mobile */
+  .footer-top {
+    grid-template-columns: 1fr !important;
+    gap: 28px !important;
+    padding: 36px 16px 20px !important;
+  }
+
+  .footer-bottom {
+    padding: 18px 16px !important;
+    text-align: center;
+    font-size: 0.8rem;
   }
 }
 
 /* ========================================================
-   CONFIDENTIAL LOGIN PAGE RESPONSIVE ADAPTATIONS
+   COMPACT SMARTPHONES BREAKPOINT (<= 480px)
    ======================================================== */
-@media (max-width: 960px) {
-  .login-card-wrapper {
-    grid-template-columns: 1fr;
-    max-width: 580px;
-  }
-  
-  .login-brand-panel {
-    padding: 32px 24px;
-    border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+@media (max-width: 480px) {
+  .hero-headline {
+    font-size: 1.55rem !important;
   }
 
-  .login-form-panel {
-    padding: 32px 24px;
+  .categories-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
   }
 
-  .clearance-pills-row {
-    grid-template-columns: 1fr;
+  .card-actions-bar .nav-links {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* Contact emergency pills on tiny screens */
+  #contact-main-content > div:nth-of-type(2) {
+    grid-template-columns: 1fr !important;
   }
 }
 
-@media (max-width: 600px) {
-  .login-page-layout {
-    padding: 20px 12px 40px;
+/* ========================================================
+   ULTRA-COMPACT PHONES BREAKPOINT (<= 360px e.g. iPhone SE 1st)
+   ======================================================== */
+@media (max-width: 360px) {
+  html {
+    font-size: 14px !important;
   }
 
-  .confidential-classification-bar {
+  .categories-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card-actions-bar .nav-links {
+    grid-template-columns: 1fr !important;
+  }
+
+  .brand-name {
+    font-size: 1.05rem;
+  }
+
+  .nav-container {
+    padding: 8px 12px;
+  }
+}
+
+/* ========================================================
+   RESPONSIVE APPOINTMENT BOOKING & MY APPOINTMENTS RULES
+   ======================================================== */
+
+.card-actions-bar .nav-links {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+
+.card-actions-bar .nav-links .btn {
+  flex: 1 1 130px !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+  justify-content: center !important;
+}
+
+@media (max-width: 768px) {
+  /* Full-screen bottom drawer / native modal feel on mobile */
+  .booking-modal .modal-dialog.booking-dialog {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+  }
+
+  .booking-dialog-body {
+    padding: 16px !important;
+  }
+
+  .booking-dialog-header {
+    padding: 14px 16px !important;
+  }
+
+  .booking-progress-tracker {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+  }
+
+  .step-progress-item .step-lbl {
+    font-size: 0.65rem;
+  }
+
+  .step-progress-divider {
+    margin: 0 4px 12px;
+  }
+
+  .ras-details-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .confirmed-action-buttons .btn {
+    flex: 1 1 100% !important;
+    width: 100% !important;
+  }
+
+  .wizard-footer-actions {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+
+  .wizard-footer-actions .btn {
+    width: 100% !important;
+  }
+
+  .trm-methods-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .trm-test-options {
     flex-direction: column;
-    gap: 6px;
-    padding: 10px 14px;
-    border-radius: 12px;
   }
 
-  .confidential-tag-text {
-    font-size: 0.72rem;
+  /* My Appointments mobile layout */
+  .my-appointments-page {
+    padding: 20px 14px 40px !important;
   }
 
-  .otp-inputs-row {
-    gap: 5px;
-    justify-content: center;
+  .appointments-hero-section .hero-title {
+    font-size: 1.6rem !important;
   }
 
-  .otp-box {
-    width: 36px;
-    height: 40px;
-    font-size: 1.1rem;
+  .appointment-lookup-card {
+    padding: 18px 14px !important;
+  }
+
+  .lookup-fields-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .btn-lookup {
+    width: 100% !important;
+  }
+
+  .arc-body {
+    padding: 16px !important;
+  }
+
+  .arc-details-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .arc-actions-bar {
+    flex-direction: column;
+  }
+
+  .arc-actions-bar .btn {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .card-actions-bar .nav-links .btn {
+    flex: 1 1 100% !important;
+    width: 100% !important;
   }
 }
 

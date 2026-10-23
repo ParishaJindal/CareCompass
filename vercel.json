@@ -81,6 +81,10 @@
     {
       "source": "/login",
       "destination": "/pages/login.html"
+    },
+    {
+      "source": "/my-appointments",
+      "destination": "/pages/my-appointments.html"
     }
   ]
 }

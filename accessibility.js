@@ -153,6 +153,7 @@ const CareCompassA11y = (function() {
   }
 
   function closeAllModals() {
+    document.body.classList.remove("modal-open");
     document.querySelectorAll(".modal.active, .drawer.active").forEach(m => {
       m.classList.remove("active");
       m.setAttribute("aria-hidden", "true");
@@ -163,6 +164,14 @@ const CareCompassA11y = (function() {
         if (trigger) trigger.focus();
       }
     });
+    // Close mobile filter drawer if open
+    const filterDrawer = document.getElementById("directory-filter-drawer");
+    if (filterDrawer) filterDrawer.classList.remove("drawer-open");
+    // Close mobile menu if open
+    const mainNav = document.getElementById("main-nav-links");
+    if (mainNav) mainNav.classList.remove("mobile-open");
+    const mobileMenuBtn = document.getElementById("mobile-menu-toggle");
+    if (mobileMenuBtn) mobileMenuBtn.setAttribute("aria-expanded", "false");
   }
 
   /**

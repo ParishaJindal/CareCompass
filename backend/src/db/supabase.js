@@ -35,20 +35,137 @@ if (DATABASE_URL && DATABASE_URL.trim() !== '' && !DATABASE_URL.includes('YOUR_S
 
   dbType = 'supabase_postgresql';
   console.log('[CareCompass DB] Configured for Supabase PostgreSQL Connection Pool.');
-} else {
-  // Local Development SQLite Fallback
-  console.warn('[CareCompass DB] Notice: DATABASE_URL not configured. Checking local SQLite fallback...');
-  if (fs.existsSync(SQLITE_FALLBACK_PATH)) {
-    try {
-      const { DatabaseSync } = require('node:sqlite');
-      sqliteDb = new DatabaseSync(SQLITE_FALLBACK_PATH);
+}
+
+// Always prepare local SQLite fallback if database file exists
+if (fs.existsSync(SQLITE_FALLBACK_PATH)) {
+  try {
+    const { DatabaseSync } = require('node:sqlite');
+    sqliteDb = new DatabaseSync(SQLITE_FALLBACK_PATH);
+    initSqliteAppointmentTables(sqliteDb);
+    if (dbType === 'none') {
       dbType = 'local_sqlite_fallback';
       console.log(`[CareCompass DB] Connected to local SQLite fallback database at ${SQLITE_FALLBACK_PATH}`);
-    } catch (err) {
-      console.error('[CareCompass DB] Failed to open SQLite fallback database:', err.message);
     }
-  } else {
-    console.warn(`[CareCompass DB] Warning: SQLite database file not found at ${SQLITE_FALLBACK_PATH}`);
+  } catch (err) {
+    console.error('[CareCompass DB] Failed to open SQLite fallback database:', err.message);
+  }
+} else if (dbType === 'none') {
+  console.warn(`[CareCompass DB] Warning: SQLite database file not found at ${SQLITE_FALLBACK_PATH}`);
+}
+
+/**
+ * Initialize appointment tables in SQLite fallback if they don't exist
+ */
+function initSqliteAppointmentTables(db) {
+  try {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS appointment_providers (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        hospital_id TEXT UNIQUE NOT NULL,
+        integration_type TEXT NOT NULL DEFAULT 'carecompass_partner',
+        booking_enabled INTEGER NOT NULL DEFAULT 1,
+        verification_status TEXT NOT NULL DEFAULT 'Verified',
+        consultation_fee REAL NOT NULL DEFAULT 500.00,
+        carecompass_fee REAL NOT NULL DEFAULT 0.00,
+        currency TEXT NOT NULL DEFAULT 'INR',
+        cancellation_deadline_hours INTEGER NOT NULL DEFAULT 4,
+        departments TEXT NOT NULL DEFAULT '[]',
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+      );
+
+      CREATE TABLE IF NOT EXISTS appointment_slots (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        hospital_id TEXT NOT NULL,
+        department_id TEXT NOT NULL,
+        department_name TEXT NOT NULL,
+        doctor_id TEXT,
+        doctor_name TEXT,
+        slot_date TEXT NOT NULL,
+        start_time TEXT NOT NULL,
+        end_time TEXT NOT NULL,
+        availability_status TEXT NOT NULL DEFAULT 'available',
+        reserved_by_session TEXT,
+        reservation_expires_at TEXT,
+        created_at TEXT DEFAULT (datetime('now')),
+        UNIQUE(hospital_id, department_id, slot_date, start_time)
+      );
+
+      CREATE TABLE IF NOT EXISTS appointments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        booking_reference TEXT UNIQUE NOT NULL,
+        hospital_id TEXT NOT NULL,
+        hospital_name TEXT NOT NULL,
+        hospital_phone TEXT,
+        hospital_address TEXT,
+        department_id TEXT NOT NULL,
+        department_name TEXT NOT NULL,
+        doctor_id TEXT,
+        doctor_name TEXT,
+        slot_id INTEGER NOT NULL,
+        appointment_date TEXT NOT NULL,
+        start_time TEXT NOT NULL,
+        end_time TEXT NOT NULL,
+        patient_name TEXT NOT NULL,
+        patient_phone TEXT NOT NULL,
+        patient_email TEXT,
+        notes TEXT,
+        booking_status TEXT NOT NULL DEFAULT 'pending_confirmation',
+        payment_status TEXT NOT NULL DEFAULT 'pending',
+        consultation_fee REAL NOT NULL,
+        service_fee REAL NOT NULL DEFAULT 0.00,
+        total_amount REAL NOT NULL,
+        currency TEXT NOT NULL DEFAULT 'INR',
+        cancellation_reason TEXT,
+        cancelled_at TEXT,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+      );
+
+      CREATE TABLE IF NOT EXISTS payments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        appointment_id INTEGER NOT NULL,
+        booking_reference TEXT NOT NULL,
+        provider TEXT NOT NULL DEFAULT 'razorpay',
+        provider_order_id TEXT UNIQUE NOT NULL,
+        provider_payment_id TEXT,
+        provider_signature TEXT,
+        amount REAL NOT NULL,
+        currency TEXT NOT NULL DEFAULT 'INR',
+        payment_status TEXT NOT NULL DEFAULT 'created',
+        payment_method TEXT,
+        refund_id TEXT,
+        refund_amount REAL,
+        refund_status TEXT,
+        error_code TEXT,
+        error_description TEXT,
+        webhook_verified INTEGER DEFAULT 0,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+      );
+    `);
+
+    // Seed test pilot provider records if not present
+    const stmt = db.prepare('SELECT COUNT(*) as count FROM appointment_providers');
+    const count = stmt.get().count;
+    if (count === 0) {
+      db.prepare(`
+        INSERT OR IGNORE INTO appointment_providers 
+        (hospital_id, integration_type, booking_enabled, verification_status, consultation_fee, carecompass_fee, cancellation_deadline_hours, departments)
+        VALUES 
+        (
+          'IN-HOSP-11299', 'carecompass_partner', 1, 'Verified', 400.00, 0.00, 4,
+          '[{"id":"gen-med","name":"General Medicine","consultationFee":400,"description":"Consultation with certified General Physician"},{"id":"gen-surg","name":"General Surgery","consultationFee":500,"description":"Surgical evaluations and post-op consultation"},{"id":"emerg-opd","name":"Emergency & Urgent Care OPD","consultationFee":450,"description":"Urgent outpatient triage and specialist review"}]'
+        ),
+        (
+          'IN-HOSP-11383', 'carecompass_partner', 1, 'Verified', 500.00, 0.00, 4,
+          '[{"id":"gen-med","name":"General Medicine","consultationFee":500,"description":"Consultation with certified General Physician"},{"id":"cardio","name":"Cardiology Consultation","consultationFee":750,"description":"Cardiovascular assessment & ECG review"}]'
+        )
+      `).run();
+    }
+  } catch (err) {
+    console.warn('[CareCompass DB] Note initializing SQLite appointment tables:', err.message);
   }
 }
 
@@ -68,39 +185,51 @@ async function query(text, params = []) {
       }
       return res;
     } catch (err) {
-      console.error('[Supabase Query Error]:', err.message, '| SQL:', text.slice(0, 100));
+      console.warn('[Supabase Query Warning]:', err.message);
+      // If PostgreSQL fails due to auth, network, or connection issues, fall back to SQLite permanently for this session
+      if (sqliteDb) {
+        dbType = 'local_sqlite_fallback';
+        console.log('[CareCompass DB] Permanently switched to local SQLite fallback database for session.');
+        return querySqlite(text, params);
+      }
       throw err;
     }
   }
 
-  if (dbType === 'local_sqlite_fallback' && sqliteDb) {
-    // Map PostgreSQL $1, $2, ... placeholders to SQLite ? placeholders and align params
-    const reorderedParams = [];
-    let sqliteSql = text
-      .replace(/\$(\d+)/g, (match, idx) => {
-        const pIdx = parseInt(idx, 10) - 1;
-        reorderedParams.push(params[pIdx]);
-        return '?';
-      })
-      .replace(/\bILIKE\b/gi, 'LIKE')
-      .replace(/\bNOW\(\)/gi, "datetime('now')");
-
-    try {
-      const stmt = sqliteDb.prepare(sqliteSql);
-      if (/^\s*(SELECT|PRAGMA)/i.test(sqliteSql)) {
-        const rows = stmt.all(...reorderedParams);
-        return { rows, rowCount: rows.length };
-      } else {
-        const info = stmt.run(...reorderedParams);
-        return { rows: [], rowCount: info.changes };
-      }
-    } catch (err) {
-      console.error('[SQLite Fallback Query Error]:', err.message, '| SQL:', sqliteSql.slice(0, 100));
-      throw err;
-    }
+  if (sqliteDb) {
+    return querySqlite(text, params);
   }
 
   throw new Error('Database is not initialized. Please configure DATABASE_URL for Supabase PostgreSQL.');
+}
+
+function querySqlite(text, params = []) {
+  // Map PostgreSQL $1, $2, ... placeholders to SQLite ? placeholders and align params
+  const reorderedParams = [];
+  let sqliteSql = text
+    .replace(/\$(\d+)/g, (match, idx) => {
+      const pIdx = parseInt(idx, 10) - 1;
+      reorderedParams.push(params[pIdx]);
+      return '?';
+    })
+    .replace(/\bILIKE\b/gi, 'LIKE')
+    .replace(/\bNOW\(\)\s*\+\s*INTERVAL\s*'(\d+)\s*minutes'/gi, "datetime('now', '+$1 minutes')")
+    .replace(/\bNOW\(\)/gi, "datetime('now')");
+
+  try {
+    const stmt = sqliteDb.prepare(sqliteSql);
+    const isSelectOrReturning = /^\s*(SELECT|PRAGMA)/i.test(sqliteSql) || /\bRETURNING\b/i.test(sqliteSql);
+    if (isSelectOrReturning) {
+      const rows = stmt.all(...reorderedParams);
+      return { rows, rowCount: rows.length };
+    } else {
+      const info = stmt.run(...reorderedParams);
+      return { rows: [], rowCount: info.changes };
+    }
+  } catch (err) {
+    console.error('[SQLite Fallback Query Error]:', err.message, '| SQL:', sqliteSql.slice(0, 100));
+    throw err;
+  }
 }
 
 /**

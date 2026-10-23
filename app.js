@@ -40,11 +40,33 @@ const CareCompassApp = (function() {
     const mobileMenuBtn = document.getElementById("mobile-menu-toggle");
     const navLinksContainer = document.getElementById("main-nav-links");
 
+    const closeMobileMenu = () => {
+      if (mobileMenuBtn && navLinksContainer && navLinksContainer.classList.contains("mobile-open")) {
+        mobileMenuBtn.setAttribute("aria-expanded", "false");
+        navLinksContainer.classList.remove("mobile-open");
+      }
+    };
+
     if (mobileMenuBtn && navLinksContainer) {
-      mobileMenuBtn.addEventListener("click", () => {
+      mobileMenuBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
         const isExpanded = mobileMenuBtn.getAttribute("aria-expanded") === "true";
         mobileMenuBtn.setAttribute("aria-expanded", !isExpanded);
         navLinksContainer.classList.toggle("mobile-open");
+      });
+
+      // Close mobile menu when clicking any nav link
+      navLinksContainer.querySelectorAll(".nav-link, .btn").forEach(link => {
+        link.addEventListener("click", () => {
+          closeMobileMenu();
+        });
+      });
+
+      // Close when clicking outside of nav
+      document.addEventListener("click", (e) => {
+        if (!navLinksContainer.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
+          closeMobileMenu();
+        }
       });
     }
 
@@ -108,6 +130,7 @@ const CareCompassApp = (function() {
     if (triggerId) modal.setAttribute("data-trigger-id", triggerId);
     modal.classList.add("active");
     modal.setAttribute("aria-hidden", "false");
+    document.body.classList.add("modal-open");
 
     // Focus first focusable element
     const focusable = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
@@ -365,6 +388,79 @@ const CareCompassApp = (function() {
     const resetBottomBtn = document.getElementById("btn-reset-filters-bottom");
     if (resetBottomBtn) resetBottomBtn.addEventListener("click", handleResetFilters);
 
+    // Setup Mobile Filter Drawer & Live Badge Counter
+    const mobileFilterTrigger = document.getElementById("mobile-filter-trigger");
+    const mobileFilterDrawer = document.getElementById("directory-filter-drawer");
+    const mobileFilterCloseBtn = document.getElementById("mobile-filter-close-btn");
+    const drawerApplyBtn = document.getElementById("btn-drawer-apply");
+    const drawerResetBtn = document.getElementById("btn-drawer-reset");
+    const filterBadge = document.getElementById("mobile-filter-count-badge");
+
+    const updateFilterBadgeCount = () => {
+      if (!filterBadge) return;
+      let activeCount = 0;
+      filterInputs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          if (el.type === "checkbox" && el.checked) activeCount++;
+          else if (el.tagName === "SELECT" && el.value !== "all" && el.value !== "") activeCount++;
+        }
+      });
+      if (activeCount > 0) {
+        filterBadge.textContent = activeCount;
+        filterBadge.style.display = "inline-block";
+      } else {
+        filterBadge.style.display = "none";
+      }
+    };
+
+    // Listen to changes on filter inputs to keep badge count synced
+    filterInputs.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener("change", updateFilterBadgeCount);
+      }
+    });
+
+    const openFilterDrawer = () => {
+      if (mobileFilterDrawer) {
+        mobileFilterDrawer.classList.add("drawer-open");
+        document.body.classList.add("modal-open");
+      }
+    };
+
+    const closeFilterDrawer = () => {
+      if (mobileFilterDrawer) {
+        mobileFilterDrawer.classList.remove("drawer-open");
+        document.body.classList.remove("modal-open");
+      }
+    };
+
+    if (mobileFilterTrigger) {
+      mobileFilterTrigger.addEventListener("click", openFilterDrawer);
+    }
+    if (mobileFilterCloseBtn) {
+      mobileFilterCloseBtn.addEventListener("click", closeFilterDrawer);
+    }
+    if (drawerApplyBtn) {
+      drawerApplyBtn.addEventListener("click", async () => {
+        closeFilterDrawer();
+        updateFilterBadgeCount();
+        await executeDirectorySearch(1);
+        const resultsHeader = document.querySelector(".results-content-header");
+        if (resultsHeader) {
+          resultsHeader.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      });
+    }
+    if (drawerResetBtn) {
+      drawerResetBtn.addEventListener("click", () => {
+        handleResetFilters();
+        updateFilterBadgeCount();
+        closeFilterDrawer();
+      });
+    }
+
     // Demo Scenario Trigger Button on Search page
     const runDemoBtn = document.getElementById("btn-trigger-demo-scenario");
     if (runDemoBtn) {
@@ -383,16 +479,20 @@ const CareCompassApp = (function() {
       });
     });
 
-    // Check if initial view was requested via URL (e.g. ?view=list)
-    const initialViewMode = urlParams.get("view");
-    if (initialViewMode && ["split", "list", "map"].includes(initialViewMode)) {
-      document.querySelectorAll(".view-toggle-btn").forEach(b => {
-        b.classList.toggle("active", b.getAttribute("data-view") === initialViewMode);
-      });
-      switchViewMode(initialViewMode);
-    }
+    // Determine initial view: On mobile (<= 768px), default to "list" mode for smooth touch scrolling
+    const isMobileViewport = window.innerWidth <= 768;
+    const requestedView = urlParams.get("view");
+    const initialViewMode = requestedView && ["split", "list", "map"].includes(requestedView)
+      ? requestedView
+      : (isMobileViewport ? "list" : "split");
 
-    // Separate independent scrolling is managed natively via CSS overscroll-behavior: contain
+    document.querySelectorAll(".view-toggle-btn").forEach(b => {
+      b.classList.toggle("active", b.getAttribute("data-view") === initialViewMode);
+    });
+    switchViewMode(initialViewMode);
+
+    // Initial filter badge calculation
+    updateFilterBadgeCount();
 
     // Run initial search
     if (isDemo) {
@@ -1020,7 +1120,10 @@ const CareCompassApp = (function() {
               <button type="button" class="btn btn-outline btn-sm btn-open-directions" data-fac-id="${facility.id}">
                 📍 Directions
               </button>
-              <a href="facility-details.html?id=${facility.id}${queryService ? '&service=' + encodeURIComponent(queryService) : ''}" class="btn btn-primary btn-sm">
+              <button type="button" class="btn btn-primary btn-sm btn-book-appointment" data-fac-id="${facility.id}" data-fac-name="${escapeHtml(facility.name)}">
+                📅 Book Appointment
+              </button>
+              <a href="facility-details.html?id=${facility.id}${queryService ? '&service=' + encodeURIComponent(queryService) : ''}" class="btn btn-outline btn-sm">
                 View Details →
               </a>
             </div>
@@ -1039,6 +1142,20 @@ const CareCompassApp = (function() {
     }).join("");
 
     // Attach card action event listeners
+    container.querySelectorAll(".btn-book-appointment").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const facId = btn.getAttribute("data-fac-id");
+        const facName = btn.getAttribute("data-fac-name");
+        const fac = (currentSearchResults || []).find(f => f.id === facId) || (HEALTHCARE_DATA.facilities || []).find(f => f.id === facId);
+        if (window.CareCompassBooking) {
+          window.CareCompassBooking.openBookingModal(facId, facName, fac);
+        } else {
+          alert('Appointment booking system is initializing. Please try again in a moment.');
+        }
+      });
+    });
+
     container.querySelectorAll(".btn-open-directions").forEach(btn => {
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
@@ -1804,8 +1921,11 @@ const CareCompassApp = (function() {
             </div>
           </div>
           <div class="dh-actions">
+            <button type="button" class="btn btn-primary btn-detail-book" data-fac-id="${facility.id}">
+              📅 Book Appointment
+            </button>
             ${facility.phone ? `
-              <a href="tel:${facility.phone}" class="btn btn-primary">
+              <a href="tel:${facility.phone}" class="btn btn-outline">
                 <i class="icon-phone"></i> Call Facility: ${facility.phone}
               </a>
             ` : ''}
@@ -1992,6 +2112,17 @@ const CareCompassApp = (function() {
         if (fac) openDirectionsModal(fac);
       });
     });
+
+    const bookDetailBtn = container.querySelector(".btn-detail-book");
+    if (bookDetailBtn) {
+      bookDetailBtn.addEventListener("click", () => {
+        if (window.CareCompassBooking) {
+          window.CareCompassBooking.openBookingModal(facility.id, facility.name, facility);
+        } else {
+          alert('Appointment booking system is initializing. Please try again.');
+        }
+      });
+    }
 
     container.querySelectorAll(".btn-detail-report").forEach(btn => {
       btn.addEventListener("click", () => {

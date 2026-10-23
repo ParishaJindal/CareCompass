@@ -25,8 +25,8 @@ window.CARECOMPASS_CONFIG = (function () {
   if (envApiUrl && envApiUrl.trim() !== '') {
     defaultBaseUrl = envApiUrl.trim();
   } else if (isLocalhost) {
-    // In local development: use local port if __USE_LOCAL_BACKEND__ is set, otherwise use live production API
-    defaultBaseUrl = window.__USE_LOCAL_BACKEND__ ? 'http://localhost:10000' : PRODUCTION_API_URL;
+    // In local development: use local port 10000 by default (falls back to production Render if needed)
+    defaultBaseUrl = 'http://localhost:10000';
   } else {
     // Production Vercel deployment points directly to live Render backend
     defaultBaseUrl = PRODUCTION_API_URL;
