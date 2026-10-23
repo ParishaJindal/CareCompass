@@ -1,4 +1,4 @@
-const { describe, it, before } = require('node:test');
+const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const db = require('../src/db/supabase');
 const appointmentService = require('../src/services/appointmentService');
@@ -195,27 +195,19 @@ describe('CareCompass Hospital Appointments & Scheduling Service (Pay at Hospita
   });
 
   it('9. Booking status confirmed should NOT be granted for unverified hospital even if a slot exists in database', async () => {
-    // Insert a slot for an unverified/disabled hospital
+    // Insert a slot for an unverified/disabled hospital idempotently
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const dateStr = tomorrow.toISOString().slice(0, 10);
 
-    let slotRes;
-    try {
-      slotRes = await db.query(`
-        INSERT INTO appointment_slots 
-        (hospital_id, department_id, department_name, slot_date, start_time, end_time, availability_status)
-        VALUES ('IN-HOSP-TEST-UNVERIFIED', 'test-dept', 'Test Department', $1, '12:00:00', '12:30:00', 'available')
-        RETURNING id
-      `, [dateStr]);
-    } catch (e) {
-      // In SQLite without RETURNING
-      const s = await db.query(
-        'SELECT id FROM appointment_slots WHERE hospital_id = $1 AND slot_date = $2',
-        ['IN-HOSP-TEST-UNVERIFIED', dateStr]
-      );
-      slotRes = s;
-    }
+    const slotRes = await db.query(`
+      INSERT INTO appointment_slots 
+      (hospital_id, department_id, department_name, slot_date, start_time, end_time, availability_status)
+      VALUES ('IN-HOSP-TEST-UNVERIFIED', 'test-dept', 'Test Department', $1, '12:00:00', '12:30:00', 'available')
+      ON CONFLICT (hospital_id, department_id, slot_date, start_time)
+      DO UPDATE SET availability_status = 'available', reserved_by_session = NULL, reservation_expires_at = NULL
+      RETURNING id
+    `, [dateStr]);
 
     const testSlotId = slotRes.rows[0].id;
 
@@ -231,6 +223,15 @@ describe('CareCompass Hospital Appointments & Scheduling Service (Pay at Hospita
       },
       /Online (direct )?booking .* not authorized/i
     );
+  });
+
+  after(async () => {
+    // Clean up temporary test data cleanly
+    try {
+      await db.query("DELETE FROM appointment_slots WHERE hospital_id = 'IN-HOSP-TEST-UNVERIFIED'");
+      await db.query("DELETE FROM appointment_providers WHERE hospital_id = 'IN-HOSP-TEST-UNVERIFIED'");
+      await db.query("DELETE FROM appointments WHERE patient_phone IN ('9999888877', '9876543299', '9812345600')");
+    } catch (e) {}
   });
 });
 
