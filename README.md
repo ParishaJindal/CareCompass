@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # CareCompass — Healthcare Navigation for Everyone
 
 **Architecture:** Vercel (Frontend) + Render (Backend API) + Supabase (PostgreSQL Database)  
@@ -378,7 +377,9 @@ CAREECOMPASS/
 **Parisha Jindal**  
 Healthcare Data Architect & Lead Developer  
 Email: `parishajindal17@gmail.com`
-=======
+
+---
+
 # CareCompass Machine Learning Workflow
 
 This directory contains the end-to-end Machine Learning pipeline for healthcare facility tier classification, data completeness scoring, and duplicate entity detection.
@@ -418,4 +419,3 @@ This fits a multi-modal pipeline (TF-IDF N-Gram Vectorizer + Scaled Tabular Feat
 - **Inference Speed:** > 100,000 predictions / second
 - **Saved Model:** `ml/models/facility_tier_classifier.joblib`
 - **Detailed Report:** `ml/evaluation_report.md`
->>>>>>> origin/main

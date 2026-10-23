@@ -1249,10 +1249,15 @@ window.CareCompassBooking = (function () {
       .replace(/'/g, '&#039;');
   }
 
+  if (typeof window !== 'undefined' && !window.escapeHtml) {
+    window.escapeHtml = escapeHtml;
+  }
+
   return {
     openBookingModal,
     openAppointmentRequestFlow,
     closeModal,
-    getApiUrl
+    getApiUrl,
+    escapeHtml
   };
 })();

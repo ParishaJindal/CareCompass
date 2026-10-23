@@ -8,6 +8,22 @@
  */
 
 const CareCompassApp = (function() {
+  /**
+   * Safe HTML attribute & entity encoder
+   */
+  function escapeHtml(str) {
+    if (typeof str !== 'string') return str || '';
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+  if (typeof window !== 'undefined' && !window.escapeHtml) {
+    window.escapeHtml = escapeHtml;
+  }
+
   // Current search state
   let currentSearchResults = [];
   let currentMapMode = "split"; // 'list', 'map', 'split'
