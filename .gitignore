@@ -36,6 +36,7 @@ scratch/
 .vercel
 dist/
 build/
+public/
 coverage/
 
 # IDE settings
