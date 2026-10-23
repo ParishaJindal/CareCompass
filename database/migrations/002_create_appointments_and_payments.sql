@@ -21,9 +21,9 @@ CREATE TABLE IF NOT EXISTS appointment_providers (
     id BIGSERIAL PRIMARY KEY,
     hospital_id VARCHAR(100) NOT NULL UNIQUE,
     integration_type VARCHAR(50) NOT NULL DEFAULT 'carecompass_partner',
-    booking_enabled BOOLEAN NOT NULL DEFAULT true,
-    verification_status VARCHAR(50) NOT NULL DEFAULT 'Verified',
-    consultation_fee NUMERIC(10,2) NOT NULL DEFAULT 500.00,
+    booking_enabled BOOLEAN NOT NULL DEFAULT false,
+    verification_status VARCHAR(50) NOT NULL DEFAULT 'Not Verified',
+    consultation_fee NUMERIC(10,2) NOT NULL DEFAULT 0.00,
     carecompass_fee NUMERIC(10,2) NOT NULL DEFAULT 0.00,
     payment_mode VARCHAR(50) NOT NULL DEFAULT 'pay_at_hospital',
     currency VARCHAR(10) NOT NULL DEFAULT 'INR',
@@ -38,9 +38,9 @@ CREATE TABLE IF NOT EXISTS appointment_providers (
 -- Idempotent column additions for partially existing tables
 ALTER TABLE appointment_providers ADD COLUMN IF NOT EXISTS hospital_id VARCHAR(100);
 ALTER TABLE appointment_providers ADD COLUMN IF NOT EXISTS integration_type VARCHAR(50) DEFAULT 'carecompass_partner';
-ALTER TABLE appointment_providers ADD COLUMN IF NOT EXISTS booking_enabled BOOLEAN DEFAULT true;
-ALTER TABLE appointment_providers ADD COLUMN IF NOT EXISTS verification_status VARCHAR(50) DEFAULT 'Verified';
-ALTER TABLE appointment_providers ADD COLUMN IF NOT EXISTS consultation_fee NUMERIC(10,2) DEFAULT 500.00;
+ALTER TABLE appointment_providers ADD COLUMN IF NOT EXISTS booking_enabled BOOLEAN DEFAULT false;
+ALTER TABLE appointment_providers ADD COLUMN IF NOT EXISTS verification_status VARCHAR(50) DEFAULT 'Not Verified';
+ALTER TABLE appointment_providers ADD COLUMN IF NOT EXISTS consultation_fee NUMERIC(10,2) DEFAULT 0.00;
 ALTER TABLE appointment_providers ADD COLUMN IF NOT EXISTS carecompass_fee NUMERIC(10,2) DEFAULT 0.00;
 ALTER TABLE appointment_providers ADD COLUMN IF NOT EXISTS payment_mode VARCHAR(50) DEFAULT 'pay_at_hospital';
 ALTER TABLE appointment_providers ADD COLUMN IF NOT EXISTS currency VARCHAR(10) DEFAULT 'INR';
@@ -48,6 +48,12 @@ ALTER TABLE appointment_providers ADD COLUMN IF NOT EXISTS cancellation_deadline
 ALTER TABLE appointment_providers ADD COLUMN IF NOT EXISTS departments JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE appointment_providers ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP;
 ALTER TABLE appointment_providers ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP;
+
+-- Explicitly enforce unverified / disabled defaults on pre-existing tables
+ALTER TABLE appointment_providers ALTER COLUMN booking_enabled SET DEFAULT false;
+ALTER TABLE appointment_providers ALTER COLUMN verification_status SET DEFAULT 'Not Verified';
+ALTER TABLE appointment_providers ALTER COLUMN consultation_fee SET DEFAULT 0.00;
+ALTER TABLE appointment_providers ALTER COLUMN payment_mode SET DEFAULT 'pay_at_hospital';
 
 -- ============================================================================
 -- 2. APPOINTMENT SLOTS TABLE & IDEMPOTENT ALTERS
@@ -218,6 +224,20 @@ ALTER TABLE payments ADD COLUMN IF NOT EXISTS notes TEXT;
 ALTER TABLE payments ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP;
 ALTER TABLE payments ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP;
 
+-- Safe foreign key constraint for partially existing tables
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'fk_payments_appointment'
+    ) THEN
+        ALTER TABLE payments 
+            ADD CONSTRAINT fk_payments_appointment 
+            FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE CASCADE;
+    END IF;
+EXCEPTION
+    WHEN OTHERS THEN NULL;
+END $$;
+
 -- ============================================================================
 -- 5. PERFORMANCE INDEXES
 -- ============================================================================
@@ -260,7 +280,8 @@ CREATE TRIGGER trg_payments_updated_at
     FOR EACH ROW EXECUTE FUNCTION update_timestamp_column();
 
 -- ============================================================================
--- 7. ROW LEVEL SECURITY (RLS) POLICIES — ZERO DATA LEAKAGE ENFORCEMENT
+-- 7. ROW LEVEL SECURITY (RLS) POLICIES & ACCESS CONTROL
+-- ZERO DATA LEAKAGE ENFORCEMENT
 -- ============================================================================
 
 ALTER TABLE appointment_providers ENABLE ROW LEVEL SECURITY;
@@ -278,10 +299,10 @@ DROP POLICY IF EXISTS "Service role access for appointment_slots" ON appointment
 DROP POLICY IF EXISTS "Service role access for appointments" ON appointments;
 DROP POLICY IF EXISTS "Service role access for payments" ON payments;
 
--- 7.1. Appointment Providers: Public can only view active, enabled facilities
+-- 7.1. Appointment Providers: Public can ONLY view genuinely verified & active facilities
 CREATE POLICY "Public can view active appointment providers"
     ON appointment_providers FOR SELECT
-    USING (booking_enabled = true);
+    USING (booking_enabled = true AND verification_status = 'Verified');
 
 -- 7.2. Appointment Slots: NO direct public SELECT access.
 -- Slot availability is queried exclusively via backend API (/api/appointments/slots),
@@ -307,6 +328,15 @@ CREATE POLICY "Service role access for appointments"
 
 CREATE POLICY "Service role access for payments"
     ON payments FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+-- Explicitly revoke sensitive table permissions from anon & authenticated public roles
+REVOKE ALL ON appointments FROM anon, authenticated;
+REVOKE ALL ON payments FROM anon, authenticated;
+REVOKE ALL ON appointment_slots FROM anon, authenticated;
+REVOKE ALL ON appointment_providers FROM anon, authenticated;
+
+-- Grant selective read access on appointment_providers (filtered strictly by RLS policy)
+GRANT SELECT ON appointment_providers TO anon, authenticated;
 
 -- NOTE: Demo provider seeds have been separated into:
 -- database/seeds/demo_appointment_providers.sql

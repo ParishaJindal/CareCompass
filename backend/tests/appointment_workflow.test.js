@@ -33,7 +33,8 @@ describe('CareCompass Hospital Appointments & Scheduling Service (Pay at Hospita
             ('IN-HOSP-11299', 'gen-med', 'General Medicine', $1, '09:30:00', '10:00:00', 'available'),
             ('IN-HOSP-11299', 'gen-med', 'General Medicine', $1, '10:15:00', '10:45:00', 'available'),
             ('IN-HOSP-11299', 'gen-med', 'General Medicine', $1, '11:00:00', '11:30:00', 'available')
-          ON CONFLICT (hospital_id, department_id, slot_date, start_time) DO NOTHING
+          ON CONFLICT (hospital_id, department_id, slot_date, start_time) 
+          DO UPDATE SET availability_status = 'available', reserved_by_session = NULL, reservation_expires_at = NULL
         `, [dateStr]);
       } catch (e) {}
     }
@@ -172,4 +173,64 @@ describe('CareCompass Hospital Appointments & Scheduling Service (Pay at Hospita
       /Verification failed: Mobile number does not match/
     );
   });
+
+  it('8. Newly created provider records should default to Not Verified and booking disabled', async () => {
+    // Insert a new provider without specifying booking_enabled, verification_status, or fee
+    await db.query(`
+      INSERT INTO appointment_providers (hospital_id)
+      VALUES ('IN-HOSP-TEST-UNVERIFIED')
+      ON CONFLICT (hospital_id) DO NOTHING
+    `);
+
+    const res = await db.query(
+      'SELECT booking_enabled, verification_status, consultation_fee FROM appointment_providers WHERE hospital_id = $1',
+      ['IN-HOSP-TEST-UNVERIFIED']
+    );
+
+    assert.ok(res.rows && res.rows.length > 0);
+    const row = res.rows[0];
+    assert.equal(row.booking_enabled == 0 || row.booking_enabled === false, true, 'booking_enabled must default to false/0');
+    assert.equal(row.verification_status, 'Not Verified', 'verification_status must default to Not Verified');
+    assert.equal(Number(row.consultation_fee), 0.00, 'consultation_fee must default to 0.00');
+  });
+
+  it('9. Booking status confirmed should NOT be granted for unverified hospital even if a slot exists in database', async () => {
+    // Insert a slot for an unverified/disabled hospital
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const dateStr = tomorrow.toISOString().slice(0, 10);
+
+    let slotRes;
+    try {
+      slotRes = await db.query(`
+        INSERT INTO appointment_slots 
+        (hospital_id, department_id, department_name, slot_date, start_time, end_time, availability_status)
+        VALUES ('IN-HOSP-TEST-UNVERIFIED', 'test-dept', 'Test Department', $1, '12:00:00', '12:30:00', 'available')
+        RETURNING id
+      `, [dateStr]);
+    } catch (e) {
+      // In SQLite without RETURNING
+      const s = await db.query(
+        'SELECT id FROM appointment_slots WHERE hospital_id = $1 AND slot_date = $2',
+        ['IN-HOSP-TEST-UNVERIFIED', dateStr]
+      );
+      slotRes = s;
+    }
+
+    const testSlotId = slotRes.rows[0].id;
+
+    // Direct booking must fail authorization and refuse to create a confirmed booking
+    await assert.rejects(
+      async () => {
+        await appointmentService.createDirectBooking({
+          slotId: testSlotId,
+          sessionId: 'sess_unverified_guard',
+          patientName: 'Guard Test Patient',
+          patientPhone: '9999888877'
+        });
+      },
+      /Online (direct )?booking .* not authorized/i
+    );
+  });
 });
+

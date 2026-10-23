@@ -74,8 +74,8 @@ async function getProviderInfo(hospitalId) {
 
   // Check appointment_providers for genuine authorized integration
   const provRes = await db.query(
-    'SELECT * FROM appointment_providers WHERE hospital_id = $1 AND booking_enabled = true LIMIT 1',
-    [hospitalId]
+    'SELECT * FROM appointment_providers WHERE hospital_id = $1 AND booking_enabled = true AND verification_status = $2 LIMIT 1',
+    [hospitalId, 'Verified']
   );
 
   if (!provRes.rows || provRes.rows.length === 0) {
@@ -234,8 +234,8 @@ async function createDirectBooking({
 
   // Fetch provider fee and policy
   const provCheck = await getProviderInfo(slot.hospital_id);
-  if (!provCheck.bookingEnabled) {
-    throw new Error('Online booking is not enabled for this hospital.');
+  if (!provCheck.bookingEnabled || !provCheck.provider || provCheck.provider.verificationStatus !== 'Verified') {
+    throw new Error('Online direct booking confirmation is not authorized or verified for this hospital. Please submit an appointment request or contact the hospital directly.');
   }
 
   const dept = provCheck.provider.departments.find(d => d.id === slot.department_id);

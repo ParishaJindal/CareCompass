@@ -64,9 +64,9 @@ function initSqliteAppointmentTables(db) {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         hospital_id TEXT UNIQUE NOT NULL,
         integration_type TEXT NOT NULL DEFAULT 'carecompass_partner',
-        booking_enabled INTEGER NOT NULL DEFAULT 1,
-        verification_status TEXT NOT NULL DEFAULT 'Verified',
-        consultation_fee REAL NOT NULL DEFAULT 500.00,
+        booking_enabled INTEGER NOT NULL DEFAULT 0,
+        verification_status TEXT NOT NULL DEFAULT 'Not Verified',
+        consultation_fee REAL NOT NULL DEFAULT 0.00,
         carecompass_fee REAL NOT NULL DEFAULT 0.00,
         payment_mode TEXT NOT NULL DEFAULT 'pay_at_hospital',
         currency TEXT NOT NULL DEFAULT 'INR',
@@ -161,8 +161,40 @@ function initSqliteAppointmentTables(db) {
       if (!apptCols.includes('cancellation_reason')) db.exec("ALTER TABLE appointments ADD COLUMN cancellation_reason TEXT");
       if (!apptCols.includes('cancelled_at')) db.exec("ALTER TABLE appointments ADD COLUMN cancelled_at TEXT");
 
-      const provCols = db.prepare("PRAGMA table_info(appointment_providers)").all().map(c => c.name);
-      if (!provCols.includes('payment_mode')) db.exec("ALTER TABLE appointment_providers ADD COLUMN payment_mode TEXT NOT NULL DEFAULT 'pay_at_hospital'");
+      const provCols = db.prepare("PRAGMA table_info(appointment_providers)").all();
+      const bookingCol = provCols.find(c => c.name === 'booking_enabled');
+      if (bookingCol && bookingCol.dflt_value === '1') {
+        db.exec(`
+          CREATE TABLE appointment_providers_v2 (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            hospital_id TEXT UNIQUE NOT NULL,
+            integration_type TEXT NOT NULL DEFAULT 'carecompass_partner',
+            booking_enabled INTEGER NOT NULL DEFAULT 0,
+            verification_status TEXT NOT NULL DEFAULT 'Not Verified',
+            consultation_fee REAL NOT NULL DEFAULT 0.00,
+            carecompass_fee REAL NOT NULL DEFAULT 0.00,
+            payment_mode TEXT NOT NULL DEFAULT 'pay_at_hospital',
+            currency TEXT NOT NULL DEFAULT 'INR',
+            cancellation_deadline_hours INTEGER NOT NULL DEFAULT 4,
+            departments TEXT NOT NULL DEFAULT '[]',
+            created_at TEXT DEFAULT (datetime('now')),
+            updated_at TEXT DEFAULT (datetime('now'))
+          );
+          INSERT OR IGNORE INTO appointment_providers_v2 (
+            id, hospital_id, integration_type, booking_enabled, verification_status,
+            consultation_fee, carecompass_fee, payment_mode, currency,
+            cancellation_deadline_hours, departments, created_at, updated_at
+          ) SELECT 
+            id, hospital_id, integration_type, booking_enabled, verification_status,
+            consultation_fee, carecompass_fee, payment_mode, currency,
+            cancellation_deadline_hours, departments, created_at, updated_at
+          FROM appointment_providers;
+          DROP TABLE appointment_providers;
+          ALTER TABLE appointment_providers_v2 RENAME TO appointment_providers;
+        `);
+      }
+      const provColNames = db.prepare("PRAGMA table_info(appointment_providers)").all().map(c => c.name);
+      if (!provColNames.includes('payment_mode')) db.exec("ALTER TABLE appointment_providers ADD COLUMN payment_mode TEXT NOT NULL DEFAULT 'pay_at_hospital'");
 
       const payCols = db.prepare("PRAGMA table_info(payments)").all().map(c => c.name);
       if (!payCols.includes('notes')) db.exec("ALTER TABLE payments ADD COLUMN notes TEXT");
