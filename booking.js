@@ -274,7 +274,7 @@ window.CareCompassBooking = (function () {
           <form id="appointment-request-form" class="booking-form-grid" novalidate>
             <div class="booking-form-group">
               <label for="req-patient-name">Patient Full Name <span class="required-star">*</span></label>
-              <input type="text" id="req-patient-name" class="booking-input" placeholder="e.g. Parisha Jindal" value="${escapeHtml(state.patient.name)}" required autocomplete="name">
+              <input type="text" id="req-patient-name" class="booking-input" placeholder="Full name as per ID / Aadhaar" value="${escapeHtml(state.patient.name)}" required autocomplete="name">
               <span class="field-error-msg" id="err-req-name"></span>
             </div>
 
@@ -282,7 +282,7 @@ window.CareCompassBooking = (function () {
               <label for="req-patient-phone">Mobile Contact Number <span class="required-star">*</span></label>
               <div class="phone-input-group">
                 <span class="country-prefix">+91</span>
-                <input type="tel" id="req-patient-phone" class="booking-input" placeholder="98765 43210" maxlength="10" value="${escapeHtml(state.patient.phone)}" required autocomplete="tel">
+                <input type="tel" id="req-patient-phone" class="booking-input" placeholder="10-digit mobile number" maxlength="10" value="${escapeHtml(state.patient.phone)}" required autocomplete="tel">
               </div>
               <span class="field-help-text">Hospital reception will call this number to confirm the appointment</span>
               <span class="field-error-msg" id="err-req-phone"></span>
@@ -290,7 +290,7 @@ window.CareCompassBooking = (function () {
 
             <div class="booking-form-group">
               <label for="req-patient-email">Email Address <span class="optional-tag">(Optional)</span></label>
-              <input type="email" id="req-patient-email" class="booking-input" placeholder="parisha@example.com" value="${escapeHtml(state.patient.email)}" autocomplete="email">
+              <input type="email" id="req-patient-email" class="booking-input" placeholder="patient@example.com" value="${escapeHtml(state.patient.email)}" autocomplete="email">
             </div>
 
             <div class="booking-form-group">
@@ -765,7 +765,7 @@ window.CareCompassBooking = (function () {
           <form id="booking-patient-form" class="booking-form-grid" novalidate>
             <div class="booking-form-group">
               <label for="patient-full-name">Patient Full Name <span class="required-star">*</span></label>
-              <input type="text" id="patient-full-name" class="booking-input" placeholder="e.g. Parisha Jindal" value="${escapeHtml(state.patient.name)}" required autocomplete="name">
+              <input type="text" id="patient-full-name" class="booking-input" placeholder="Full name as per ID / Aadhaar" value="${escapeHtml(state.patient.name)}" required autocomplete="name">
               <span class="field-error-msg" id="err-patient-name"></span>
             </div>
 
@@ -773,7 +773,7 @@ window.CareCompassBooking = (function () {
               <label for="patient-phone-number">Mobile Contact Number <span class="required-star">*</span></label>
               <div class="phone-input-group">
                 <span class="country-prefix">+91</span>
-                <input type="tel" id="patient-phone-number" class="booking-input" placeholder="98765 43210" maxlength="10" value="${escapeHtml(state.patient.phone)}" required autocomplete="tel">
+                <input type="tel" id="patient-phone-number" class="booking-input" placeholder="10-digit mobile number" maxlength="10" value="${escapeHtml(state.patient.phone)}" required autocomplete="tel">
               </div>
               <span class="field-help-text">Used for appointment confirmation SMS & booking lookup</span>
               <span class="field-error-msg" id="err-patient-phone"></span>
@@ -781,7 +781,7 @@ window.CareCompassBooking = (function () {
 
             <div class="booking-form-group">
               <label for="patient-email">Email Address <span class="optional-tag">(Optional)</span></label>
-              <input type="email" id="patient-email" class="booking-input" placeholder="parisha@example.com" value="${escapeHtml(state.patient.email)}" autocomplete="email">
+              <input type="email" id="patient-email" class="booking-input" placeholder="patient@example.com" value="${escapeHtml(state.patient.email)}" autocomplete="email">
               <span class="field-help-text">Receives appointment confirmation slip & calendar reminder</span>
               <span class="field-error-msg" id="err-patient-email"></span>
             </div>

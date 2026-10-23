@@ -47,8 +47,8 @@ function getPublicConfig() {
     companyName: 'CareCompass Healthcare',
     themeColor: '#0d9488',
     serviceFee: 0.00,
-    supportEmail: 'support@carecompass.org',
-    supportPhone: '+91 1800 123 4567'
+    supportEmail: process.env.SUPPORT_EMAIL || 'parishajindal17@gmail.com',
+    supportPhone: process.env.SUPPORT_PHONE || '112 / 108 (National Emergency)'
   };
 }
 
@@ -481,11 +481,22 @@ async function lookupAppointment({ reference, phone }) {
     throw new Error('Verification failed: Mobile number does not match this booking record.');
   }
 
-  // Calculate cancellation eligibility
-  const apptDateTime = new Date(`${appt.appointment_date}T${appt.start_time}`);
+  // Calculate cancellation eligibility safely across PostgreSQL (pg) and SQLite
+  let dateOnly;
+  if (appt.appointment_date instanceof Date) {
+    dateOnly = appt.appointment_date.toISOString().slice(0, 10);
+  } else if (typeof appt.appointment_date === 'string') {
+    dateOnly = appt.appointment_date.slice(0, 10);
+  } else {
+    dateOnly = new Date().toISOString().slice(0, 10);
+  }
+
+  const timeOnly = appt.start_time ? String(appt.start_time).slice(0, 8) : '09:00:00';
+  const apptDateTime = new Date(`${dateOnly}T${timeOnly}`);
   const now = new Date();
   const hoursUntilAppointment = (apptDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-  const isCancellable = (appt.booking_status === 'confirmed' || appt.booking_status === 'pending_confirmation') && hoursUntilAppointment >= 4;
+  const isFuture = isNaN(hoursUntilAppointment) ? true : hoursUntilAppointment >= 4;
+  const isCancellable = (appt.booking_status === 'confirmed' || appt.booking_status === 'pending_confirmation') && isFuture;
 
   return {
     bookingReference: appt.booking_reference,
@@ -496,7 +507,7 @@ async function lookupAppointment({ reference, phone }) {
     hospitalAddress: appt.hospital_address,
     departmentName: appt.department_name,
     doctorName: appt.doctor_name,
-    appointmentDate: appt.appointment_date,
+    appointmentDate: dateOnly,
     startTime: appt.start_time ? appt.start_time.slice(0, 5) : '09:00',
     endTime: appt.end_time ? appt.end_time.slice(0, 5) : '17:00',
     patientName: appt.patient_name,
