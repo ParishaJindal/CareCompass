@@ -68,6 +68,7 @@ function initSqliteAppointmentTables(db) {
         verification_status TEXT NOT NULL DEFAULT 'Verified',
         consultation_fee REAL NOT NULL DEFAULT 500.00,
         carecompass_fee REAL NOT NULL DEFAULT 0.00,
+        payment_mode TEXT NOT NULL DEFAULT 'pay_at_hospital',
         currency TEXT NOT NULL DEFAULT 'INR',
         cancellation_deadline_hours INTEGER NOT NULL DEFAULT 4,
         departments TEXT NOT NULL DEFAULT '[]',
@@ -95,6 +96,7 @@ function initSqliteAppointmentTables(db) {
       CREATE TABLE IF NOT EXISTS appointments (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         booking_reference TEXT UNIQUE NOT NULL,
+        booking_type TEXT NOT NULL DEFAULT 'direct_booking',
         hospital_id TEXT NOT NULL,
         hospital_name TEXT NOT NULL,
         hospital_phone TEXT,
@@ -103,7 +105,7 @@ function initSqliteAppointmentTables(db) {
         department_name TEXT NOT NULL,
         doctor_id TEXT,
         doctor_name TEXT,
-        slot_id INTEGER NOT NULL,
+        slot_id INTEGER,
         appointment_date TEXT NOT NULL,
         start_time TEXT NOT NULL,
         end_time TEXT NOT NULL,
@@ -112,11 +114,14 @@ function initSqliteAppointmentTables(db) {
         patient_email TEXT,
         notes TEXT,
         booking_status TEXT NOT NULL DEFAULT 'pending_confirmation',
-        payment_status TEXT NOT NULL DEFAULT 'pending',
-        consultation_fee REAL NOT NULL,
+        payment_status TEXT NOT NULL DEFAULT 'pay_at_hospital',
+        payment_mode TEXT NOT NULL DEFAULT 'pay_at_hospital',
+        consultation_fee REAL NOT NULL DEFAULT 0.00,
         service_fee REAL NOT NULL DEFAULT 0.00,
-        total_amount REAL NOT NULL,
+        total_amount REAL NOT NULL DEFAULT 0.00,
         currency TEXT NOT NULL DEFAULT 'INR',
+        confirmed_by_system TEXT,
+        confirmed_at TEXT,
         cancellation_reason TEXT,
         cancelled_at TEXT,
         created_at TEXT DEFAULT (datetime('now')),
@@ -127,14 +132,14 @@ function initSqliteAppointmentTables(db) {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         appointment_id INTEGER NOT NULL,
         booking_reference TEXT NOT NULL,
-        provider TEXT NOT NULL DEFAULT 'razorpay',
+        provider TEXT NOT NULL DEFAULT 'hospital_counter',
         provider_order_id TEXT UNIQUE NOT NULL,
         provider_payment_id TEXT,
         provider_signature TEXT,
         amount REAL NOT NULL,
         currency TEXT NOT NULL DEFAULT 'INR',
-        payment_status TEXT NOT NULL DEFAULT 'created',
-        payment_method TEXT,
+        payment_status TEXT NOT NULL DEFAULT 'pay_at_hospital',
+        payment_method TEXT DEFAULT 'pay_at_hospital',
         refund_id TEXT,
         refund_amount REAL,
         refund_status TEXT,
@@ -146,20 +151,39 @@ function initSqliteAppointmentTables(db) {
       );
     `);
 
+    // Ensure columns exist on older SQLite databases via safe migrations
+    try {
+      const apptCols = db.prepare("PRAGMA table_info(appointments)").all().map(c => c.name);
+      if (!apptCols.includes('booking_type')) db.exec("ALTER TABLE appointments ADD COLUMN booking_type TEXT NOT NULL DEFAULT 'direct_booking'");
+      if (!apptCols.includes('payment_mode')) db.exec("ALTER TABLE appointments ADD COLUMN payment_mode TEXT NOT NULL DEFAULT 'pay_at_hospital'");
+      if (!apptCols.includes('confirmed_by_system')) db.exec("ALTER TABLE appointments ADD COLUMN confirmed_by_system TEXT");
+      if (!apptCols.includes('confirmed_at')) db.exec("ALTER TABLE appointments ADD COLUMN confirmed_at TEXT");
+      if (!apptCols.includes('cancellation_reason')) db.exec("ALTER TABLE appointments ADD COLUMN cancellation_reason TEXT");
+      if (!apptCols.includes('cancelled_at')) db.exec("ALTER TABLE appointments ADD COLUMN cancelled_at TEXT");
+
+      const provCols = db.prepare("PRAGMA table_info(appointment_providers)").all().map(c => c.name);
+      if (!provCols.includes('payment_mode')) db.exec("ALTER TABLE appointment_providers ADD COLUMN payment_mode TEXT NOT NULL DEFAULT 'pay_at_hospital'");
+
+      const payCols = db.prepare("PRAGMA table_info(payments)").all().map(c => c.name);
+      if (!payCols.includes('notes')) db.exec("ALTER TABLE payments ADD COLUMN notes TEXT");
+    } catch (migErr) {
+      console.warn('[CareCompass DB] SQLite column check warning:', migErr.message);
+    }
+
     // Seed test pilot provider records if not present
     const stmt = db.prepare('SELECT COUNT(*) as count FROM appointment_providers');
     const count = stmt.get().count;
     if (count === 0) {
       db.prepare(`
         INSERT OR IGNORE INTO appointment_providers 
-        (hospital_id, integration_type, booking_enabled, verification_status, consultation_fee, carecompass_fee, cancellation_deadline_hours, departments)
+        (hospital_id, integration_type, booking_enabled, verification_status, consultation_fee, carecompass_fee, payment_mode, cancellation_deadline_hours, departments)
         VALUES 
         (
-          'IN-HOSP-11299', 'carecompass_partner', 1, 'Verified', 400.00, 0.00, 4,
+          'IN-HOSP-11299', 'carecompass_partner', 1, 'Verified', 400.00, 0.00, 'pay_at_hospital', 4,
           '[{"id":"gen-med","name":"General Medicine","consultationFee":400,"description":"Consultation with certified General Physician"},{"id":"gen-surg","name":"General Surgery","consultationFee":500,"description":"Surgical evaluations and post-op consultation"},{"id":"emerg-opd","name":"Emergency & Urgent Care OPD","consultationFee":450,"description":"Urgent outpatient triage and specialist review"}]'
         ),
         (
-          'IN-HOSP-11383', 'carecompass_partner', 1, 'Verified', 500.00, 0.00, 4,
+          'IN-HOSP-11383', 'carecompass_partner', 1, 'Verified', 500.00, 0.00, 'pay_at_hospital', 4,
           '[{"id":"gen-med","name":"General Medicine","consultationFee":500,"description":"Consultation with certified General Physician"},{"id":"cardio","name":"Cardiology Consultation","consultationFee":750,"description":"Cardiovascular assessment & ECG review"}]'
         )
       `).run();

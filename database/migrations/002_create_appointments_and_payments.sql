@@ -1,13 +1,12 @@
 -- ============================================================================
 -- CareCompass: Supabase PostgreSQL Database Migration
 -- Migration: 002_create_appointments_and_payments.sql
--- Description: Creates appointment providers, scheduling slots, appointments,
---              payments, double-booking prevention, audit triggers, and RLS policies.
+-- Description: Hospital appointment scheduling & appointment requests with
+--              "Pay at Hospital OPD Counter" workflow (No online payment gateway).
 -- ============================================================================
 
 -- 1. Appointment Providers Table
--- Stores authorized hospital scheduling partnerships and booking configurations.
--- Non-integrated hospitals will NOT have an active entry here, preserving integrity.
+-- Stores authorized hospital scheduling partnerships and OPD consultation fees.
 CREATE TABLE IF NOT EXISTS appointment_providers (
     id BIGSERIAL PRIMARY KEY,
     hospital_id VARCHAR(100) NOT NULL UNIQUE,
@@ -16,6 +15,7 @@ CREATE TABLE IF NOT EXISTS appointment_providers (
     verification_status VARCHAR(50) NOT NULL DEFAULT 'Verified',
     consultation_fee NUMERIC(10,2) NOT NULL DEFAULT 500.00,
     carecompass_fee NUMERIC(10,2) NOT NULL DEFAULT 0.00,
+    payment_mode VARCHAR(50) NOT NULL DEFAULT 'pay_at_hospital',
     currency VARCHAR(10) NOT NULL DEFAULT 'INR',
     cancellation_deadline_hours INTEGER NOT NULL DEFAULT 4,
     departments JSONB NOT NULL DEFAULT '[]'::jsonb,
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS appointment_providers (
 );
 
 -- 2. Appointment Slots Table
--- Authorized available consultation slots for partner healthcare facilities.
+-- Available consultation slots for partner healthcare facilities.
 CREATE TABLE IF NOT EXISTS appointment_slots (
     id BIGSERIAL PRIMARY KEY,
     hospital_id VARCHAR(100) NOT NULL,
@@ -48,10 +48,11 @@ CREATE TABLE IF NOT EXISTS appointment_slots (
 );
 
 -- 3. Appointments Table
--- Secure booking records linked to genuine partner hospitals and patient contact.
+-- Secure booking & appointment request records (Pay at Hospital).
 CREATE TABLE IF NOT EXISTS appointments (
     id BIGSERIAL PRIMARY KEY,
     booking_reference VARCHAR(64) UNIQUE NOT NULL,
+    booking_type VARCHAR(50) NOT NULL DEFAULT 'direct_booking', -- 'direct_booking' or 'appointment_request'
     hospital_id VARCHAR(100) NOT NULL,
     hospital_name TEXT NOT NULL,
     hospital_phone VARCHAR(50),
@@ -60,7 +61,7 @@ CREATE TABLE IF NOT EXISTS appointments (
     department_name VARCHAR(255) NOT NULL,
     doctor_id VARCHAR(100),
     doctor_name VARCHAR(255),
-    slot_id BIGINT NOT NULL,
+    slot_id BIGINT, -- Nullable for facility appointment requests
     appointment_date DATE NOT NULL,
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
@@ -69,11 +70,14 @@ CREATE TABLE IF NOT EXISTS appointments (
     patient_email VARCHAR(255),
     notes TEXT,
     booking_status VARCHAR(50) NOT NULL DEFAULT 'pending_confirmation',
-    payment_status VARCHAR(50) NOT NULL DEFAULT 'pending',
-    consultation_fee NUMERIC(10,2) NOT NULL,
+    payment_status VARCHAR(50) NOT NULL DEFAULT 'pay_at_hospital',
+    payment_mode VARCHAR(50) NOT NULL DEFAULT 'pay_at_hospital',
+    consultation_fee NUMERIC(10,2) NOT NULL DEFAULT 0.00,
     service_fee NUMERIC(10,2) NOT NULL DEFAULT 0.00,
-    total_amount NUMERIC(10,2) NOT NULL,
+    total_amount NUMERIC(10,2) NOT NULL DEFAULT 0.00,
     currency VARCHAR(10) NOT NULL DEFAULT 'INR',
+    confirmed_by_system VARCHAR(100),
+    confirmed_at TIMESTAMPTZ,
     cancellation_reason TEXT,
     cancelled_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -82,35 +86,25 @@ CREATE TABLE IF NOT EXISTS appointments (
         booking_status IN ('pending_confirmation', 'confirmed', 'cancelled', 'completed', 'rescheduled')
     ),
     CONSTRAINT chk_payment_status CHECK (
-        payment_status IN ('pending', 'paid', 'failed', 'refunded', 'waived')
+        payment_status IN ('pay_at_hospital', 'pending', 'paid', 'waived')
     )
 );
 
--- 4. Payments Table
--- Secure Razorpay order & transaction ledger. Card numbers or CVVs are NEVER stored.
+-- 4. Audit & Payment Receipts Table (Pay at Hospital Ledger)
 CREATE TABLE IF NOT EXISTS payments (
     id BIGSERIAL PRIMARY KEY,
     appointment_id BIGINT NOT NULL REFERENCES appointments(id) ON DELETE CASCADE,
     booking_reference VARCHAR(64) NOT NULL,
-    provider VARCHAR(50) NOT NULL DEFAULT 'razorpay',
+    provider VARCHAR(50) NOT NULL DEFAULT 'hospital_counter',
     provider_order_id VARCHAR(100) UNIQUE NOT NULL,
     provider_payment_id VARCHAR(100),
-    provider_signature TEXT,
+    payment_method VARCHAR(50) NOT NULL DEFAULT 'pay_at_hospital',
     amount NUMERIC(10,2) NOT NULL,
     currency VARCHAR(10) NOT NULL DEFAULT 'INR',
-    payment_status VARCHAR(50) NOT NULL DEFAULT 'created',
-    payment_method VARCHAR(50),
-    refund_id VARCHAR(100),
-    refund_amount NUMERIC(10,2),
-    refund_status VARCHAR(50),
-    error_code VARCHAR(100),
-    error_description TEXT,
-    webhook_verified BOOLEAN DEFAULT false,
+    payment_status VARCHAR(50) NOT NULL DEFAULT 'pay_at_hospital',
+    notes TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT chk_pay_status CHECK (
-        payment_status IN ('created', 'authorized', 'captured', 'failed', 'refunded')
-    )
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 5. Performance Indexes
@@ -121,8 +115,7 @@ CREATE INDEX IF NOT EXISTS idx_appointment_slots_cleanup ON appointment_slots (a
 CREATE INDEX IF NOT EXISTS idx_appointments_ref ON appointments (booking_reference);
 CREATE INDEX IF NOT EXISTS idx_appointments_phone ON appointments (patient_phone);
 CREATE INDEX IF NOT EXISTS idx_appointments_hosp ON appointments (hospital_id, appointment_date);
-CREATE INDEX IF NOT EXISTS idx_payments_order ON payments (provider_order_id);
-CREATE INDEX IF NOT EXISTS idx_payments_pay_id ON payments (provider_payment_id);
+CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments (booking_status);
 CREATE INDEX IF NOT EXISTS idx_payments_ref ON payments (booking_reference);
 
 -- 6. Trigger for Automatic updated_at
@@ -149,13 +142,13 @@ CREATE TRIGGER trg_payments_updated_at
     BEFORE UPDATE ON payments
     FOR EACH ROW EXECUTE FUNCTION update_timestamp_column();
 
--- 7. Row Level Security
+-- 7. Row Level Security (RLS) Policies
 ALTER TABLE appointment_providers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE appointment_slots ENABLE ROW LEVEL SECURITY;
 ALTER TABLE appointments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
 
--- Public can view enabled providers and available slots
+-- Public can view enabled providers and slots
 DROP POLICY IF EXISTS "Public can view active appointment providers" ON appointment_providers;
 CREATE POLICY "Public can view active appointment providers"
     ON appointment_providers FOR SELECT
@@ -183,8 +176,7 @@ DROP POLICY IF EXISTS "Service role access for payments" ON payments;
 CREATE POLICY "Service role access for payments"
     ON payments FOR ALL TO service_role USING (true) WITH CHECK (true);
 
--- Seed Initial Authorized Partner Hospital for Testing & Verification
--- Selects existing verified facility IN-HOSP-11299 and IN-HOSP-11383 from real database
+-- Seed Initial Authorized Partner Hospitals with Authentic OPD Fee Schedule
 INSERT INTO appointment_providers (
     hospital_id,
     integration_type,
@@ -192,6 +184,7 @@ INSERT INTO appointment_providers (
     verification_status,
     consultation_fee,
     carecompass_fee,
+    payment_mode,
     cancellation_deadline_hours,
     departments
 ) VALUES
@@ -202,6 +195,7 @@ INSERT INTO appointment_providers (
     'Verified',
     400.00,
     0.00,
+    'pay_at_hospital',
     4,
     '[
         {"id": "gen-med", "name": "General Medicine", "consultationFee": 400, "description": "Consultation with certified General Physician"},
@@ -216,6 +210,7 @@ INSERT INTO appointment_providers (
     'Verified',
     500.00,
     0.00,
+    'pay_at_hospital',
     4,
     '[
         {"id": "gen-med", "name": "General Medicine", "consultationFee": 500, "description": "Consultation with certified General Physician"},
@@ -225,4 +220,5 @@ INSERT INTO appointment_providers (
 ON CONFLICT (hospital_id) DO UPDATE SET
     booking_enabled = EXCLUDED.booking_enabled,
     consultation_fee = EXCLUDED.consultation_fee,
+    payment_mode = EXCLUDED.payment_mode,
     departments = EXCLUDED.departments;

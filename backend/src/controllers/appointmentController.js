@@ -1,19 +1,19 @@
 /**
- * CareCompass — Appointment & Payment API Controller
+ * CareCompass — Appointment API Controller
  * Express controller handling appointment booking, slot queries,
- * Razorpay order creation, payment signature verification, and cancellations.
+ * appointment requests, and "Pay at Hospital" workflow.
+ * (Zero external payment gateway credentials required).
  */
 
 const appointmentService = require('../services/appointmentService');
-const razorpayService = require('../services/razorpayService');
 
 /**
  * GET /api/appointments/config
- * Returns public payment configuration (key ID, mode, currency)
+ * Returns public payment configuration (paymentMode: 'pay_at_hospital')
  */
 function getConfig(req, res) {
   try {
-    const config = razorpayService.getPublicConfig();
+    const config = appointmentService.getPublicConfig();
     res.json({
       success: true,
       config
@@ -21,7 +21,7 @@ function getConfig(req, res) {
   } catch (err) {
     res.status(500).json({
       success: false,
-      error: 'Failed to retrieve payment configuration.'
+      error: 'Failed to retrieve appointment configuration.'
     });
   }
 }
@@ -113,10 +113,11 @@ async function reserveSlot(req, res, next) {
 }
 
 /**
- * POST /api/appointments/create-order
- * Create temporary reservation, calculate authorized fee, and generate Razorpay payment order
+ * POST /api/appointments/book
+ * Direct booking for authorized partner hospitals with Pay at Hospital workflow.
+ * Confirmed by CareCompass Authorized Hospital Scheduling System upon successful reservation.
  */
-async function createOrder(req, res, next) {
+async function bookAppointment(req, res, next) {
   try {
     const {
       slotId,
@@ -134,7 +135,7 @@ async function createOrder(req, res, next) {
       });
     }
 
-    const orderData = await appointmentService.createBookingAndOrder({
+    const bookingResult = await appointmentService.createDirectBooking({
       slotId,
       sessionId,
       patientName,
@@ -143,10 +144,7 @@ async function createOrder(req, res, next) {
       notes
     });
 
-    res.json({
-      success: true,
-      ...orderData
-    });
+    res.json(bookingResult);
   } catch (err) {
     res.status(400).json({
       success: false,
@@ -156,27 +154,44 @@ async function createOrder(req, res, next) {
 }
 
 /**
- * POST /api/appointments/verify-payment
- * Verify cryptographic Razorpay signature and confirm appointment
+ * POST /api/appointments/request
+ * Submit an Appointment Request for hospitals without automated slot booking.
+ * Status is set to 'pending_confirmation' until hospital scheduling confirms.
  */
-async function verifyPayment(req, res, next) {
+async function requestAppointment(req, res, next) {
   try {
-    const { orderId, paymentId, signature } = req.body;
+    const {
+      hospitalId,
+      departmentId,
+      departmentName,
+      preferredDate,
+      preferredTime,
+      patientName,
+      patientPhone,
+      patientEmail,
+      notes
+    } = req.body;
 
-    if (!orderId || !paymentId) {
+    if (!hospitalId || !patientName || !patientPhone || !preferredDate) {
       return res.status(400).json({
         success: false,
-        error: 'Missing orderId or paymentId.'
+        error: 'Please provide hospitalId, patientName, patientPhone, and preferredDate.'
       });
     }
 
-    const confirmation = await appointmentService.verifyPaymentAndConfirm({
-      orderId,
-      paymentId,
-      signature
+    const requestResult = await appointmentService.createAppointmentRequest({
+      hospitalId,
+      departmentId,
+      departmentName,
+      preferredDate,
+      preferredTime,
+      patientName,
+      patientPhone,
+      patientEmail,
+      notes
     });
 
-    res.json(confirmation);
+    res.json(requestResult);
   } catch (err) {
     res.status(400).json({
       success: false,
@@ -214,7 +229,7 @@ async function lookupAppointment(req, res, next) {
 
 /**
  * POST /api/appointments/cancel
- * Cancel booking and initiate refund if eligible
+ * Cancel booking safely without requiring payment gateway refunds
  */
 async function cancelAppointment(req, res, next) {
   try {
@@ -241,58 +256,13 @@ async function cancelAppointment(req, res, next) {
   }
 }
 
-/**
- * POST /api/appointments/webhook
- * Razorpay asynchronous webhook for reconciliation
- */
-async function handleWebhook(req, res) {
-  try {
-    const signature = req.headers['x-razorpay-signature'];
-    const rawBody = JSON.stringify(req.body);
-
-    const isValid = razorpayService.verifyWebhookSignature(rawBody, signature);
-    if (!isValid && process.env.NODE_ENV === 'production') {
-      return res.status(400).json({ error: 'Invalid webhook signature' });
-    }
-
-    const event = req.body.event;
-    console.log(`[Razorpay Webhook] Received event: ${event}`);
-
-    // If payment captured event received asynchronously
-    if (event === 'payment.captured' && req.body.payload?.payment?.entity) {
-      const entity = req.body.payload.payment.entity;
-      const orderId = entity.order_id;
-      const paymentId = entity.id;
-
-      if (orderId && paymentId) {
-        try {
-          await appointmentService.verifyPaymentAndConfirm({
-            orderId,
-            paymentId,
-            signature: 'webhook_verified'
-          });
-          console.log(`[Razorpay Webhook] Asynchronously confirmed appointment for order: ${orderId}`);
-        } catch (e) {
-          // May already be confirmed
-        }
-      }
-    }
-
-    res.json({ status: 'ok' });
-  } catch (err) {
-    console.error('[Razorpay Webhook Error]:', err);
-    res.status(500).json({ error: 'Webhook processing error' });
-  }
-}
-
 module.exports = {
   getConfig,
   getProvider,
   getSlots,
   reserveSlot,
-  createOrder,
-  verifyPayment,
+  bookAppointment,
+  requestAppointment,
   lookupAppointment,
-  cancelAppointment,
-  handleWebhook
+  cancelAppointment
 };

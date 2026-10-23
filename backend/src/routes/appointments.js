@@ -1,12 +1,13 @@
 /**
- * CareCompass — Appointments and Razorpay Payment Routes
+ * CareCompass — Appointments and Scheduling Routes
+ * Pay at Hospital workflow without external online payment gateway.
  */
 
 const express = require('express');
 const router = express.Router();
 const appointmentController = require('../controllers/appointmentController');
 
-// Gateway Configuration (Public key ID and policies)
+// Appointment Configuration (Pay at Hospital mode, policies)
 router.get('/config', appointmentController.getConfig);
 
 // Provider Information & Department Catalog
@@ -18,19 +19,16 @@ router.get('/slots', appointmentController.getSlots);
 // Temporary Slot Hold / Reservation (Double-booking prevention)
 router.post('/reserve', appointmentController.reserveSlot);
 
-// Create Booking & Razorpay Payment Order
-router.post('/create-order', appointmentController.createOrder);
+// Direct Booking for Partner Hospitals (Confirmed by Authorized Scheduling System, Pay at Hospital)
+router.post('/book', appointmentController.bookAppointment);
 
-// Verify Razorpay Payment Signature & Confirm Booking
-router.post('/verify-payment', appointmentController.verifyPayment);
+// Appointment Request for Non-Partner Hospitals (Pending Confirmation, Pay at Hospital)
+router.post('/request', appointmentController.requestAppointment);
 
 // Secure Patient Appointment Lookup (Reference + Phone)
 router.post('/lookup', appointmentController.lookupAppointment);
 
-// Cancellation & Refund Request
+// Cancellation Request
 router.post('/cancel', appointmentController.cancelAppointment);
-
-// Razorpay Webhook Endpoint
-router.post('/webhook', appointmentController.handleWebhook);
 
 module.exports = router;

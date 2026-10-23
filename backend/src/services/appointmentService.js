@@ -1,12 +1,12 @@
 /**
  * CareCompass — Hospital Appointment Booking & Scheduling Service
  * Implements genuine hospital scheduling, double-booking prevention, 
- * atomic slot reservation, secure lookup, and cancellation/refund logic.
+ * atomic slot reservation, appointment request routing, and "Pay at Hospital" workflow.
+ * (Zero external payment gateway credentials required).
  */
 
 const crypto = require('node:crypto');
 const db = require('../db/supabase');
-const razorpayService = require('./razorpayService');
 
 /**
  * Generate a unique, professional CareCompass booking reference
@@ -37,6 +37,22 @@ async function releaseExpiredReservations() {
 }
 
 /**
+ * Public configuration for frontend appointment modal
+ */
+function getPublicConfig() {
+  return {
+    onlinePayment: false,
+    paymentMode: 'pay_at_hospital',
+    currency: 'INR',
+    companyName: 'CareCompass Healthcare',
+    themeColor: '#0d9488',
+    serviceFee: 0.00,
+    supportEmail: 'support@carecompass.org',
+    supportPhone: '+91 1800 123 4567'
+  };
+}
+
+/**
  * Check if a hospital is an authorized partner and get its booking configuration
  * @param {string} hospitalId - e.g. "IN-HOSP-11299"
  */
@@ -63,11 +79,11 @@ async function getProviderInfo(hospitalId) {
   );
 
   if (!provRes.rows || provRes.rows.length === 0) {
-    // Non-integrated hospital: per strict instructions, do not generate fake bookings!
+    // Non-partner hospital: bookingEnabled is false, users can submit Appointment Request or call hospital
     return {
       success: true,
       bookingEnabled: false,
-      message: 'Online booking is not available for this hospital yet.',
+      message: 'Direct slot scheduling is not integrated for this facility. You can submit an appointment request or contact the hospital directly.',
       hospital: {
         id: hospital.hospital_id,
         name: hospital.hospital_name,
@@ -105,6 +121,7 @@ async function getProviderInfo(hospitalId) {
       verificationStatus: provider.verification_status,
       consultationFee: Number(provider.consultation_fee),
       carecompassFee: Number(provider.carecompass_fee || 0),
+      paymentMode: provider.payment_mode || 'pay_at_hospital',
       currency: provider.currency || 'INR',
       cancellationHours: provider.cancellation_deadline_hours || 4,
       departments
@@ -236,9 +253,10 @@ async function reserveSlot(slotId, sessionId) {
 }
 
 /**
- * Create a pending booking reservation and generate Razorpay payment order
+ * Direct booking for authorized partner hospitals with Pay at Hospital workflow.
+ * Confirmed by CareCompass Authorized Hospital Scheduling System upon successful reservation.
  */
-async function createBookingAndOrder({
+async function createDirectBooking({
   slotId,
   sessionId,
   patientName,
@@ -270,22 +288,24 @@ async function createBookingAndOrder({
   const totalAmount = consultationFee + serviceFee;
   const bookingReference = generateBookingReference();
 
-  // Create pending appointment record
+  // Create confirmed appointment record (authorized hospital scheduling system confirmation)
   const apptRes = await db.query(`
     INSERT INTO appointments (
-      booking_reference, hospital_id, hospital_name, hospital_phone, hospital_address,
+      booking_reference, booking_type, hospital_id, hospital_name, hospital_phone, hospital_address,
       department_id, department_name, doctor_id, doctor_name, slot_id,
       appointment_date, start_time, end_time,
       patient_name, patient_phone, patient_email, notes,
-      booking_status, payment_status,
-      consultation_fee, service_fee, total_amount, currency
+      booking_status, payment_status, payment_mode,
+      consultation_fee, service_fee, total_amount, currency,
+      confirmed_by_system, confirmed_at
     ) VALUES (
-      $1, $2, $3, $4, $5,
+      $1, 'direct_booking', $2, $3, $4, $5,
       $6, $7, $8, $9, $10,
       $11, $12, $13,
       $14, $15, $16, $17,
-      'pending_confirmation', 'pending',
-      $18, $19, $20, 'INR'
+      'confirmed', 'pay_at_hospital', 'pay_at_hospital',
+      $18, $19, $20, 'INR',
+      'CareCompass Authorized Hospital Scheduling System', NOW()
     ) RETURNING *
   `, [
     bookingReference,
@@ -312,35 +332,38 @@ async function createBookingAndOrder({
 
   const appointment = apptRes.rows[0];
 
-  // Create Razorpay payment order
-  const order = await razorpayService.createOrder({
-    amount: totalAmount,
-    receipt: bookingReference,
-    notes: {
-      hospital_id: slot.hospital_id,
-      hospital_name: provCheck.provider.hospitalName,
-      department_name: slot.department_name,
-      patient_phone: cleanPhone
-    }
-  });
+  // Mark slot as booked
+  await db.query(`
+    UPDATE appointment_slots
+    SET availability_status = 'booked',
+        reserved_by_session = NULL,
+        reservation_expires_at = NULL
+    WHERE id = $1
+  `, [slot.id]);
 
-  // Record order in payments table
+  // Record audit entry in payments ledger
   await db.query(`
     INSERT INTO payments (
       appointment_id, booking_reference, provider, provider_order_id,
-      amount, currency, payment_status
-    ) VALUES ($1, $2, 'razorpay', $3, $4, 'INR', 'created')
+      amount, currency, payment_status, payment_method, notes
+    ) VALUES ($1, $2, 'hospital_counter', $3, $4, 'INR', 'pay_at_hospital', 'pay_at_hospital', 'Pay at hospital OPD counter upon arrival')
   `, [
     appointment.id,
     bookingReference,
-    order.orderId,
+    `OPD-${bookingReference}`,
     totalAmount
   ]);
 
   return {
+    success: true,
     bookingReference,
     appointmentId: appointment.id,
+    bookingType: 'direct_booking',
+    bookingStatus: 'confirmed',
+    paymentStatus: 'pay_at_hospital',
+    paymentMode: 'pay_at_hospital',
     hospitalName: provCheck.provider.hospitalName,
+    hospitalPhone: provCheck.provider.hospitalPhone,
     hospitalAddress: provCheck.provider.address,
     departmentName: slot.department_name,
     doctorName: slot.doctor_name,
@@ -354,115 +377,121 @@ async function createBookingAndOrder({
     serviceFee,
     totalAmount,
     currency: 'INR',
-    orderId: order.orderId,
-    keyId: order.keyId,
-    isSimulated: order.isSimulated,
-    cancellationHours: provCheck.provider.cancellationHours
+    confirmedBySystem: 'CareCompass Authorized Hospital Scheduling System',
+    cancellationHours: provCheck.provider.cancellationHours || 4,
+    paymentInstructions: 'No advance online payment required. Settle your consultation fee at the hospital OPD registration counter on arrival via Cash, UPI, or Card.'
   };
 }
 
 /**
- * Verify payment signature and mark appointment and slot as CONFIRMED
+ * Submit an Appointment Request for hospitals without automated slot booking.
+ * Status is set to 'pending_confirmation' until hospital scheduling desk confirms.
  */
-async function verifyPaymentAndConfirm({
-  orderId,
-  paymentId,
-  signature
+async function createAppointmentRequest({
+  hospitalId,
+  departmentId,
+  departmentName,
+  preferredDate,
+  preferredTime,
+  patientName,
+  patientPhone,
+  patientEmail,
+  notes
 }) {
-  if (!orderId || !paymentId) {
-    throw new Error('Missing payment verification parameters (orderId, paymentId).');
+  if (!patientName || patientName.trim().length < 2) {
+    throw new Error('Please provide the patient full name.');
   }
 
-  // Find payment record
-  const payRes = await db.query(
-    'SELECT * FROM payments WHERE provider_order_id = $1 LIMIT 1',
-    [orderId]
+  const cleanPhone = (patientPhone || '').replace(/\D/g, '');
+  if (cleanPhone.length < 10) {
+    throw new Error('Please provide a valid 10-digit mobile contact number.');
+  }
+
+  if (!preferredDate) {
+    throw new Error('Please provide a preferred appointment date.');
+  }
+
+  // Validate date is not in past
+  const targetDate = new Date(`${preferredDate}T00:00:00`);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (isNaN(targetDate.getTime()) || targetDate < today) {
+    throw new Error('Please select a valid future appointment date.');
+  }
+
+  // Fetch hospital from directory
+  const hospRes = await db.query(
+    'SELECT * FROM hospitals WHERE hospital_id = $1 LIMIT 1',
+    [hospitalId]
   );
 
-  if (!payRes.rows || payRes.rows.length === 0) {
-    throw new Error('Payment record not found for this order.');
+  if (!hospRes.rows || hospRes.rows.length === 0) {
+    throw new Error('Hospital not found in CareCompass registry.');
   }
 
-  const payment = payRes.rows[0];
+  const hospital = hospRes.rows[0];
+  const bookingReference = generateBookingReference();
+  const startTime = preferredTime || '09:30:00';
+  const endTime = '17:00:00';
+  const resolvedDeptName = departmentName || 'General OPD Consultation';
 
-  // Verify HMAC SHA256 signature
-  const isSignatureValid = razorpayService.verifyPaymentSignature({
-    orderId,
-    paymentId,
-    signature
-  });
-
-  // In simulated test mode with test orders, permit verified mock signature
-  const isSimulatedTest = orderId.startsWith('order_test_');
-  const passedVerification = isSignatureValid || (isSimulatedTest && signature.length >= 16);
-
-  if (!passedVerification) {
-    await db.query(`
-      UPDATE payments 
-      SET payment_status = 'failed', 
-          error_code = 'SIG_VERIFY_FAILED',
-          error_description = 'Payment signature does not match computed HMAC SHA256.'
-      WHERE id = $1
-    `, [payment.id]);
-
-    await db.query(`
-      UPDATE appointments 
-      SET payment_status = 'failed', 
-          booking_status = 'pending_confirmation' 
-      WHERE id = $1
-    `, [payment.appointment_id]);
-
-    throw new Error('Payment signature verification failed. Untrusted payment source.');
-  }
-
-  // Signature is genuine! Atomically confirm appointment, payment, and slot
-  await db.query(`
-    UPDATE payments 
-    SET payment_status = 'captured',
-        provider_payment_id = $1,
-        provider_signature = $2
-    WHERE id = $3
-  `, [paymentId, signature, payment.id]);
-
+  // Create pending appointment request record
   const apptRes = await db.query(`
-    UPDATE appointments
-    SET booking_status = 'confirmed',
-        payment_status = 'paid'
-    WHERE id = $1
-    RETURNING *
-  `, [payment.appointment_id]);
+    INSERT INTO appointments (
+      booking_reference, booking_type, hospital_id, hospital_name, hospital_phone, hospital_address,
+      department_id, department_name, doctor_id, doctor_name, slot_id,
+      appointment_date, start_time, end_time,
+      patient_name, patient_phone, patient_email, notes,
+      booking_status, payment_status, payment_mode,
+      consultation_fee, service_fee, total_amount, currency,
+      confirmed_by_system, confirmed_at
+    ) VALUES (
+      $1, 'appointment_request', $2, $3, $4, $5,
+      $6, $7, NULL, NULL, NULL,
+      $8, $9, $10,
+      $11, $12, $13, $14,
+      'pending_confirmation', 'pay_at_hospital', 'pay_at_hospital',
+      0.00, 0.00, 0.00, 'INR',
+      NULL, NULL
+    ) RETURNING *
+  `, [
+    bookingReference,
+    hospital.hospital_id,
+    hospital.hospital_name,
+    hospital.phone || hospital.alternate_phone || null,
+    hospital.address || null,
+    departmentId || 'general',
+    resolvedDeptName,
+    preferredDate,
+    startTime,
+    endTime,
+    patientName.trim(),
+    cleanPhone,
+    (patientEmail || '').trim() || null,
+    (notes || '').trim() || null
+  ]);
 
   const appointment = apptRes.rows[0];
 
-  // Update slot status to booked
-  await db.query(`
-    UPDATE appointment_slots
-    SET availability_status = 'booked',
-        reserved_by_session = NULL,
-        reservation_expires_at = NULL
-    WHERE id = $1
-  `, [appointment.slot_id]);
-
   return {
     success: true,
-    bookingReference: appointment.booking_reference,
-    bookingStatus: 'confirmed',
-    paymentStatus: 'paid',
-    paymentId,
-    orderId,
-    hospitalName: appointment.hospital_name,
-    hospitalPhone: appointment.hospital_phone,
-    hospitalAddress: appointment.hospital_address,
-    departmentName: appointment.department_name,
-    doctorName: appointment.doctor_name,
-    appointmentDate: appointment.appointment_date,
-    startTime: appointment.start_time.slice(0, 5),
-    endTime: appointment.end_time.slice(0, 5),
+    bookingReference,
+    appointmentId: appointment.id,
+    bookingType: 'appointment_request',
+    bookingStatus: 'pending_confirmation',
+    paymentStatus: 'pay_at_hospital',
+    paymentMode: 'pay_at_hospital',
+    hospitalName: hospital.hospital_name,
+    hospitalPhone: hospital.phone || hospital.alternate_phone,
+    hospitalAddress: hospital.address,
+    departmentName: resolvedDeptName,
+    appointmentDate: preferredDate,
+    preferredTime: startTime.slice(0, 5),
     patientName: appointment.patient_name,
-    patientPhone: appointment.patient_phone,
-    totalAmount: Number(appointment.total_amount),
-    currency: appointment.currency,
-    confirmedAt: new Date().toISOString()
+    patientPhone: cleanPhone,
+    patientEmail: appointment.patient_email,
+    paymentInstructions: 'Your appointment request has been submitted to the hospital desk. Hospital staff will contact you to confirm final timing. Consultation charges apply as per hospital tariff on arrival.'
   };
 }
 
@@ -476,7 +505,7 @@ async function lookupAppointment({ reference, phone }) {
 
   const cleanPhone = phone.replace(/\D/g, '');
   const res = await db.query(`
-    SELECT a.*, p.provider_order_id, p.provider_payment_id, p.payment_method
+    SELECT a.*, p.provider_order_id, p.payment_method
     FROM appointments a
     LEFT JOIN payments p ON p.appointment_id = a.id
     WHERE a.booking_reference = $1
@@ -498,10 +527,11 @@ async function lookupAppointment({ reference, phone }) {
   const apptDateTime = new Date(`${appt.appointment_date}T${appt.start_time}`);
   const now = new Date();
   const hoursUntilAppointment = (apptDateTime.getTime() - now.getTime()) / (1000 * 60 * 60);
-  const isCancellable = appt.booking_status === 'confirmed' && hoursUntilAppointment >= 4;
+  const isCancellable = (appt.booking_status === 'confirmed' || appt.booking_status === 'pending_confirmation') && hoursUntilAppointment >= 4;
 
   return {
     bookingReference: appt.booking_reference,
+    bookingType: appt.booking_type || 'direct_booking',
     hospitalId: appt.hospital_id,
     hospitalName: appt.hospital_name,
     hospitalPhone: appt.hospital_phone,
@@ -509,19 +539,20 @@ async function lookupAppointment({ reference, phone }) {
     departmentName: appt.department_name,
     doctorName: appt.doctor_name,
     appointmentDate: appt.appointment_date,
-    startTime: appt.start_time.slice(0, 5),
-    endTime: appt.end_time.slice(0, 5),
+    startTime: appt.start_time ? appt.start_time.slice(0, 5) : '09:00',
+    endTime: appt.end_time ? appt.end_time.slice(0, 5) : '17:00',
     patientName: appt.patient_name,
     patientPhone: appt.patient_phone,
     patientEmail: appt.patient_email,
     bookingStatus: appt.booking_status,
-    paymentStatus: appt.payment_status,
-    consultationFee: Number(appt.consultation_fee),
-    serviceFee: Number(appt.service_fee),
-    totalAmount: Number(appt.total_amount),
-    currency: appt.currency,
-    orderId: appt.provider_order_id,
-    paymentId: appt.provider_payment_id,
+    paymentStatus: appt.payment_status || 'pay_at_hospital',
+    paymentMode: appt.payment_mode || 'pay_at_hospital',
+    consultationFee: Number(appt.consultation_fee || 0),
+    serviceFee: Number(appt.service_fee || 0),
+    totalAmount: Number(appt.total_amount || 0),
+    currency: appt.currency || 'INR',
+    confirmedBySystem: appt.confirmed_by_system,
+    confirmedAt: appt.confirmed_at,
     createdAt: appt.created_at,
     isCancellable,
     hoursUntilAppointment: Math.round(hoursUntilAppointment * 10) / 10
@@ -529,7 +560,7 @@ async function lookupAppointment({ reference, phone }) {
 }
 
 /**
- * Cancel an appointment and process refund if eligible
+ * Cancel an appointment safely without requiring online payment gateway refunds
  */
 async function cancelAppointment({ reference, phone, reason = 'Patient requested cancellation' }) {
   const appt = await lookupAppointment({ reference, phone });
@@ -539,55 +570,38 @@ async function cancelAppointment({ reference, phone, reason = 'Patient requested
   }
 
   if (!appt.isCancellable) {
-    throw new Error(`Cancellation policy: Appointments can only be cancelled at least 4 hours in advance.`);
-  }
-
-  let refundResult = null;
-  if (appt.paymentStatus === 'paid' && appt.paymentId) {
-    refundResult = await razorpayService.processRefund({
-      paymentId: appt.paymentId,
-      amount: appt.totalAmount,
-      notes: { bookingReference: reference, reason }
-    });
+    throw new Error('Cancellation policy: Appointments can only be cancelled at least 4 hours in advance.');
   }
 
   // Update appointment record
   await db.query(`
     UPDATE appointments
     SET booking_status = 'cancelled',
-        payment_status = $1,
-        cancellation_reason = $2,
+        cancellation_reason = $1,
         cancelled_at = NOW()
-    WHERE booking_reference = $3
+    WHERE booking_reference = $2
   `, [
-    refundResult && refundResult.success ? 'refunded' : 'cancelled',
     reason,
     reference
   ]);
 
-  // Update payment record
-  if (refundResult && refundResult.success) {
-    await db.query(`
-      UPDATE payments
-      SET payment_status = 'refunded',
-          refund_id = $1,
-          refund_amount = $2,
-          refund_status = $3
-      WHERE booking_reference = $4
-    `, [
-      refundResult.refundId,
-      refundResult.amount,
-      refundResult.status,
-      reference
-    ]);
-  }
+  // Update payment status in audit ledger if exists
+  await db.query(`
+    UPDATE payments
+    SET payment_status = 'cancelled',
+        notes = $1
+    WHERE booking_reference = $2
+  `, [
+    `Cancelled by patient: ${reason}`,
+    reference
+  ]);
 
-  // Free the appointment slot back to available
+  // Free the appointment slot back to available if assigned
   const slotRes = await db.query(
     'SELECT slot_id FROM appointments WHERE booking_reference = $1 LIMIT 1',
     [reference]
   );
-  if (slotRes.rows && slotRes.rows.length > 0) {
+  if (slotRes.rows && slotRes.rows.length > 0 && slotRes.rows[0].slot_id) {
     await db.query(`
       UPDATE appointment_slots
       SET availability_status = 'available',
@@ -601,10 +615,8 @@ async function cancelAppointment({ reference, phone, reason = 'Patient requested
     success: true,
     bookingReference: reference,
     bookingStatus: 'cancelled',
-    paymentStatus: refundResult && refundResult.success ? 'refunded' : 'cancelled',
-    refundId: refundResult ? refundResult.refundId : null,
-    refundAmount: refundResult ? refundResult.amount : 0,
-    message: 'Your appointment has been cancelled successfully. Any eligible refund will be credited back via Razorpay.'
+    paymentStatus: 'cancelled',
+    message: 'Your appointment has been cancelled successfully. Since your payment mode was Pay at Hospital, no cancellation charges or refunds apply.'
   };
 }
 
@@ -612,9 +624,10 @@ module.exports = {
   getProviderInfo,
   getAvailableSlots,
   reserveSlot,
-  createBookingAndOrder,
-  verifyPaymentAndConfirm,
+  createDirectBooking,
+  createAppointmentRequest,
   lookupAppointment,
   cancelAppointment,
+  getPublicConfig,
   generateBookingReference
 };

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Manage your CareCompass hospital appointments, check live confirmation status, view Razorpay payment receipts, and request cancellations or rescheduling.">
-  <title>My Hospital Appointments & Receipts — CareCompass</title>
+  <meta name="description" content="Manage your CareCompass hospital appointments, check live confirmation status, view appointment slips, and manage cancellations.">
+  <title>My Hospital Appointments & Booking Slips — CareCompass</title>
 
   <!-- Open Graph & Meta -->
   <meta property="og:title" content="My Hospital Appointments — CareCompass">
@@ -168,7 +168,7 @@
         <p>Are you sure you want to cancel your appointment with <strong id="cancel-hospital-name"></strong>?</p>
 
         <div class="booking-policy-box" style="margin: 16px 0;">
-          <p><strong>Refund Policy:</strong> If eligible, your consultation fee of <strong id="cancel-refund-amount"></strong> will be automatically refunded through Razorpay to your original payment method within 3–5 banking days.</p>
+          <p><strong>Cancellation Policy:</strong> Since your payment mode is Pay at Hospital, this appointment will be cancelled immediately with zero cancellation fees or penalties.</p>
         </div>
 
         <div class="search-field-group">
@@ -184,7 +184,7 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-outline" id="btn-dismiss-cancel">Keep Appointment</button>
         <button type="button" class="btn btn-primary" id="btn-confirm-cancel" style="background: #dc2626; border-color: #dc2626;">
-          Confirm Cancellation & Refund
+          Confirm Cancellation
         </button>
       </div>
     </div>
@@ -334,12 +334,12 @@
         if (appt.bookingStatus === 'cancelled') {
           statusClass = 'status-cancelled';
           statusLabel = 'CANCELLED';
+        } else if (appt.bookingStatus === 'pending_confirmation') {
+          statusClass = 'status-pending';
+          statusLabel = 'PENDING HOSPITAL CONFIRMATION';
         } else if (appt.bookingStatus === 'completed') {
           statusClass = 'status-completed';
           statusLabel = 'COMPLETED';
-        } else if (appt.paymentStatus === 'pending') {
-          statusClass = 'status-pending';
-          statusLabel = 'PAYMENT PENDING';
         }
 
         resultSection.innerHTML = `
@@ -391,18 +391,18 @@
                 </div>
 
                 <div class="arc-col">
-                  <span class="arc-col-lbl">Payment Status</span>
-                  <strong class="arc-col-val"><span class="badge-paid">PAID ₹${appt.totalAmount.toFixed(2)}</span></strong>
-                  <span class="arc-pay-method">via Razorpay ${appt.paymentId ? `(#${appt.paymentId.slice(-8)})` : ''}</span>
+                  <span class="arc-col-lbl">Payment Mode & Status</span>
+                  <strong class="arc-col-val"><span class="badge-pay-hospital">Pay at Hospital OPD Desk</span></strong>
+                  <span class="arc-pay-method">${appt.totalAmount > 0 ? `Payable: ₹${appt.totalAmount.toFixed(2)}` : 'Tariff as per hospital counter'}</span>
                 </div>
               </div>
 
-              <!-- Transparent Price Receipt -->
+              <!-- Transparent Consultation Summary -->
               <div class="arc-receipt-box">
-                <h4>Payment Receipt Summary</h4>
+                <h4>Appointment & Consultation Summary</h4>
                 <div class="receipt-row">
                   <span>Hospital Outpatient Consultation Fee</span>
-                  <span>₹${appt.consultationFee.toFixed(2)}</span>
+                  <span>${appt.consultationFee > 0 ? `₹${appt.consultationFee.toFixed(2)}` : 'As per hospital tariff'}</span>
                 </div>
                 <div class="receipt-row">
                   <span>CareCompass Platform Convenience Fee</span>
@@ -410,9 +410,12 @@
                 </div>
                 <div class="receipt-divider"></div>
                 <div class="receipt-row total-row">
-                  <strong>Total Paid</strong>
-                  <strong>₹${appt.totalAmount.toFixed(2)}</strong>
+                  <strong>Total Payable at Hospital OPD Desk</strong>
+                  <strong>${appt.totalAmount > 0 ? `₹${appt.totalAmount.toFixed(2)}` : 'Applicable OPD Tariff'}</strong>
                 </div>
+                <p style="font-size: 0.8rem; color: #64748b; margin-top: 8px;">
+                  Pay directly at the hospital registration counter on arrival (Cash, UPI, or Card).
+                </p>
               </div>
 
               <!-- Notice & Cancellation Rules -->
@@ -433,7 +436,7 @@
               ${appt.bookingStatus === 'cancelled' ? `
                 <div class="arc-cancelled-banner">
                   <strong>This appointment has been cancelled.</strong>
-                  <p>Payment Status: <strong>${appt.paymentStatus.toUpperCase()}</strong>. Any eligible refund is credited via Razorpay.</p>
+                  <p>Payment Mode: <strong>PAY AT HOSPITAL</strong>. No advance payment was charged.</p>
                 </div>
               ` : ''}
 
@@ -488,7 +491,7 @@
         if (!currentActiveAppointment) return;
 
         btnConfirmCancel.setAttribute('disabled', 'true');
-        btnConfirmCancel.textContent = 'Processing Cancellation & Refund...';
+        btnConfirmCancel.textContent = 'Processing Cancellation...';
 
         try {
           const reason = cancelReasonSelect.value;
@@ -505,19 +508,19 @@
           const data = await res.json();
           closeCancellationModal();
           btnConfirmCancel.removeAttribute('disabled');
-          btnConfirmCancel.textContent = 'Confirm Cancellation & Refund';
+          btnConfirmCancel.textContent = 'Confirm Cancellation';
 
           if (!data || !data.success) {
             alert(data?.error || 'Cancellation request failed.');
             return;
           }
 
-          alert('Your appointment has been cancelled successfully. Your refund has been processed.');
+          alert('Your appointment has been cancelled successfully. Since your payment mode was Pay at Hospital, no cancellation charges apply.');
           performLookup(currentActiveAppointment.bookingReference, currentActiveAppointment.patientPhone);
         } catch (err) {
           closeCancellationModal();
           btnConfirmCancel.removeAttribute('disabled');
-          btnConfirmCancel.textContent = 'Confirm Cancellation & Refund';
+          btnConfirmCancel.textContent = 'Confirm Cancellation';
           alert(`Cancellation error: ${err.message}`);
         }
       });

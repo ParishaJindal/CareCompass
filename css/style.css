@@ -4454,6 +4454,45 @@ img, video, canvas, svg {
   color: #38bdf8;
 }
 
+.arc-status-badge.status-pending {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+
+.badge-pay-hospital {
+  background: rgba(13, 148, 136, 0.15);
+  color: #0f766e;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 12px;
+  display: inline-block;
+}
+
+.notice-contact-action-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.dcc-fee-note {
+  font-size: 0.68rem;
+  color: #0d9488;
+  font-weight: 600;
+  display: block;
+}
+
+.btn-confirm-booking {
+  background: #0d9488 !important;
+  color: #ffffff !important;
+  font-weight: 700;
+}
+
+.btn-confirm-booking:hover {
+  background: #0f766e !important;
+}
+
 .arc-body {
   padding: 24px;
 }

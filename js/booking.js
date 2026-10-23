@@ -1,7 +1,8 @@
 /**
- * CareCompass — Hospital Appointment Booking & Razorpay Online Payment Flow
+ * CareCompass — Hospital Appointment Booking & Scheduling Flow
+ * "Pay at Hospital OPD Counter" workflow (Zero online payment gateway).
  * Architected for responsive mobile devices, strict data integrity,
- * and zero-leakage security.
+ * and zero-leakage patient privacy.
  */
 
 window.CareCompassBooking = (function () {
@@ -11,12 +12,15 @@ window.CareCompassBooking = (function () {
   const state = {
     sessionId: 'cc_sess_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now(),
     currentStep: 1,
+    bookingMode: 'direct_booking', // 'direct_booking' or 'appointment_request'
     hospitalId: null,
     hospitalData: null,
     providerConfig: null,
     selectedDepartment: null,
     selectedDate: null,
     selectedSlot: null,
+    preferredTimeSlot: 'Morning (09:30 AM - 12:30 PM)',
+    requestDepartmentName: 'General OPD Consultation',
     slotsCache: {},
     patient: {
       name: '',
@@ -25,9 +29,7 @@ window.CareCompassBooking = (function () {
       notes: '',
       consent: false
     },
-    orderData: null,
-    confirmedBooking: null,
-    razorpayKeyId: null
+    confirmedBooking: null
   };
 
   /**
@@ -41,42 +43,7 @@ window.CareCompassBooking = (function () {
   }
 
   /**
-   * Initialize Razorpay SDK script dynamically if not yet loaded
-   */
-  function loadRazorpaySdk() {
-    return new Promise((resolve) => {
-      if (window.Razorpay) {
-        return resolve(true);
-      }
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.async = true;
-      script.onload = () => resolve(true);
-      script.onerror = () => {
-        console.warn('[CareCompass Booking] Razorpay checkout.js script could not be loaded from CDN.');
-        resolve(false);
-      };
-      document.head.appendChild(script);
-    });
-  }
-
-  /**
-   * Fetch public gateway configuration from backend
-   */
-  async function fetchConfig() {
-    try {
-      const res = await fetch(getApiUrl('/api/appointments/config'));
-      const data = await res.json();
-      if (data && data.success && data.config) {
-        state.razorpayKeyId = data.config.keyId;
-      }
-    } catch (e) {
-      console.warn('[CareCompass Booking] Note loading config:', e.message);
-    }
-  }
-
-  /**
-   * Open the appointment booking modal or unavailable notice
+   * Open the appointment booking modal or request flow
    * @param {string} hospitalId - e.g. "IN-HOSP-11299"
    * @param {string} hospitalName
    * @param {Object} [fallbackData] - Local hospital object
@@ -88,17 +55,16 @@ window.CareCompassBooking = (function () {
     state.hospitalId = hospitalId;
     state.hospitalData = fallbackData;
     state.currentStep = 1;
+    state.bookingMode = 'direct_booking';
     state.selectedDepartment = null;
     state.selectedDate = new Date().toISOString().slice(0, 10);
     state.selectedSlot = null;
-    state.orderData = null;
     state.confirmedBooking = null;
 
     ensureModalElements();
     showLoadingModal('Checking Hospital Scheduling Integration...');
 
     try {
-      await fetchConfig();
       const res = await fetch(getApiUrl(`/api/appointments/provider/${encodeURIComponent(hospitalId)}`));
       const data = await res.json();
 
@@ -108,12 +74,13 @@ window.CareCompassBooking = (function () {
       }
 
       if (!data.bookingEnabled) {
-        // Hospital is not integrated with CareCompass online scheduling
-        showNonIntegratedNotice(data.hospital || fallbackData);
+        // Hospital does not have automated slot booking: allow user to Call or Request Appointment
+        state.hospitalData = data.hospital || fallbackData;
+        showNonIntegratedNotice(state.hospitalData);
         return;
       }
 
-      // Hospital IS an authorized partner with genuine appointment scheduling!
+      // Hospital IS an authorized partner with genuine appointment scheduling
       state.providerConfig = data.provider;
       state.hospitalData = {
         id: data.provider.hospitalId,
@@ -155,8 +122,8 @@ window.CareCompassBooking = (function () {
             <div class="bd-brand">
               <span class="bd-logo-icon">🧭</span>
               <div>
-                <h3 id="booking-modal-title">Book Hospital Appointment</h3>
-                <p id="booking-modal-subtitle">Direct, authorized hospital scheduling</p>
+                <h3 id="booking-modal-title">Hospital Appointment Scheduling</h3>
+                <p id="booking-modal-subtitle">Pay at Hospital OPD Counter • Zero Advance Online Fee</p>
               </div>
             </div>
             <button type="button" class="modal-close-btn" id="booking-modal-close" aria-label="Close booking">&times;</button>
@@ -196,13 +163,14 @@ window.CareCompassBooking = (function () {
       <div class="booking-loading-state">
         <div class="loading-spinner-circle" aria-hidden="true"></div>
         <h4>${escapeHtml(message)}</h4>
-        <p>Connecting to authorized hospital scheduling gateway...</p>
+        <p>Connecting to hospital OPD scheduling services...</p>
       </div>
     `;
   }
 
   /**
-   * Display professional notice for non-partner hospitals (Constraint fulfillment)
+   * Display notice for facilities without automated real-time slot booking.
+   * Fulfills Requirement 11: Allow user to Request Appointment or Contact Hospital.
    */
   function showNonIntegratedNotice(hospital) {
     const body = document.getElementById('booking-dialog-body');
@@ -218,26 +186,28 @@ window.CareCompassBooking = (function () {
           ℹ️
         </div>
         <div class="notice-content">
-          <span class="badge-notice-unavail">Online Booking Not Yet Active</span>
-          <h3>Online booking is not available for this hospital yet.</h3>
+          <span class="badge-notice-unavail">Direct Slot Booking Not Active</span>
+          <h3>Direct calendar slot scheduling is not integrated for this facility yet.</h3>
           <p class="notice-explainer">
-            CareCompass only provides online appointment scheduling for healthcare facilities with an authorized, verified scheduling integration.
-            We do not display unverified slots or simulated doctor availability.
+            CareCompass partners with healthcare facilities for authorized slot booking. For this facility, you can either call the reception desk directly or submit an official <strong>Appointment Request</strong>.
           </p>
 
           <div class="notice-facility-info">
             <h4>${escapeHtml(name)}</h4>
             <p>📍 ${escapeHtml(address)}</p>
-            ${phone ? `
-              <div class="notice-contact-action">
-                <p>You can contact this hospital directly to schedule an appointment or inquiry:</p>
-                <a href="tel:${escapeHtml(phone)}" class="btn btn-primary btn-call-direct">
+            
+            <div class="notice-contact-action-box">
+              ${phone ? `
+                <a href="tel:${escapeHtml(phone)}" class="btn btn-outline btn-call-direct">
                   📞 Call Hospital: ${escapeHtml(phone)}
                 </a>
-              </div>
-            ` : `
-              <p class="notice-phone-missing">Official telephone contact is currently pending verification for this registry record.</p>
-            `}
+              ` : `
+                <p class="notice-phone-missing">Telephone contact pending verification for this registry record.</p>
+              `}
+              <button type="button" class="btn btn-primary" id="btn-start-appointment-request">
+                📝 Request an Appointment
+              </button>
+            </div>
           </div>
 
           <div class="notice-actions-footer">
@@ -249,6 +219,9 @@ window.CareCompassBooking = (function () {
     `;
 
     body.querySelector('#btn-notice-dismiss')?.addEventListener('click', closeModal);
+    body.querySelector('#btn-start-appointment-request')?.addEventListener('click', () => {
+      openAppointmentRequestFlow(hospital);
+    });
   }
 
   function showErrorNotice(errorMessage) {
@@ -271,7 +244,300 @@ window.CareCompassBooking = (function () {
   }
 
   /**
-   * Render Steps 1 through 6 of the Booking Wizard
+   * Start Appointment Request flow for non-partner hospitals (Requirement 11)
+   */
+  function openAppointmentRequestFlow(hospital) {
+    state.bookingMode = 'appointment_request';
+    state.hospitalData = hospital;
+    state.selectedDate = new Date().toISOString().slice(0, 10);
+    renderRequestStep(1);
+  }
+
+  /**
+   * Render Steps for Appointment Request Flow
+   */
+  function renderRequestStep(stepNumber) {
+    const body = document.getElementById('booking-dialog-body');
+    if (!body) return;
+
+    const hosp = state.hospitalData;
+    const name = hosp.name || hosp.hospital_name || 'Hospital';
+
+    if (stepNumber === 1) {
+      body.innerHTML = `
+        <div class="booking-step-content step-request-form">
+          <div class="wizard-header">
+            <h4>Request an Appointment at ${escapeHtml(name)}</h4>
+            <p>Submit your preferred date and consultation details. Hospital staff will confirm your slot.</p>
+          </div>
+
+          <form id="appointment-request-form" class="booking-form-grid" novalidate>
+            <div class="booking-form-group">
+              <label for="req-patient-name">Patient Full Name <span class="required-star">*</span></label>
+              <input type="text" id="req-patient-name" class="booking-input" placeholder="e.g. Parisha Jindal" value="${escapeHtml(state.patient.name)}" required autocomplete="name">
+              <span class="field-error-msg" id="err-req-name"></span>
+            </div>
+
+            <div class="booking-form-group">
+              <label for="req-patient-phone">Mobile Contact Number <span class="required-star">*</span></label>
+              <div class="phone-input-group">
+                <span class="country-prefix">+91</span>
+                <input type="tel" id="req-patient-phone" class="booking-input" placeholder="98765 43210" maxlength="10" value="${escapeHtml(state.patient.phone)}" required autocomplete="tel">
+              </div>
+              <span class="field-help-text">Hospital reception will call this number to confirm the appointment</span>
+              <span class="field-error-msg" id="err-req-phone"></span>
+            </div>
+
+            <div class="booking-form-group">
+              <label for="req-patient-email">Email Address <span class="optional-tag">(Optional)</span></label>
+              <input type="email" id="req-patient-email" class="booking-input" placeholder="parisha@example.com" value="${escapeHtml(state.patient.email)}" autocomplete="email">
+            </div>
+
+            <div class="booking-form-group">
+              <label for="req-preferred-date">Preferred Consultation Date <span class="required-star">*</span></label>
+              <input type="date" id="req-preferred-date" class="booking-input" min="${new Date().toISOString().slice(0, 10)}" value="${state.selectedDate || new Date().toISOString().slice(0, 10)}" required>
+              <span class="field-error-msg" id="err-req-date"></span>
+            </div>
+
+            <div class="booking-form-group">
+              <label for="req-preferred-time">Preferred Time Window <span class="required-star">*</span></label>
+              <select id="req-preferred-time" class="booking-input">
+                <option value="09:30:00" ${state.preferredTimeSlot.includes('09:30') ? 'selected' : ''}>Morning (09:30 AM – 12:30 PM)</option>
+                <option value="14:00:00" ${state.preferredTimeSlot.includes('14:00') ? 'selected' : ''}>Afternoon (02:00 PM – 04:30 PM)</option>
+                <option value="17:00:00" ${state.preferredTimeSlot.includes('17:00') ? 'selected' : ''}>Evening (05:00 PM – 07:30 PM)</option>
+              </select>
+            </div>
+
+            <div class="booking-form-group">
+              <label for="req-department-name">Clinical Department / Concern</label>
+              <input type="text" id="req-department-name" class="booking-input" placeholder="e.g. General Medicine, Pediatrics, Orthopedics, Fever" value="${escapeHtml(state.requestDepartmentName || 'General OPD Consultation')}">
+            </div>
+
+            <div class="booking-form-group">
+              <label for="req-notes">Symptoms / Notes for Doctor <span class="optional-tag">(Optional)</span></label>
+              <textarea id="req-notes" class="booking-textarea" rows="2" placeholder="Brief description of symptoms...">${escapeHtml(state.patient.notes)}</textarea>
+            </div>
+
+            <div class="review-pricing-card" style="margin-top: 10px;">
+              <h5>Payment Notice</h5>
+              <div class="pricing-row total-row">
+                <strong>Payment Mode</strong>
+                <strong class="total-price" style="color: #0d9488;">Pay at Hospital Counter</strong>
+              </div>
+              <p style="font-size: 0.85rem; color: #64748b; margin-top: 6px;">
+                Zero payment required online. Consultation fees apply as per hospital standard tariff upon arrival.
+              </p>
+            </div>
+
+            <div class="booking-consent-box">
+              <label class="consent-checkbox-label">
+                <input type="checkbox" id="req-privacy-consent" ${state.patient.consent ? 'checked' : ''} required>
+                <span>
+                  I consent to sharing this request with <strong>${escapeHtml(name)}</strong> 
+                  to schedule this consultation.
+                </span>
+              </label>
+              <span class="field-error-msg" id="err-req-consent"></span>
+            </div>
+          </form>
+
+          <div class="wizard-footer-actions">
+            <button type="button" class="btn btn-outline" id="btn-req-cancel">Cancel</button>
+            <button type="button" class="btn btn-primary" id="btn-submit-request">
+              📝 Submit Appointment Request
+            </button>
+          </div>
+        </div>
+      `;
+
+      body.querySelector('#btn-req-cancel')?.addEventListener('click', closeModal);
+      body.querySelector('#btn-submit-request')?.addEventListener('click', submitAppointmentRequest);
+    }
+  }
+
+  /**
+   * Submit Appointment Request (Requirement 11)
+   */
+  async function submitAppointmentRequest() {
+    const nameInput = document.getElementById('req-patient-name');
+    const phoneInput = document.getElementById('req-patient-phone');
+    const emailInput = document.getElementById('req-patient-email');
+    const dateInput = document.getElementById('req-preferred-date');
+    const timeSelect = document.getElementById('req-preferred-time');
+    const deptInput = document.getElementById('req-department-name');
+    const notesInput = document.getElementById('req-notes');
+    const consentInput = document.getElementById('req-privacy-consent');
+
+    const errName = document.getElementById('err-req-name');
+    const errPhone = document.getElementById('err-req-phone');
+    const errDate = document.getElementById('err-req-date');
+    const errConsent = document.getElementById('err-req-consent');
+
+    if (errName) errName.textContent = '';
+    if (errPhone) errPhone.textContent = '';
+    if (errDate) errDate.textContent = '';
+    if (errConsent) errConsent.textContent = '';
+
+    let isValid = true;
+    const name = (nameInput?.value || '').trim();
+    if (name.length < 2) {
+      if (errName) errName.textContent = 'Please enter patient full name.';
+      nameInput?.focus();
+      isValid = false;
+    }
+
+    const rawPhone = (phoneInput?.value || '').replace(/\D/g, '');
+    if (rawPhone.length !== 10) {
+      if (errPhone) errPhone.textContent = 'Please enter a valid 10-digit mobile number.';
+      if (isValid) phoneInput?.focus();
+      isValid = false;
+    }
+
+    const dateVal = dateInput?.value;
+    if (!dateVal) {
+      if (errDate) errDate.textContent = 'Please select a preferred date.';
+      isValid = false;
+    }
+
+    const consent = Boolean(consentInput?.checked);
+    if (!consent) {
+      if (errConsent) errConsent.textContent = 'Please accept consent to submit appointment request.';
+      isValid = false;
+    }
+
+    if (!isValid) return;
+
+    const submitBtn = document.getElementById('btn-submit-request');
+    if (submitBtn) {
+      submitBtn.setAttribute('disabled', 'true');
+      submitBtn.innerHTML = 'Submitting Request...';
+    }
+
+    try {
+      const res = await fetch(getApiUrl('/api/appointments/request'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          hospitalId: state.hospitalId,
+          departmentName: (deptInput?.value || '').trim() || 'General OPD Consultation',
+          preferredDate: dateVal,
+          preferredTime: timeSelect?.value || '09:30:00',
+          patientName: name,
+          patientPhone: rawPhone,
+          patientEmail: (emailInput?.value || '').trim(),
+          notes: (notesInput?.value || '').trim()
+        })
+      });
+
+      const data = await res.json();
+      if (!data || !data.success) {
+        throw new Error(data?.error || 'Failed to submit appointment request.');
+      }
+
+      state.confirmedBooking = data;
+      saveLocalAppointmentReference(data.bookingReference, rawPhone);
+      renderRequestConfirmation();
+    } catch (err) {
+      alert(`Submission Error: ${err.message}`);
+      if (submitBtn) {
+        submitBtn.removeAttribute('disabled');
+        submitBtn.innerHTML = '📝 Submit Appointment Request';
+      }
+    }
+  }
+
+  /**
+   * Render Request Confirmation Screen (Requirement 9 & 10: Status is Pending Confirmation)
+   */
+  function renderRequestConfirmation() {
+    const body = document.getElementById('booking-dialog-body');
+    if (!body || !state.confirmedBooking) return;
+
+    const b = state.confirmedBooking;
+    body.innerHTML = `
+      <div class="booking-step-content step-6-confirmed">
+        <div class="confirmation-success-hero">
+          <div class="success-animated-icon" style="background: #f59e0b; color: #fff;">⏳</div>
+          <span class="badge-confirmed-live" style="background: #fef3c7; color: #92400e; border-color: #fde68a;">
+            ● PENDING HOSPITAL CONFIRMATION
+          </span>
+          <h3>Appointment Request Submitted!</h3>
+          <p>Your request has been routed to <strong>${escapeHtml(b.hospitalName)}</strong>.</p>
+        </div>
+
+        <!-- Reference Code Card -->
+        <div class="booking-reference-card">
+          <span class="brc-label">YOUR APPOINTMENT REQUEST REFERENCE</span>
+          <div class="brc-code-row">
+            <span class="brc-code" id="confirmed-booking-ref">${escapeHtml(b.bookingReference)}</span>
+            <button type="button" class="btn btn-outline btn-sm" id="btn-copy-ref" title="Copy reference number">
+              📋 Copy
+            </button>
+          </div>
+          <p class="brc-hint">Save this reference code to track appointment acceptance status.</p>
+        </div>
+
+        <!-- Details Card -->
+        <div class="confirmed-info-table">
+          <div class="cit-row">
+            <span class="cit-lbl">Hospital:</span>
+            <span class="cit-val"><strong>${escapeHtml(b.hospitalName)}</strong></span>
+          </div>
+          <div class="cit-row">
+            <span class="cit-lbl">Requested Date:</span>
+            <span class="cit-val">📅 ${formatReadableDate(b.appointmentDate)} (${b.preferredTime || 'Morning'})</span>
+          </div>
+          <div class="cit-row">
+            <span class="cit-lbl">Department:</span>
+            <span class="cit-val">${escapeHtml(b.departmentName)}</span>
+          </div>
+          <div class="cit-row">
+            <span class="cit-lbl">Patient:</span>
+            <span class="cit-val">${escapeHtml(b.patientName)} (+91 ${escapeHtml(b.patientPhone)})</span>
+          </div>
+          <div class="cit-row">
+            <span class="cit-lbl">Status:</span>
+            <span class="cit-val"><strong style="color: #d97706;">Pending Confirmation</strong> by Hospital Scheduling Desk</span>
+          </div>
+          <div class="cit-row">
+            <span class="cit-lbl">Payment Mode:</span>
+            <span class="cit-val"><span class="badge-pay-hospital">Pay at Hospital Counter on Arrival</span></span>
+          </div>
+          ${b.hospitalPhone ? `
+            <div class="cit-row">
+              <span class="cit-lbl">Hospital Phone:</span>
+              <span class="cit-val"><a href="tel:${escapeHtml(b.hospitalPhone)}">📞 ${escapeHtml(b.hospitalPhone)}</a></span>
+            </div>
+          ` : ''}
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="confirmed-action-buttons">
+          <button type="button" class="btn btn-outline" id="btn-print-receipt">🖨️ Print Request Slip</button>
+          <a href="my-appointments.html?ref=${encodeURIComponent(b.bookingReference)}&phone=${encodeURIComponent(b.patientPhone)}" class="btn btn-secondary">
+            📂 View in My Appointments
+          </a>
+          <button type="button" class="btn btn-primary" id="btn-done-booking">Done</button>
+        </div>
+      </div>
+    `;
+
+    body.querySelector('#btn-copy-ref')?.addEventListener('click', () => {
+      navigator.clipboard.writeText(b.bookingReference).then(() => {
+        const btn = body.querySelector('#btn-copy-ref');
+        if (btn) {
+          btn.textContent = '✓ Copied!';
+          setTimeout(() => { btn.textContent = '📋 Copy'; }, 2000);
+        }
+      });
+    });
+
+    body.querySelector('#btn-print-receipt')?.addEventListener('click', () => window.print());
+    body.querySelector('#btn-done-booking')?.addEventListener('click', closeModal);
+  }
+
+  /**
+   * Render Steps 1 through 6 of the Direct Booking Wizard (Authorized Partners)
    */
   async function renderWizardStep(stepNumber) {
     state.currentStep = stepNumber;
@@ -281,9 +547,9 @@ window.CareCompassBooking = (function () {
     const prov = state.providerConfig;
     const hosp = state.hospitalData;
 
-    // Progress bar navigation
+    // Progress bar navigation (5 steps)
     const progressHtml = `
-      <div class="booking-progress-tracker" role="progressbar" aria-valuenow="${stepNumber}" aria-valuemin="1" aria-valuemax="6">
+      <div class="booking-progress-tracker" role="progressbar" aria-valuenow="${stepNumber}" aria-valuemin="1" aria-valuemax="5">
         <div class="step-progress-item ${stepNumber >= 1 ? 'completed' : ''} ${stepNumber === 1 ? 'active' : ''}">
           <span class="step-num">1</span>
           <span class="step-lbl">Hospital</span>
@@ -306,7 +572,7 @@ window.CareCompassBooking = (function () {
         <div class="step-progress-divider"></div>
         <div class="step-progress-item ${stepNumber >= 5 ? 'completed' : ''} ${stepNumber === 5 ? 'active' : ''}">
           <span class="step-num">5</span>
-          <span class="step-lbl">Pay</span>
+          <span class="step-lbl">Confirm</span>
         </div>
       </div>
     `;
@@ -341,17 +607,17 @@ window.CareCompassBooking = (function () {
                 </div>
               </div>
               <div class="guarantee-item">
-                <span class="gi-icon">💳</span>
+                <span class="gi-icon">🏥</span>
                 <div>
-                  <strong>Secure Razorpay Checkout</strong>
-                  <p>Bank-grade encrypted payments with zero platform markups.</p>
+                  <strong>Pay at Hospital Counter</strong>
+                  <p>Zero advance online fee. Settle consultation fee on arrival via Cash, UPI, or Card.</p>
                 </div>
               </div>
               <div class="guarantee-item">
                 <span class="gi-icon">⏱️</span>
                 <div>
                   <strong>Transparent Cancellation</strong>
-                  <p>Full refund available up to ${prov.cancellationHours || 4} hours before appointment.</p>
+                  <p>Free cancellation available up to ${prov.cancellationHours || 4} hours before appointment.</p>
                 </div>
               </div>
             </div>
@@ -386,6 +652,7 @@ window.CareCompassBooking = (function () {
             <div class="dcc-fee">
               <span class="dcc-fee-label">Consultation Fee</span>
               <span class="dcc-fee-amount">₹${fee}</span>
+              <span class="dcc-fee-note">Pay at Hospital</span>
             </div>
           </label>
         `;
@@ -508,14 +775,14 @@ window.CareCompassBooking = (function () {
                 <span class="country-prefix">+91</span>
                 <input type="tel" id="patient-phone-number" class="booking-input" placeholder="98765 43210" maxlength="10" value="${escapeHtml(state.patient.phone)}" required autocomplete="tel">
               </div>
-              <span class="field-help-text">Used for Razorpay payment receipt & booking lookup</span>
+              <span class="field-help-text">Used for appointment confirmation SMS & booking lookup</span>
               <span class="field-error-msg" id="err-patient-phone"></span>
             </div>
 
             <div class="booking-form-group">
               <label for="patient-email">Email Address <span class="optional-tag">(Optional)</span></label>
               <input type="email" id="patient-email" class="booking-input" placeholder="parisha@example.com" value="${escapeHtml(state.patient.email)}" autocomplete="email">
-              <span class="field-help-text">Receives PDF tax invoice & calendar reminder</span>
+              <span class="field-help-text">Receives appointment confirmation slip & calendar reminder</span>
               <span class="field-error-msg" id="err-patient-email"></span>
             </div>
 
@@ -530,7 +797,7 @@ window.CareCompassBooking = (function () {
                 <input type="checkbox" id="booking-privacy-consent" ${state.patient.consent ? 'checked' : ''} required>
                 <span>
                   I consent to sharing these contact details with <strong>${escapeHtml(hosp.name)}</strong> 
-                  solely for scheduling and verifying this medical consultation. CareCompass never sells patient information.
+                  solely for scheduling this medical consultation. CareCompass never sells patient data.
                 </span>
               </label>
               <span class="field-error-msg" id="err-patient-consent"></span>
@@ -539,7 +806,7 @@ window.CareCompassBooking = (function () {
 
           <div class="wizard-footer-actions">
             <button type="button" class="btn btn-outline" id="btn-step4-back">&larr; Back</button>
-            <button type="button" class="btn btn-primary" id="btn-step4-next">Review & Proceed to Payment &rarr;</button>
+            <button type="button" class="btn btn-primary" id="btn-step4-next">Review & Confirm Booking &rarr;</button>
           </div>
         </div>
       `;
@@ -549,7 +816,8 @@ window.CareCompassBooking = (function () {
     }
 
     // -----------------------------------------------------------------
-    // STEP 5: Review Appointment & Transparent Price Breakdown
+    // STEP 5: Review Appointment & "Pay at Hospital" Confirmation
+    // (Requirement 4 & 6: Hide Pay Now, Add Pay at Hospital)
     // -----------------------------------------------------------------
     else if (stepNumber === 5) {
       const deptFee = state.selectedDepartment?.consultationFee || prov.consultationFee;
@@ -560,8 +828,8 @@ window.CareCompassBooking = (function () {
         ${progressHtml}
         <div class="booking-step-content step-5-review">
           <div class="wizard-header">
-            <h4>Step 5: Review & Secure Online Payment</h4>
-            <p>Verify your consultation details before proceeding to Razorpay secure checkout.</p>
+            <h4>Step 5: Review & Confirm Appointment</h4>
+            <p>Verify your details. Zero advance payment online — settle fee at the hospital OPD counter.</p>
           </div>
 
           <!-- Summary Card -->
@@ -592,45 +860,45 @@ window.CareCompassBooking = (function () {
 
           <!-- Transparent Fee Ledger -->
           <div class="review-pricing-card">
-            <h5>Transparent Fee Breakdown</h5>
+            <h5>Fee Breakdown & Payment Mode</h5>
             <div class="pricing-row">
-              <span>Hospital Consultation Fee (Direct)</span>
+              <span>Hospital Outpatient Consultation Fee</span>
               <span>₹${deptFee.toFixed(2)}</span>
             </div>
             <div class="pricing-row fee-free">
-              <span>CareCompass Platform Fee</span>
-              <span>₹0.00 <span class="badge-free">ZERO MARKUP</span></span>
+              <span>CareCompass Platform Convenience Fee</span>
+              <span>₹0.00 <span class="badge-free">FREE</span></span>
             </div>
             <div class="pricing-divider"></div>
             <div class="pricing-row total-row">
-              <strong>Total Payable via Razorpay</strong>
-              <strong class="total-price">₹${totalAmount.toFixed(2)}</strong>
+              <strong>Total Payable at Hospital OPD Counter</strong>
+              <strong class="total-price" style="color: #0d9488;">₹${totalAmount.toFixed(2)}</strong>
             </div>
           </div>
 
-          <!-- Policies & Safeguards -->
+          <!-- Pay at Hospital Explainer Box -->
           <div class="review-policies-box">
             <div class="policy-item">
-              <span class="pol-icon">✓</span>
-              <span><strong>Cancellation Policy:</strong> Free cancellation & automated refund up to ${prov.cancellationHours || 4} hours before appointment.</span>
+              <span class="pol-icon">🏥</span>
+              <span><strong>Payment Mode: Pay at Hospital Counter.</strong> No credit card or online payment required. Pay directly at the hospital registration counter on arrival via Cash, UPI, or Card.</span>
             </div>
             <div class="policy-item">
-              <span class="pol-icon">✓</span>
-              <span><strong>Supported Payment Methods:</strong> UPI (Google Pay, PhonePe, Paytm), Debit/Credit Cards, Net Banking via Razorpay.</span>
+              <span class="pol-icon">⏱️</span>
+              <span><strong>Cancellation Policy:</strong> Free cancellation up to ${prov.cancellationHours || 4} hours before appointment. No cancellation penalties.</span>
             </div>
           </div>
 
           <div class="wizard-footer-actions">
             <button type="button" class="btn btn-outline" id="btn-step5-back">&larr; Back</button>
-            <button type="button" class="btn btn-primary btn-pay-now" id="btn-trigger-payment">
-              🔒 Pay ₹${totalAmount.toFixed(2)} & Confirm Appointment
+            <button type="button" class="btn btn-primary btn-confirm-booking" id="btn-trigger-booking">
+              ✓ Confirm Booking (Pay at Hospital)
             </button>
           </div>
         </div>
       `;
 
       body.querySelector('#btn-step5-back')?.addEventListener('click', () => renderWizardStep(4));
-      body.querySelector('#btn-trigger-payment')?.addEventListener('click', initiatePaymentCheckout);
+      body.querySelector('#btn-trigger-booking')?.addEventListener('click', executeDirectBooking);
     }
 
     // -----------------------------------------------------------------
@@ -642,21 +910,21 @@ window.CareCompassBooking = (function () {
         <div class="booking-step-content step-6-confirmed">
           <div class="confirmation-success-hero">
             <div class="success-animated-icon">✓</div>
-            <span class="badge-confirmed-live">CONFIRMED WITH HOSPITAL</span>
-            <h3>Appointment Successfully Booked!</h3>
-            <p>Your appointment has been accepted and scheduled by <strong>${escapeHtml(b.hospitalName)}</strong>.</p>
+            <span class="badge-confirmed-live">● CONFIRMED WITH HOSPITAL</span>
+            <h3>Appointment Successfully Confirmed!</h3>
+            <p>Your appointment has been confirmed by the <strong>CareCompass Authorized Hospital Scheduling System</strong> for <strong>${escapeHtml(b.hospitalName)}</strong>.</p>
           </div>
 
           <!-- Reference Code Card -->
           <div class="booking-reference-card">
-            <span class="brc-label">YOUR BOOKING REFERENCE NUMBER</span>
+            <span class="brc-label">YOUR OFFICIAL BOOKING REFERENCE NUMBER</span>
             <div class="brc-code-row">
               <span class="brc-code" id="confirmed-booking-ref">${escapeHtml(b.bookingReference)}</span>
               <button type="button" class="btn btn-outline btn-sm" id="btn-copy-ref" title="Copy reference number">
                 📋 Copy
               </button>
             </div>
-            <p class="brc-hint">Please save this reference number or show it at the hospital OPD registration desk.</p>
+            <p class="brc-hint">Please present this reference number at the hospital OPD registration counter on arrival.</p>
           </div>
 
           <!-- Confirmation Details Card -->
@@ -682,18 +950,20 @@ window.CareCompassBooking = (function () {
               <span class="cit-val">${escapeHtml(b.patientName)} (+91 ${escapeHtml(b.patientPhone)})</span>
             </div>
             <div class="cit-row">
-              <span class="cit-lbl">Payment Status:</span>
-              <span class="cit-val"><span class="badge-paid">PAID ₹${b.totalAmount.toFixed(2)}</span> via Razorpay</span>
+              <span class="cit-lbl">Payment Mode:</span>
+              <span class="cit-val"><span class="badge-pay-hospital">Pay at Hospital OPD Desk: ₹${Number(b.totalAmount).toFixed(2)}</span> (Cash/UPI/Card)</span>
             </div>
-            <div class="cit-row">
-              <span class="cit-lbl">Hospital Phone:</span>
-              <span class="cit-val"><a href="tel:${escapeHtml(b.hospitalPhone || '')}">📞 ${escapeHtml(b.hospitalPhone || 'Call Desk')}</a></span>
-            </div>
+            ${b.hospitalPhone ? `
+              <div class="cit-row">
+                <span class="cit-lbl">Hospital Phone:</span>
+                <span class="cit-val"><a href="tel:${escapeHtml(b.hospitalPhone)}">📞 ${escapeHtml(b.hospitalPhone)}</a></span>
+              </div>
+            ` : ''}
           </div>
 
           <!-- Action Buttons -->
           <div class="confirmed-action-buttons">
-            <button type="button" class="btn btn-outline" id="btn-print-receipt">🖨️ Print / Save Receipt</button>
+            <button type="button" class="btn btn-outline" id="btn-print-receipt">🖨️ Print / Save Slip</button>
             <a href="my-appointments.html?ref=${encodeURIComponent(b.bookingReference)}&phone=${encodeURIComponent(b.patientPhone)}" class="btn btn-secondary">
               📂 Manage in My Appointments
             </a>
@@ -714,10 +984,7 @@ window.CareCompassBooking = (function () {
       });
 
       // Print receipt button
-      body.querySelector('#btn-print-receipt')?.addEventListener('click', () => {
-        window.print();
-      });
-
+      body.querySelector('#btn-print-receipt')?.addEventListener('click', () => window.print());
       body.querySelector('#btn-done-booking')?.addEventListener('click', closeModal);
     }
   }
@@ -897,22 +1164,18 @@ window.CareCompassBooking = (function () {
   }
 
   /**
-   * Initiate Razorpay Payment Checkout Flow
-   * 1. Calls backend /api/appointments/create-order
-   * 2. Opens official Razorpay modal checkout
-   * 3. Calls backend /api/appointments/verify-payment with HMAC signature
-   * 4. Renders Step 6 Confirmation on verified success
+   * Execute Direct Booking (Pay at Hospital workflow)
+   * Calls POST /api/appointments/book directly with zero external payment gateway.
    */
-  async function initiatePaymentCheckout() {
-    const payBtn = document.getElementById('btn-trigger-payment');
-    if (payBtn) {
-      payBtn.setAttribute('disabled', 'true');
-      payBtn.innerHTML = '🔒 Processing Reservation & Gateway Order...';
+  async function executeDirectBooking() {
+    const confirmBtn = document.getElementById('btn-trigger-booking');
+    if (confirmBtn) {
+      confirmBtn.setAttribute('disabled', 'true');
+      confirmBtn.innerHTML = 'Confirming Appointment with Hospital...';
     }
 
     try {
-      // 1. Create order on CareCompass backend
-      const res = await fetch(getApiUrl('/api/appointments/create-order'), {
+      const res = await fetch(getApiUrl('/api/appointments/book'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -925,186 +1188,23 @@ window.CareCompassBooking = (function () {
         })
       });
 
-      const orderData = await res.json();
-      if (!orderData || !orderData.success) {
-        throw new Error(orderData?.error || 'Unable to create payment order. Slot may have been reserved by another patient.');
+      const bookingData = await res.json();
+      if (!bookingData || !bookingData.success) {
+        throw new Error(bookingData?.error || 'Unable to confirm appointment. Slot may have been reserved by another patient.');
       }
 
-      state.orderData = orderData;
-
-      // 2. Load Razorpay SDK
-      const sdkReady = await loadRazorpaySdk();
-
-      // If Razorpay SDK is loaded and we have a valid key (live or real test key)
-      if (sdkReady && window.Razorpay && orderData.keyId && !orderData.isSimulated) {
-        const options = {
-          key: orderData.keyId,
-          amount: Math.round(orderData.totalAmount * 100),
-          currency: orderData.currency || 'INR',
-          name: 'CareCompass Healthcare',
-          description: `Consultation at ${orderData.hospitalName} (${orderData.departmentName})`,
-          order_id: orderData.orderId,
-          prefill: {
-            name: state.patient.name,
-            contact: state.patient.phone,
-            email: state.patient.email || ''
-          },
-          theme: {
-            color: '#0d9488'
-          },
-          handler: async function (response) {
-            // Verify payment on backend with cryptographic signature
-            await handlePaymentVerification({
-              orderId: response.razorpay_order_id || orderData.orderId,
-              paymentId: response.razorpay_payment_id,
-              signature: response.razorpay_signature
-            });
-          },
-          modal: {
-            ondismiss: function () {
-              if (payBtn) {
-                payBtn.removeAttribute('disabled');
-                payBtn.innerHTML = `🔒 Pay ₹${orderData.totalAmount.toFixed(2)} & Confirm Appointment`;
-              }
-            }
-          }
-        };
-
-        const rzp = new window.Razorpay(options);
-        rzp.on('payment.failed', function (response) {
-          alert(`Payment failed: ${response.error?.description || 'Payment was declined by bank.'}`);
-          if (payBtn) {
-            payBtn.removeAttribute('disabled');
-            payBtn.innerHTML = `🔒 Retry Payment`;
-          }
-        });
-        rzp.open();
-      } else {
-        // Controlled Test Mode Sandbox Checkout Flow (for automated testing or development mode)
-        showTestPaymentModal(orderData);
-      }
-    } catch (err) {
-      alert(`Booking Error: ${err.message}`);
-      if (payBtn) {
-        payBtn.removeAttribute('disabled');
-        payBtn.innerHTML = '🔒 Retry Payment';
-      }
-    }
-  }
-
-  /**
-   * Test Mode Gateway Simulator Modal
-   * Allows safe, authentic testing of Razorpay success, failure, and cancellation flows
-   */
-  function showTestPaymentModal(orderData) {
-    const body = document.getElementById('booking-dialog-body');
-    if (!body) return;
-
-    body.innerHTML = `
-      <div class="test-razorpay-modal">
-        <div class="trm-header">
-          <div class="trm-brand">
-            <span class="rzp-badge">RAZORPAY TEST GATEWAY</span>
-            <h4>Secure Checkout Simulator</h4>
-          </div>
-          <span class="trm-amount">₹${orderData.totalAmount.toFixed(2)}</span>
-        </div>
-
-        <div class="trm-body">
-          <div class="trm-order-pill">Order ID: <code>${escapeHtml(orderData.orderId)}</code></div>
-          <p class="trm-desc">
-            You are operating in <strong>Razorpay Test Mode</strong>. No real credit/debit card will be charged.
-            Select a payment method below to simulate your test transaction:
-          </p>
-
-          <div class="trm-methods-grid">
-            <button type="button" class="trm-method-btn" id="btn-test-pay-upi">
-              <span class="method-icon">📱</span>
-              <span class="method-name">UPI / QR Code</span>
-              <span class="method-sub">Instant Bank Transfer</span>
-            </button>
-            <button type="button" class="trm-method-btn" id="btn-test-pay-card">
-              <span class="method-icon">💳</span>
-              <span class="method-name">Debit / Credit Card</span>
-              <span class="method-sub">Visa, Mastercard, RuPay</span>
-            </button>
-            <button type="button" class="trm-method-btn" id="btn-test-pay-netbank">
-              <span class="method-icon">🏦</span>
-              <span class="method-name">Net Banking</span>
-              <span class="method-sub">SBI, HDFC, ICICI, Axis</span>
-            </button>
-          </div>
-
-          <div class="trm-test-options">
-            <button type="button" class="btn btn-outline btn-sm" id="btn-test-fail-payment">
-              Simulate Payment Failure
-            </button>
-            <button type="button" class="btn btn-outline btn-sm" id="btn-test-cancel-payment">
-              Cancel Transaction
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
-
-    // Simulate success
-    const handleSimulatedSuccess = async (methodName) => {
-      body.innerHTML = '<div class="booking-loading-state"><div class="loading-spinner-circle"></div><h4>Verifying Payment with Razorpay...</h4><p>Generating cryptographically signed confirmation...</p></div>';
-      const fakePaymentId = `pay_test_${Date.now()}`;
-      // In simulated test mode, pass payment verification to backend
-      await handlePaymentVerification({
-        orderId: orderData.orderId,
-        paymentId: fakePaymentId,
-        signature: `test_verified_sig_${Date.now()}_${methodName}`
-      });
-    };
-
-    body.querySelector('#btn-test-pay-upi')?.addEventListener('click', () => handleSimulatedSuccess('upi'));
-    body.querySelector('#btn-test-pay-card')?.addEventListener('click', () => handleSimulatedSuccess('card'));
-    body.querySelector('#btn-test-pay-netbank')?.addEventListener('click', () => handleSimulatedSuccess('netbank'));
-
-    // Simulate failure
-    body.querySelector('#btn-test-fail-payment')?.addEventListener('click', () => {
-      alert('Razorpay Payment Simulation: Payment was declined by user bank (Test Error).');
-      renderWizardStep(5);
-    });
-
-    // Cancel transaction
-    body.querySelector('#btn-test-cancel-payment')?.addEventListener('click', () => {
-      renderWizardStep(5);
-    });
-  }
-
-  /**
-   * Verify Razorpay payment on server and render confirmation
-   */
-  async function handlePaymentVerification({ orderId, paymentId, signature }) {
-    try {
-      showLoadingModal('Confirming Appointment with Hospital...');
-
-      const res = await fetch(getApiUrl('/api/appointments/verify-payment'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          orderId,
-          paymentId,
-          signature
-        })
-      });
-
-      const verifyData = await res.json();
-      if (!verifyData || !verifyData.success) {
-        throw new Error(verifyData?.error || 'Payment signature verification failed.');
-      }
-
-      state.confirmedBooking = verifyData;
+      state.confirmedBooking = bookingData;
 
       // Save reference to localStorage so user can access it easily in My Appointments
-      saveLocalAppointmentReference(verifyData.bookingReference, verifyData.patientPhone);
+      saveLocalAppointmentReference(bookingData.bookingReference, bookingData.patientPhone);
 
       renderWizardStep(6);
     } catch (err) {
-      showErrorNotice(`Payment Verification Error: ${err.message}`);
+      alert(`Booking Error: ${err.message}`);
+      if (confirmBtn) {
+        confirmBtn.removeAttribute('disabled');
+        confirmBtn.innerHTML = '✓ Confirm Booking (Pay at Hospital)';
+      }
     }
   }
 
@@ -1151,6 +1251,7 @@ window.CareCompassBooking = (function () {
 
   return {
     openBookingModal,
+    openAppointmentRequestFlow,
     closeModal,
     getApiUrl
   };
