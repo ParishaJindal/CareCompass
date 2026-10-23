@@ -3,7 +3,7 @@ backend/
 database/
 data/
 ml/
-scripts/
+scripts/*.py
 *.db
 *.csv
 *.py
