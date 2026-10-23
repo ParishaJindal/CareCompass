@@ -169,25 +169,6 @@ function initSqliteAppointmentTables(db) {
     } catch (migErr) {
       console.warn('[CareCompass DB] SQLite column check warning:', migErr.message);
     }
-
-    // Seed test pilot provider records if not present
-    const stmt = db.prepare('SELECT COUNT(*) as count FROM appointment_providers');
-    const count = stmt.get().count;
-    if (count === 0) {
-      db.prepare(`
-        INSERT OR IGNORE INTO appointment_providers 
-        (hospital_id, integration_type, booking_enabled, verification_status, consultation_fee, carecompass_fee, payment_mode, cancellation_deadline_hours, departments)
-        VALUES 
-        (
-          'IN-HOSP-11299', 'carecompass_partner', 1, 'Verified', 400.00, 0.00, 'pay_at_hospital', 4,
-          '[{"id":"gen-med","name":"General Medicine","consultationFee":400,"description":"Consultation with certified General Physician"},{"id":"gen-surg","name":"General Surgery","consultationFee":500,"description":"Surgical evaluations and post-op consultation"},{"id":"emerg-opd","name":"Emergency & Urgent Care OPD","consultationFee":450,"description":"Urgent outpatient triage and specialist review"}]'
-        ),
-        (
-          'IN-HOSP-11383', 'carecompass_partner', 1, 'Verified', 500.00, 0.00, 'pay_at_hospital', 4,
-          '[{"id":"gen-med","name":"General Medicine","consultationFee":500,"description":"Consultation with certified General Physician"},{"id":"cardio","name":"Cardiology Consultation","consultationFee":750,"description":"Cardiovascular assessment & ECG review"}]'
-        )
-      `).run();
-    }
   } catch (err) {
     console.warn('[CareCompass DB] Note initializing SQLite appointment tables:', err.message);
   }

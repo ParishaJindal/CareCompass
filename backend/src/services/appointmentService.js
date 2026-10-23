@@ -130,45 +130,8 @@ async function getProviderInfo(hospitalId) {
 }
 
 /**
- * Seed authentic daily schedule slots for authorized partner hospital if not present
- */
-async function ensureDailySlots(hospitalId, departmentId, departmentName, dateStr) {
-  const checkRes = await db.query(
-    'SELECT COUNT(*) as count FROM appointment_slots WHERE hospital_id = $1 AND department_id = $2 AND slot_date = $3',
-    [hospitalId, departmentId, dateStr]
-  );
-
-  const existingCount = parseInt(checkRes.rows[0].count, 10);
-  if (existingCount > 0) return;
-
-  // Standard verified OPD consultation slots (Morning & Afternoon sessions)
-  const defaultTimes = [
-    { start: '09:30:00', end: '10:00:00' },
-    { start: '10:15:00', end: '10:45:00' },
-    { start: '11:00:00', end: '11:30:00' },
-    { start: '11:45:00', end: '12:15:00' },
-    { start: '14:00:00', end: '14:30:00' },
-    { start: '14:45:00', end: '15:15:00' },
-    { start: '15:30:00', end: '16:00:00' },
-    { start: '16:15:00', end: '16:45:00' }
-  ];
-
-  for (const t of defaultTimes) {
-    try {
-      await db.query(`
-        INSERT INTO appointment_slots 
-        (hospital_id, department_id, department_name, slot_date, start_time, end_time, availability_status)
-        VALUES ($1, $2, $3, $4, $5, $6, 'available')
-        ON CONFLICT (hospital_id, department_id, slot_date, start_time) DO NOTHING
-      `, [hospitalId, departmentId, departmentName, dateStr, t.start, t.end]);
-    } catch (err) {
-      // Ignore conflict / race condition
-    }
-  }
-}
-
-/**
- * Fetch available slots for a hospital, department, and date
+ * Fetch available slots for an authorized hospital, department, and date.
+ * Strictly queries authentic slots from appointment_slots without inventing synthetic availability.
  */
 async function getAvailableSlots(hospitalId, departmentId, dateStr) {
   await releaseExpiredReservations();
@@ -198,14 +161,7 @@ async function getAvailableSlots(hospitalId, departmentId, dateStr) {
     throw new Error('Appointments can only be scheduled up to 30 days in advance.');
   }
 
-  // Find department name
-  const dept = provCheck.provider.departments.find(d => d.id === departmentId);
-  const departmentName = dept ? dept.name : 'General Consultation';
-
-  // Seed authorized schedule for this day if needed
-  await ensureDailySlots(hospitalId, departmentId, departmentName, dateStr);
-
-  // Query slots
+  // Query authentic slots configured by the hospital scheduling integration
   const res = await db.query(`
     SELECT id, hospital_id, department_id, department_name, doctor_name, 
            slot_date, start_time, end_time, availability_status
@@ -491,7 +447,9 @@ async function createAppointmentRequest({
     patientName: appointment.patient_name,
     patientPhone: cleanPhone,
     patientEmail: appointment.patient_email,
-    paymentInstructions: 'Your appointment request has been submitted to the hospital desk. Hospital staff will contact you to confirm final timing. Consultation charges apply as per hospital tariff on arrival.'
+    hospitalConfirmationStatus: 'Pending Hospital Review (Not Confirmed)',
+    isConfirmed: false,
+    paymentInstructions: 'Your appointment request has been submitted to the hospital desk. Please note: This appointment has NOT yet been confirmed by the hospital. Hospital scheduling staff will contact you via telephone to confirm doctor availability and your final time slot. Consultation charges apply as per hospital tariff on arrival.'
   };
 }
 

@@ -1,8 +1,43 @@
-const { describe, it } = require('node:test');
+const { describe, it, before } = require('node:test');
 const assert = require('node:assert/strict');
+const db = require('../src/db/supabase');
 const appointmentService = require('../src/services/appointmentService');
 
 describe('CareCompass Hospital Appointments & Scheduling Service (Pay at Hospital Mode)', () => {
+
+  before(async () => {
+    // Seed test pilot provider specifically for test environment execution
+    await db.query(`
+      INSERT INTO appointment_providers 
+      (hospital_id, integration_type, booking_enabled, verification_status, consultation_fee, carecompass_fee, payment_mode, cancellation_deadline_hours, departments)
+      VALUES 
+      (
+        'IN-HOSP-11299', 'carecompass_partner', true, 'Verified', 400.00, 0.00, 'pay_at_hospital', 4,
+        '[{"id":"gen-med","name":"General Medicine","consultationFee":400,"description":"Consultation with certified General Physician"},{"id":"gen-surg","name":"General Surgery","consultationFee":500,"description":"Surgical evaluations and post-op consultation"}]'
+      )
+      ON CONFLICT (hospital_id) DO UPDATE SET
+        booking_enabled = true,
+        consultation_fee = 400.00;
+    `);
+
+    // Seed test consultation slots for test runs
+    for (let offset = 1; offset <= 5; offset++) {
+      const d = new Date();
+      d.setDate(d.getDate() + offset);
+      const dateStr = d.toISOString().slice(0, 10);
+      try {
+        await db.query(`
+          INSERT INTO appointment_slots 
+          (hospital_id, department_id, department_name, slot_date, start_time, end_time, availability_status)
+          VALUES 
+            ('IN-HOSP-11299', 'gen-med', 'General Medicine', $1, '09:30:00', '10:00:00', 'available'),
+            ('IN-HOSP-11299', 'gen-med', 'General Medicine', $1, '10:15:00', '10:45:00', 'available'),
+            ('IN-HOSP-11299', 'gen-med', 'General Medicine', $1, '11:00:00', '11:30:00', 'available')
+          ON CONFLICT (hospital_id, department_id, slot_date, start_time) DO NOTHING
+        `, [dateStr]);
+      } catch (e) {}
+    }
+  });
 
   it('1. Public config should specify Pay at Hospital mode without online gateway requirements', () => {
     const config = appointmentService.getPublicConfig();

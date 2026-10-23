@@ -1,12 +1,22 @@
 -- ============================================================================
 -- CareCompass: Supabase PostgreSQL Database Migration
 -- Migration: 002_create_appointments_and_payments.sql
--- Description: Hospital appointment scheduling & appointment requests with
+-- Description: Production-ready appointment scheduling & appointment requests with
 --              "Pay at Hospital OPD Counter" workflow (No online payment gateway).
+--
+-- COMPLIANCE & SAFETY GUARANTEES:
+-- 1. Strictly DDL only. NO fake/pilot hospital provider records are inserted.
+-- 2. Fully idempotent with safe CREATE TABLE and ALTER TABLE ADD COLUMN IF NOT EXISTS.
+-- 3. Does NOT modify, truncate, or delete any records in the master 'hospitals' table.
+-- 4. Secure RLS policies: Sensitive patient data, medical notes, payment records,
+--    and session reservation tokens are strictly protected (service_role only).
 -- ============================================================================
 
--- 1. Appointment Providers Table
--- Stores authorized hospital scheduling partnerships and OPD consultation fees.
+-- ============================================================================
+-- 1. APPOINTMENT PROVIDERS TABLE & IDEMPOTENT ALTERS
+-- Stores authorized hospital scheduling partnerships and OPD fee structures.
+-- ============================================================================
+
 CREATE TABLE IF NOT EXISTS appointment_providers (
     id BIGSERIAL PRIMARY KEY,
     hospital_id VARCHAR(100) NOT NULL UNIQUE,
@@ -25,8 +35,25 @@ CREATE TABLE IF NOT EXISTS appointment_providers (
     CONSTRAINT chk_carecompass_fee CHECK (carecompass_fee >= 0)
 );
 
--- 2. Appointment Slots Table
--- Available consultation slots for partner healthcare facilities.
+-- Idempotent column additions for partially existing tables
+ALTER TABLE appointment_providers ADD COLUMN IF NOT EXISTS hospital_id VARCHAR(100);
+ALTER TABLE appointment_providers ADD COLUMN IF NOT EXISTS integration_type VARCHAR(50) DEFAULT 'carecompass_partner';
+ALTER TABLE appointment_providers ADD COLUMN IF NOT EXISTS booking_enabled BOOLEAN DEFAULT true;
+ALTER TABLE appointment_providers ADD COLUMN IF NOT EXISTS verification_status VARCHAR(50) DEFAULT 'Verified';
+ALTER TABLE appointment_providers ADD COLUMN IF NOT EXISTS consultation_fee NUMERIC(10,2) DEFAULT 500.00;
+ALTER TABLE appointment_providers ADD COLUMN IF NOT EXISTS carecompass_fee NUMERIC(10,2) DEFAULT 0.00;
+ALTER TABLE appointment_providers ADD COLUMN IF NOT EXISTS payment_mode VARCHAR(50) DEFAULT 'pay_at_hospital';
+ALTER TABLE appointment_providers ADD COLUMN IF NOT EXISTS currency VARCHAR(10) DEFAULT 'INR';
+ALTER TABLE appointment_providers ADD COLUMN IF NOT EXISTS cancellation_deadline_hours INTEGER DEFAULT 4;
+ALTER TABLE appointment_providers ADD COLUMN IF NOT EXISTS departments JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE appointment_providers ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE appointment_providers ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP;
+
+-- ============================================================================
+-- 2. APPOINTMENT SLOTS TABLE & IDEMPOTENT ALTERS
+-- Available consultation slots for genuinely integrated healthcare facilities.
+-- ============================================================================
+
 CREATE TABLE IF NOT EXISTS appointment_slots (
     id BIGSERIAL PRIMARY KEY,
     hospital_id VARCHAR(100) NOT NULL,
@@ -47,8 +74,30 @@ CREATE TABLE IF NOT EXISTS appointment_slots (
     CONSTRAINT uq_hospital_slot UNIQUE (hospital_id, department_id, slot_date, start_time)
 );
 
--- 3. Appointments Table
--- Secure booking & appointment request records (Pay at Hospital).
+-- Idempotent column additions
+ALTER TABLE appointment_slots ADD COLUMN IF NOT EXISTS hospital_id VARCHAR(100);
+ALTER TABLE appointment_slots ADD COLUMN IF NOT EXISTS department_id VARCHAR(100);
+ALTER TABLE appointment_slots ADD COLUMN IF NOT EXISTS department_name VARCHAR(255);
+ALTER TABLE appointment_slots ADD COLUMN IF NOT EXISTS doctor_id VARCHAR(100);
+ALTER TABLE appointment_slots ADD COLUMN IF NOT EXISTS doctor_name VARCHAR(255);
+ALTER TABLE appointment_slots ADD COLUMN IF NOT EXISTS slot_date DATE;
+ALTER TABLE appointment_slots ADD COLUMN IF NOT EXISTS start_time TIME;
+ALTER TABLE appointment_slots ADD COLUMN IF NOT EXISTS end_time TIME;
+ALTER TABLE appointment_slots ADD COLUMN IF NOT EXISTS availability_status VARCHAR(50) DEFAULT 'available';
+ALTER TABLE appointment_slots ADD COLUMN IF NOT EXISTS reserved_by_session VARCHAR(100);
+ALTER TABLE appointment_slots ADD COLUMN IF NOT EXISTS reservation_expires_at TIMESTAMPTZ;
+ALTER TABLE appointment_slots ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP;
+
+-- Re-verify slot status check constraint
+ALTER TABLE appointment_slots DROP CONSTRAINT IF EXISTS chk_slot_status;
+ALTER TABLE appointment_slots ADD CONSTRAINT chk_slot_status 
+    CHECK (availability_status IN ('available', 'reserved', 'booked', 'blocked'));
+
+-- ============================================================================
+-- 3. APPOINTMENTS TABLE & IDEMPOTENT ALTERS
+-- Stores verified bookings (confirmed) and facility appointment requests (pending_confirmation).
+-- ============================================================================
+
 CREATE TABLE IF NOT EXISTS appointments (
     id BIGSERIAL PRIMARY KEY,
     booking_reference VARCHAR(64) UNIQUE NOT NULL,
@@ -81,16 +130,64 @@ CREATE TABLE IF NOT EXISTS appointments (
     cancellation_reason TEXT,
     cancelled_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT chk_booking_status CHECK (
-        booking_status IN ('pending_confirmation', 'confirmed', 'cancelled', 'completed', 'rescheduled')
-    ),
-    CONSTRAINT chk_payment_status CHECK (
-        payment_status IN ('pay_at_hospital', 'pending', 'paid', 'waived')
-    )
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- 4. Audit & Payment Receipts Table (Pay at Hospital Ledger)
+-- Idempotent column additions for existing tables
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS booking_reference VARCHAR(64);
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS booking_type VARCHAR(50) DEFAULT 'direct_booking';
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS hospital_id VARCHAR(100);
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS hospital_name TEXT;
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS hospital_phone VARCHAR(50);
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS hospital_address TEXT;
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS department_id VARCHAR(100);
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS department_name VARCHAR(255);
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS doctor_id VARCHAR(100);
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS doctor_name VARCHAR(255);
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS slot_id BIGINT;
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS appointment_date DATE;
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS start_time TIME;
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS end_time TIME;
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS patient_name VARCHAR(255);
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS patient_phone VARCHAR(20);
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS patient_email VARCHAR(255);
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS notes TEXT;
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS booking_status VARCHAR(50) DEFAULT 'pending_confirmation';
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS payment_status VARCHAR(50) DEFAULT 'pay_at_hospital';
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS payment_mode VARCHAR(50) DEFAULT 'pay_at_hospital';
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS consultation_fee NUMERIC(10,2) DEFAULT 0.00;
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS service_fee NUMERIC(10,2) DEFAULT 0.00;
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS total_amount NUMERIC(10,2) DEFAULT 0.00;
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS currency VARCHAR(10) DEFAULT 'INR';
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS confirmed_by_system VARCHAR(100);
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS confirmed_at TIMESTAMPTZ;
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS cancellation_reason TEXT;
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS cancelled_at TIMESTAMPTZ;
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP;
+
+-- CRITICAL SAFETY FIX: Ensure slot_id is nullable on existing tables to support appointment requests
+ALTER TABLE appointments ALTER COLUMN slot_id DROP NOT NULL;
+ALTER TABLE appointments ALTER COLUMN consultation_fee SET DEFAULT 0.00;
+ALTER TABLE appointments ALTER COLUMN total_amount SET DEFAULT 0.00;
+ALTER TABLE appointments ALTER COLUMN booking_status SET DEFAULT 'pending_confirmation';
+ALTER TABLE appointments ALTER COLUMN payment_status SET DEFAULT 'pay_at_hospital';
+ALTER TABLE appointments ALTER COLUMN payment_mode SET DEFAULT 'pay_at_hospital';
+
+-- Update check constraints safely
+ALTER TABLE appointments DROP CONSTRAINT IF EXISTS chk_booking_status;
+ALTER TABLE appointments ADD CONSTRAINT chk_booking_status 
+    CHECK (booking_status IN ('pending_confirmation', 'confirmed', 'cancelled', 'completed', 'rescheduled'));
+
+ALTER TABLE appointments DROP CONSTRAINT IF EXISTS chk_payment_status;
+ALTER TABLE appointments ADD CONSTRAINT chk_payment_status 
+    CHECK (payment_status IN ('pay_at_hospital', 'pending', 'paid', 'waived', 'cancelled'));
+
+-- ============================================================================
+-- 4. PAYMENTS & AUDIT LEDGER TABLE & IDEMPOTENT ALTERS
+-- Tracks OPD counter billing records and audit logs.
+-- ============================================================================
+
 CREATE TABLE IF NOT EXISTS payments (
     id BIGSERIAL PRIMARY KEY,
     appointment_id BIGINT NOT NULL REFERENCES appointments(id) ON DELETE CASCADE,
@@ -99,7 +196,7 @@ CREATE TABLE IF NOT EXISTS payments (
     provider_order_id VARCHAR(100) UNIQUE NOT NULL,
     provider_payment_id VARCHAR(100),
     payment_method VARCHAR(50) NOT NULL DEFAULT 'pay_at_hospital',
-    amount NUMERIC(10,2) NOT NULL,
+    amount NUMERIC(10,2) NOT NULL DEFAULT 0.00,
     currency VARCHAR(10) NOT NULL DEFAULT 'INR',
     payment_status VARCHAR(50) NOT NULL DEFAULT 'pay_at_hospital',
     notes TEXT,
@@ -107,7 +204,24 @@ CREATE TABLE IF NOT EXISTS payments (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- 5. Performance Indexes
+-- Idempotent column additions for payments
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS appointment_id BIGINT;
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS booking_reference VARCHAR(64);
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS provider VARCHAR(50) DEFAULT 'hospital_counter';
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS provider_order_id VARCHAR(100);
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS provider_payment_id VARCHAR(100);
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS payment_method VARCHAR(50) DEFAULT 'pay_at_hospital';
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS amount NUMERIC(10,2) DEFAULT 0.00;
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS currency VARCHAR(10) DEFAULT 'INR';
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS payment_status VARCHAR(50) DEFAULT 'pay_at_hospital';
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS notes TEXT;
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP;
+
+-- ============================================================================
+-- 5. PERFORMANCE INDEXES
+-- ============================================================================
+
 CREATE INDEX IF NOT EXISTS idx_appointment_providers_hosp ON appointment_providers (hospital_id);
 CREATE INDEX IF NOT EXISTS idx_appointment_slots_query ON appointment_slots (hospital_id, slot_date, availability_status);
 CREATE INDEX IF NOT EXISTS idx_appointment_slots_cleanup ON appointment_slots (availability_status, reservation_expires_at)
@@ -118,7 +232,10 @@ CREATE INDEX IF NOT EXISTS idx_appointments_hosp ON appointments (hospital_id, a
 CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments (booking_status);
 CREATE INDEX IF NOT EXISTS idx_payments_ref ON payments (booking_reference);
 
--- 6. Trigger for Automatic updated_at
+-- ============================================================================
+-- 6. AUTOMATIC UPDATED_AT TIMESTAMP TRIGGER
+-- ============================================================================
+
 CREATE OR REPLACE FUNCTION update_timestamp_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -142,83 +259,55 @@ CREATE TRIGGER trg_payments_updated_at
     BEFORE UPDATE ON payments
     FOR EACH ROW EXECUTE FUNCTION update_timestamp_column();
 
--- 7. Row Level Security (RLS) Policies
+-- ============================================================================
+-- 7. ROW LEVEL SECURITY (RLS) POLICIES — ZERO DATA LEAKAGE ENFORCEMENT
+-- ============================================================================
+
 ALTER TABLE appointment_providers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE appointment_slots ENABLE ROW LEVEL SECURITY;
 ALTER TABLE appointments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
 
--- Public can view enabled providers and slots
+-- Clean up existing legacy policies
 DROP POLICY IF EXISTS "Public can view active appointment providers" ON appointment_providers;
+DROP POLICY IF EXISTS "Public can view available appointment slots" ON appointment_slots;
+DROP POLICY IF EXISTS "Public can view appointments" ON appointments;
+DROP POLICY IF EXISTS "Public can view payments" ON payments;
+DROP POLICY IF EXISTS "Service role access for appointment_providers" ON appointment_providers;
+DROP POLICY IF EXISTS "Service role access for appointment_slots" ON appointment_slots;
+DROP POLICY IF EXISTS "Service role access for appointments" ON appointments;
+DROP POLICY IF EXISTS "Service role access for payments" ON payments;
+
+-- 7.1. Appointment Providers: Public can only view active, enabled facilities
 CREATE POLICY "Public can view active appointment providers"
     ON appointment_providers FOR SELECT
     USING (booking_enabled = true);
 
-DROP POLICY IF EXISTS "Public can view available appointment slots" ON appointment_slots;
-CREATE POLICY "Public can view available appointment slots"
-    ON appointment_slots FOR SELECT
-    USING (true);
+-- 7.2. Appointment Slots: NO direct public SELECT access.
+-- Slot availability is queried exclusively via backend API (/api/appointments/slots),
+-- preventing public scraping of doctor schedules or reservation session tokens.
+-- (Public direct select is intentionally omitted)
 
--- Backend service role has full access
-DROP POLICY IF EXISTS "Service role access for appointment_providers" ON appointment_providers;
+-- 7.3. Appointments: NO direct public SELECT or modification.
+-- Patient names, telephone numbers, emails, and medical notes are protected.
+-- Patient lookup is handled strictly via backend API with phone verification.
+
+-- 7.4. Payments: NO direct public access.
+-- All financial records are restricted.
+
+-- 7.5. Backend Service Role: Full administrative access for API execution
 CREATE POLICY "Service role access for appointment_providers"
     ON appointment_providers FOR ALL TO service_role USING (true) WITH CHECK (true);
 
-DROP POLICY IF EXISTS "Service role access for appointment_slots" ON appointment_slots;
 CREATE POLICY "Service role access for appointment_slots"
     ON appointment_slots FOR ALL TO service_role USING (true) WITH CHECK (true);
 
-DROP POLICY IF EXISTS "Service role access for appointments" ON appointments;
 CREATE POLICY "Service role access for appointments"
     ON appointments FOR ALL TO service_role USING (true) WITH CHECK (true);
 
-DROP POLICY IF EXISTS "Service role access for payments" ON payments;
 CREATE POLICY "Service role access for payments"
     ON payments FOR ALL TO service_role USING (true) WITH CHECK (true);
 
--- Seed Initial Authorized Partner Hospitals with Authentic OPD Fee Schedule
-INSERT INTO appointment_providers (
-    hospital_id,
-    integration_type,
-    booking_enabled,
-    verification_status,
-    consultation_fee,
-    carecompass_fee,
-    payment_mode,
-    cancellation_deadline_hours,
-    departments
-) VALUES
-(
-    'IN-HOSP-11299',
-    'carecompass_partner',
-    true,
-    'Verified',
-    400.00,
-    0.00,
-    'pay_at_hospital',
-    4,
-    '[
-        {"id": "gen-med", "name": "General Medicine", "consultationFee": 400, "description": "Consultation with certified General Physician"},
-        {"id": "gen-surg", "name": "General Surgery", "consultationFee": 500, "description": "Surgical evaluations and post-op consultation"},
-        {"id": "emerg-opd", "name": "Emergency & Urgent Care OPD", "consultationFee": 450, "description": "Urgent outpatient triage and specialist review"}
-    ]'::jsonb
-),
-(
-    'IN-HOSP-11383',
-    'carecompass_partner',
-    true,
-    'Verified',
-    500.00,
-    0.00,
-    'pay_at_hospital',
-    4,
-    '[
-        {"id": "gen-med", "name": "General Medicine", "consultationFee": 500, "description": "Consultation with certified General Physician"},
-        {"id": "cardio", "name": "Cardiology Consultation", "consultationFee": 750, "description": "Cardiovascular assessment & ECG review"}
-    ]'::jsonb
-)
-ON CONFLICT (hospital_id) DO UPDATE SET
-    booking_enabled = EXCLUDED.booking_enabled,
-    consultation_fee = EXCLUDED.consultation_fee,
-    payment_mode = EXCLUDED.payment_mode,
-    departments = EXCLUDED.departments;
+-- NOTE: Demo provider seeds have been separated into:
+-- database/seeds/demo_appointment_providers.sql
+-- Never run demo seeds in a production environment.
