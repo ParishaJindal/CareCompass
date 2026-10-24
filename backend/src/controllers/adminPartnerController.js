@@ -291,7 +291,7 @@ async function seedStagingHospitals(req, res, next) {
           hospital_id, hospital_name, facility_type, ownership_type,
           state, district, address, pin_code, phone, email,
           available_specializations, available_services
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb, $12::jsonb)
         ON CONFLICT (hospital_id) DO UPDATE SET
           hospital_name = EXCLUDED.hospital_name,
           facility_type = EXCLUDED.facility_type,
@@ -315,7 +315,8 @@ async function seedStagingHospitals(req, res, next) {
       hospitals: FICTIONAL_HOSPITALS.map(h => ({ id: h.id, name: h.name, state: h.state }))
     });
   } catch (err) {
-    next(err);
+    console.error('[Staging Seed Error]:', err.message);
+    res.status(500).json({ success: false, error: err.message });
   }
 }
 
