@@ -138,6 +138,8 @@ async function getDocument(req, res, next) {
     }
 
     const doc = docRes.rows[0];
+    const signedToken = authService.generateDocumentSignedToken(doc.id, id, req.admin.id, 900);
+
     res.json({
       success: true,
       document: {
@@ -147,9 +149,69 @@ async function getDocument(req, res, next) {
         fileSizeBytes: doc.file_size_bytes,
         storagePath: doc.storage_path,
         uploadedAt: doc.uploaded_at,
-        accessLevel: doc.access_level
+        accessLevel: doc.access_level,
+        signedDownloadUrl: `/api/admin/verifications/${id}/documents/${doc.id}/download?token=${signedToken}`,
+        signedUrlExpiresInSeconds: 900
       }
     });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * GET /api/admin/verifications/:id/documents/:docId/download
+ * Validate signed token and serve private document
+ */
+async function downloadDocument(req, res, next) {
+  try {
+    const { id, docId } = req.params;
+    const { token } = req.query;
+
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        error: 'Access denied. Signed authorization token required to access private verification documents.'
+      });
+    }
+
+    const isValid = authService.verifyDocumentSignedToken(token, docId, id);
+    if (!isValid) {
+      return res.status(403).json({
+        success: false,
+        error: 'Invalid, forged, or expired document access token. Signed links expire in 15 minutes.'
+      });
+    }
+
+    const docRes = await db.query(
+      'SELECT * FROM verification_documents WHERE id = $1 AND request_id = $2 LIMIT 1',
+      [docId, id]
+    );
+
+    if (docRes.rowCount === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Verification document not found.'
+      });
+    }
+
+    const doc = docRes.rows[0];
+
+    // Audit log private document access
+    await authService.logAudit({
+      eventType: 'private_document_accessed',
+      entityType: 'verification_document',
+      entityId: String(doc.id),
+      hospitalId: doc.hospital_id,
+      actorType: 'admin',
+      action: `Admin accessed private verification document ${doc.file_name}`,
+      details: { docId: doc.id, requestId: id, storagePath: doc.storage_path },
+      ipAddress: req.ip
+    });
+
+    res.setHeader('Content-Type', doc.file_type || 'application/octet-stream');
+    res.setHeader('Content-Disposition', `inline; filename="${doc.file_name}"`);
+    res.send(`[CareCompass Private Storage] Verified Document: ${doc.file_name} (${doc.storage_path})`);
   } catch (err) {
     next(err);
   }
@@ -161,5 +223,6 @@ module.exports = {
   approveRequest,
   rejectRequest,
   getAuditLogs,
-  getDocument
+  getDocument,
+  downloadDocument
 };

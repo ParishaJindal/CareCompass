@@ -241,6 +241,17 @@ describe('CareCompass Hospital Partner Verification & Multi-Tenant Isolation Sui
   });
 
   test('9. Patient acceptance confirms rescheduled appointment', async () => {
+    // Attacker who merely knows booking reference cannot accept with wrong phone
+    await assert.rejects(
+      async () => {
+        await partnerService.patientAcceptReschedule({
+          bookingReference: apptRefA,
+          patientPhone: '9999999999' // Wrong phone
+        });
+      },
+      (err) => err.message.includes('Mobile number does not match appointment record')
+    );
+
     const acceptRes = await partnerService.patientAcceptReschedule({
       bookingReference: apptRefA,
       patientPhone: '9876541111'
@@ -263,6 +274,18 @@ describe('CareCompass Hospital Partner Verification & Multi-Tenant Isolation Sui
           hospital_staff_notes = 'Alternative doctor'
       WHERE booking_reference = $1
     `, [apptRefB]);
+
+    // Attacker who merely knows booking reference cannot decline with wrong phone
+    await assert.rejects(
+      async () => {
+        await partnerService.patientDeclineReschedule({
+          bookingReference: apptRefB,
+          patientPhone: '9999999999', // Wrong phone
+          reason: 'Malicious decline attempt'
+        });
+      },
+      (err) => err.message.includes('Mobile number does not match appointment record')
+    );
 
     const declineRes = await partnerService.patientDeclineReschedule({
       bookingReference: apptRefB,
@@ -330,6 +353,25 @@ describe('CareCompass Hospital Partner Verification & Multi-Tenant Isolation Sui
       () => authService.verifyToken(''),
       (err) => err.message.includes('Missing')
     );
+  });
+
+  test('14. Private verification document storage requires valid signed token and rejects forgery', async () => {
+    // Generate valid signed token for doc 1 on request 1 by admin 1
+    const validToken = authService.generateDocumentSignedToken(1, 1, 1, 900);
+    assert.equal(authService.verifyDocumentSignedToken(validToken, 1, 1), true);
+
+    // Tampered token fails
+    assert.equal(authService.verifyDocumentSignedToken(validToken + 'forged', 1, 1), false);
+
+    // Wrong document ID fails
+    assert.equal(authService.verifyDocumentSignedToken(validToken, 999, 1), false);
+
+    // Wrong request ID fails
+    assert.equal(authService.verifyDocumentSignedToken(validToken, 1, 999), false);
+
+    // Expired token (0 seconds TTL) fails
+    const expiredToken = authService.generateDocumentSignedToken(1, 1, 1, -10);
+    assert.equal(authService.verifyDocumentSignedToken(expiredToken, 1, 1), false);
   });
 
 });

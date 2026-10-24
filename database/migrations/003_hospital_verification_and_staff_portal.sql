@@ -40,6 +40,10 @@ ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ;
 ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP;
 ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP;
 
+ALTER TABLE admin_users DROP CONSTRAINT IF EXISTS chk_admin_role;
+ALTER TABLE admin_users ADD CONSTRAINT chk_admin_role
+    CHECK (role IN ('platform_admin', 'compliance_officer', 'system_admin'));
+
 -- ============================================================================
 -- 2. HOSPITAL VERIFICATION REQUESTS TABLE
 -- Tracks hospital ownership claims submitted by official representatives.
@@ -117,6 +121,10 @@ ALTER TABLE verification_documents ADD COLUMN IF NOT EXISTS file_size_bytes BIGI
 ALTER TABLE verification_documents ADD COLUMN IF NOT EXISTS storage_path TEXT;
 ALTER TABLE verification_documents ADD COLUMN IF NOT EXISTS access_level VARCHAR(50) DEFAULT 'admin_only';
 ALTER TABLE verification_documents ADD COLUMN IF NOT EXISTS uploaded_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP;
+
+ALTER TABLE verification_documents DROP CONSTRAINT IF EXISTS chk_doc_access_level;
+ALTER TABLE verification_documents ADD CONSTRAINT chk_doc_access_level
+    CHECK (access_level IN ('admin_only', 'hospital_admin', 'internal_compliance'));
 
 -- ============================================================================
 -- 4. HOSPITAL STAFF USERS TABLE

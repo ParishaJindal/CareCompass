@@ -137,25 +137,28 @@ async function adminLogin(email, password) {
     [normalizedEmail]
   );
 
-  // If table is empty, seed initial master administrator securely from environment or secure defaults
+  // If table is empty, seed initial master administrator securely from environment
   if (adminRes.rowCount === 0) {
-    const defaultEmail = (process.env.ADMIN_EMAIL || 'admin@carecompass.org').toLowerCase();
-    const defaultPassword = process.env.ADMIN_INITIAL_PASSWORD || 'CareCompass#Admin2026';
+    const isTestEnv = process.env.NODE_ENV === 'test';
+    const defaultEmail = (process.env.ADMIN_EMAIL || (isTestEnv ? 'admin@carecompass.org' : '')).toLowerCase();
+    const defaultPassword = process.env.ADMIN_INITIAL_PASSWORD || (isTestEnv ? 'CareCompass#Admin2026' : null);
 
-    const countRes = await db.query('SELECT COUNT(*) as count FROM admin_users');
-    const existingCount = parseInt(countRes.rows[0].count, 10);
+    if (defaultEmail && defaultPassword && normalizedEmail === defaultEmail) {
+      const countRes = await db.query('SELECT COUNT(*) as count FROM admin_users');
+      const existingCount = parseInt(countRes.rows[0].count, 10);
 
-    if (existingCount === 0 && normalizedEmail === defaultEmail) {
-      const hashedPw = await hashPassword(defaultPassword);
-      await db.query(`
-        INSERT INTO admin_users (email, full_name, role, password_hash, is_active)
-        VALUES ($1, $2, $3, $4, true)
-      `, [defaultEmail, 'CareCompass Platform Administrator', 'platform_admin', hashedPw]);
+      if (existingCount === 0) {
+        const hashedPw = await hashPassword(defaultPassword);
+        await db.query(`
+          INSERT INTO admin_users (email, full_name, role, password_hash, is_active)
+          VALUES ($1, $2, $3, $4, true)
+        `, [defaultEmail, 'CareCompass Platform Administrator', 'platform_admin', hashedPw]);
 
-      adminRes = await db.query(
-        'SELECT * FROM admin_users WHERE email = $1 LIMIT 1',
-        [defaultEmail]
-      );
+        adminRes = await db.query(
+          'SELECT * FROM admin_users WHERE email = $1 LIMIT 1',
+          [defaultEmail]
+        );
+      }
     }
   }
 
@@ -337,6 +340,58 @@ async function logAudit({
   }
 }
 
+/**
+ * Generate a short-lived cryptographic signed token for private document access (15 minutes)
+ * @param {string|number} docId 
+ * @param {string|number} requestId 
+ * @param {string|number} adminId 
+ * @param {number} expiresInSeconds (default 900)
+ * @returns {string} signedToken
+ */
+function generateDocumentSignedToken(docId, requestId, adminId, expiresInSeconds = 900) {
+  const expiresAt = Math.floor(Date.now() / 1000) + expiresInSeconds;
+  const payload = `${docId}:${requestId}:${adminId}:${expiresAt}`;
+  const hmac = crypto.createHmac('sha256', JWT_SECRET).update(payload).digest('hex');
+  return Buffer.from(`${payload}:${hmac}`).toString('base64url');
+}
+
+/**
+ * Verify a short-lived signed document token
+ * @param {string} token 
+ * @param {string|number} expectedDocId 
+ * @param {string|number} expectedRequestId 
+ * @returns {boolean}
+ */
+function verifyDocumentSignedToken(token, expectedDocId, expectedRequestId) {
+  try {
+    if (!token) return false;
+    const decoded = Buffer.from(token, 'base64url').toString('utf8');
+    const parts = decoded.split(':');
+    if (parts.length !== 5) return false;
+
+    const [docId, requestId, adminId, expiresAtStr, hmac] = parts;
+    if (!/^[0-9a-f]{64}$/i.test(hmac)) return false;
+
+    const expiresAt = parseInt(expiresAtStr, 10);
+    const now = Math.floor(Date.now() / 1000);
+
+    if (now > expiresAt) return false;
+    if (String(docId) !== String(expectedDocId) || String(requestId) !== String(expectedRequestId)) {
+      return false;
+    }
+
+    const payload = `${docId}:${requestId}:${adminId}:${expiresAtStr}`;
+    const expectedHmac = crypto.createHmac('sha256', JWT_SECRET).update(payload).digest('hex');
+
+    const hmacBuf = Buffer.from(hmac, 'hex');
+    const expectedBuf = Buffer.from(expectedHmac, 'hex');
+    if (hmacBuf.length !== expectedBuf.length) return false;
+    return crypto.timingSafeEqual(hmacBuf, expectedBuf);
+  } catch (err) {
+    return false;
+  }
+}
+
 module.exports = {
   hashPassword,
   verifyPassword,
@@ -344,5 +399,7 @@ module.exports = {
   verifyToken,
   adminLogin,
   staffLogin,
-  logAudit
+  logAudit,
+  generateDocumentSignedToken,
+  verifyDocumentSignedToken
 };

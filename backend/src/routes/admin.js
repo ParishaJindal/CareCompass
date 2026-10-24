@@ -17,6 +17,7 @@ router.get('/verifications', requireAdminAuth, adminPartnerController.listReques
 router.post('/verifications/:id/approve', requireAdminAuth, adminPartnerController.approveRequest);
 router.post('/verifications/:id/reject', requireAdminAuth, adminPartnerController.rejectRequest);
 router.get('/verifications/:id/documents/:docId', requireAdminAuth, adminPartnerController.getDocument);
+router.get('/verifications/:id/documents/:docId/download', adminPartnerController.downloadDocument);
 router.get('/audit-logs', requireAdminAuth, adminPartnerController.getAuditLogs);
 
 module.exports = router;
