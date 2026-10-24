@@ -57,7 +57,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://carecompass-9jng.onrender.com/api/:path*"
+      "destination": "https://carecompass-api-staging.onrender.com/api/:path*"
     },
     {
       "source": "/find-healthcare",

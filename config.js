@@ -1,16 +1,21 @@
 /**
- * CareCompass — Frontend API Configuration
- * Manages communication between the Vercel Frontend and Render Backend API.
+ * CareCompass — Frontend API Configuration (Staging Environment)
+ * Manages communication between the Vercel Staging Frontend and Render Staging Backend API.
+ * 
+ * ISOLATION GUARANTEES:
+ * 1. Exclusively points to the CareCompass Staging Render backend.
+ * 2. Never falls back to production endpoints under any circumstances.
+ * 3. Supports Vercel preview environments, custom runtime overrides, and local development.
  */
 
 window.CARECOMPASS_CONFIG = (function () {
-  // Official live production Render backend for CareCompass
-  const PRODUCTION_API_URL = 'https://carecompass-9jng.onrender.com';
+  // Official live staging Render backend for CareCompass (feature/hospital-partner-portal)
+  const STAGING_API_URL = 'https://carecompass-api-staging.onrender.com';
 
-  // 1. Detect environment variables, window overrides, or localStorage
-  const envApiUrl = (typeof process !== 'undefined' && process.env && process.env.VITE_API_BASE_URL)
+  // 1. Detect environment variables, window overrides, or explicit custom configuration
+  const envApiUrl = (typeof process !== 'undefined' && process.env && (process.env.VITE_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || process.env.CARECOMPASS_API_URL))
     || window.__CARECOMPASS_API_BASE_URL__
-    || (typeof localStorage !== 'undefined' ? localStorage.getItem('carecompass_api_url') : null);
+    || (typeof localStorage !== 'undefined' ? localStorage.getItem('carecompass_staging_api_url') : null);
 
   // 2. Resolve default backend URL based on host environment
   const isLocalhost = Boolean(
@@ -25,16 +30,17 @@ window.CARECOMPASS_CONFIG = (function () {
   if (envApiUrl && envApiUrl.trim() !== '') {
     defaultBaseUrl = envApiUrl.trim();
   } else if (isLocalhost) {
-    // In local development: use local port 10000 by default (falls back to production Render if needed)
+    // In local development: use local port 10000 by default
     defaultBaseUrl = 'http://localhost:10000';
   } else {
-    // Production Vercel deployment points directly to live Render backend
-    defaultBaseUrl = PRODUCTION_API_URL;
+    // Staging Vercel deployment points exclusively to staging Render backend
+    defaultBaseUrl = STAGING_API_URL;
   }
 
   return {
     apiBaseUrl: defaultBaseUrl,
-    productionApiUrl: PRODUCTION_API_URL,
+    stagingApiUrl: STAGING_API_URL,
+    environment: 'staging',
 
     /**
      * Resolves complete URL for any backend API endpoint
@@ -50,7 +56,8 @@ window.CARECOMPASS_CONFIG = (function () {
     },
 
     /**
-     * Diagnostic health check for the connected Render backend
+     * Diagnostic health check for the connected Render staging backend
+     * STRICT SAFETY: Never falls back to production.
      */
     checkBackendHealth: async function () {
       try {
@@ -61,41 +68,30 @@ window.CARECOMPASS_CONFIG = (function () {
           signal: typeof AbortSignal !== 'undefined' && AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined
         });
         if (!res.ok) {
-          return { online: false, status: res.status };
+          return { online: false, status: res.status, environment: 'staging' };
         }
         const data = await res.json();
-        return { online: true, ...data };
+        return { online: true, environment: 'staging', ...data };
       } catch (err) {
-        // If local backend was attempted and failed, try falling back to production Render backend
-        if (this.apiBaseUrl !== PRODUCTION_API_URL) {
-          try {
-            const fallbackRes = await fetch(`${PRODUCTION_API_URL}/api/health`, {
-              headers: { 'Accept': 'application/json' }
-            });
-            if (fallbackRes.ok) {
-              const fbData = await fallbackRes.json();
-              this.apiBaseUrl = PRODUCTION_API_URL;
-              return { online: true, fallback: true, ...fbData };
-            }
-          } catch (_) {}
-        }
-        return { online: false, error: err.message };
+        // Strict isolation: Log staging failure but NEVER query production
+        console.warn('[CareCompass Staging] Staging backend health check error:', err.message);
+        return { online: false, environment: 'staging', error: err.message };
       }
     },
 
     /**
-     * Allows setting custom API URL at runtime (e.g. from developer console or admin portal)
+     * Allows setting custom API URL at runtime (e.g. from developer console or staging test harness)
      */
     setApiBaseUrl: function (newUrl) {
       this.apiBaseUrl = newUrl ? newUrl.trim() : '';
       if (typeof localStorage !== 'undefined') {
         if (newUrl) {
-          localStorage.setItem('carecompass_api_url', newUrl);
+          localStorage.setItem('carecompass_staging_api_url', newUrl);
         } else {
-          localStorage.removeItem('carecompass_api_url');
+          localStorage.removeItem('carecompass_staging_api_url');
         }
       }
-      console.log('[CareCompass] API Base URL set to:', this.apiBaseUrl);
+      console.log('[CareCompass Staging] API Base URL set to:', this.apiBaseUrl);
     }
   };
 })();

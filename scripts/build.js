@@ -137,6 +137,26 @@ for (const forbidden of FORBIDDEN_NAMES) {
   }
 }
 
+// Staging isolation verification: Ensure no production endpoints or credentials leak into staging frontend build
+const STAGING_FORBIDDEN_PATTERNS = [
+  'carecompass-9jng.onrender.com',
+  'aws-0-ap-northeast-1.pooler.supabase.com:6543/postgres'
+];
+
+for (const relOut of ['config.js', 'js/config.js']) {
+  const filePath = path.join(PUBLIC_DIR, relOut);
+  if (fs.existsSync(filePath)) {
+    const content = fs.readFileSync(filePath, 'utf8');
+    for (const pat of STAGING_FORBIDDEN_PATTERNS) {
+      if (content.includes(pat)) {
+        console.error(`  ✖ Security failure: Production pattern found in staging frontend asset ${relOut}: ${pat}`);
+        fs.rmSync(PUBLIC_DIR, { recursive: true, force: true });
+        process.exit(1);
+      }
+    }
+  }
+}
+
 // 7. Verification of generated public/ output
 const CRITICAL_OUTPUTS = [
   'public/index.html',
