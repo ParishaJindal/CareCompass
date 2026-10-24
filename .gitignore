@@ -5,6 +5,7 @@
 backend/.env
 backend/.env.*
 !backend/.env.example
+!backend/.env.staging.example
 
 # Node.js dependencies
 node_modules/
@@ -44,4 +45,3 @@ coverage/
 .idea/
 *.sublime-project
 *.sublime-workspace
-.env*
