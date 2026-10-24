@@ -9,8 +9,8 @@ const partnerController = require('../controllers/partnerController');
 const { requireStaffAuth } = require('../middleware/authMiddleware');
 const { lookupLimiter } = require('../middleware/rateLimiter');
 
-// Public endpoints
-router.post('/claim', partnerController.submitClaim);
+// Public endpoints (rate limited)
+router.post('/claim', lookupLimiter, partnerController.submitClaim);
 router.post('/auth/login', lookupLimiter, partnerController.staffLogin);
 
 // Protected staff endpoints (Zero-trust tenant isolation)

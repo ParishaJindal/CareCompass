@@ -233,10 +233,10 @@ async function downloadDocument(req, res, next) {
  */
 async function seedStagingHospitals(req, res, next) {
   try {
-    if (process.env.NODE_ENV === 'production') {
+    if (process.env.NODE_ENV !== 'staging' && process.env.NODE_ENV !== 'test') {
       return res.status(403).json({
         success: false,
-        error: 'Staging seed endpoint is strictly disabled in production.'
+        error: 'Staging seed endpoint is strictly restricted to staging environments and forbidden in production.'
       });
     }
 
