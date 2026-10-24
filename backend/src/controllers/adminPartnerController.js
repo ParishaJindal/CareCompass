@@ -168,6 +168,14 @@ async function downloadDocument(req, res, next) {
     const { id, docId } = req.params;
     const { token } = req.query;
 
+    // Both administrator authentication AND document authorization token required (Requirement 7)
+    if (!req.admin || !req.admin.id) {
+      return res.status(401).json({
+        success: false,
+        error: 'Access denied. Valid administrator authentication session required to download private verification documents.'
+      });
+    }
+
     if (!token) {
       return res.status(401).json({
         success: false,
@@ -175,11 +183,12 @@ async function downloadDocument(req, res, next) {
       });
     }
 
-    const isValid = authService.verifyDocumentSignedToken(token, docId, id);
+    // Verify token matches document, request, AND the authenticated admin
+    const isValid = authService.verifyDocumentSignedToken(token, docId, id, req.admin.id);
     if (!isValid) {
       return res.status(403).json({
         success: false,
-        error: 'Invalid, forged, or expired document access token. Signed links expire in 15 minutes.'
+        error: 'Invalid, forged, expired, or unauthorized document access token. Signed links expire in 15 minutes and can only be used by the authorized administrator who requested them.'
       });
     }
 

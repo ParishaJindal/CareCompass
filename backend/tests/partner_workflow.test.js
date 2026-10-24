@@ -372,6 +372,12 @@ describe('CareCompass Hospital Partner Verification & Multi-Tenant Isolation Sui
     // Expired token (0 seconds TTL) fails
     const expiredToken = authService.generateDocumentSignedToken(1, 1, 1, -10);
     assert.equal(authService.verifyDocumentSignedToken(expiredToken, 1, 1), false);
+
+    // Requirement 7: Admin binding check - token generated for Admin 1 passes for Admin 1
+    assert.equal(authService.verifyDocumentSignedToken(validToken, 1, 1, 1), true);
+
+    // Requirement 7: Possession of signed URL by someone other than the authorized administrator fails
+    assert.equal(authService.verifyDocumentSignedToken(validToken, 1, 1, 2), false);
   });
 
 });

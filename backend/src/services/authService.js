@@ -360,9 +360,10 @@ function generateDocumentSignedToken(docId, requestId, adminId, expiresInSeconds
  * @param {string} token 
  * @param {string|number} expectedDocId 
  * @param {string|number} expectedRequestId 
+ * @param {string|number|null} expectedAdminId 
  * @returns {boolean}
  */
-function verifyDocumentSignedToken(token, expectedDocId, expectedRequestId) {
+function verifyDocumentSignedToken(token, expectedDocId, expectedRequestId, expectedAdminId = null) {
   try {
     if (!token) return false;
     const decoded = Buffer.from(token, 'base64url').toString('utf8');
@@ -377,6 +378,9 @@ function verifyDocumentSignedToken(token, expectedDocId, expectedRequestId) {
 
     if (now > expiresAt) return false;
     if (String(docId) !== String(expectedDocId) || String(requestId) !== String(expectedRequestId)) {
+      return false;
+    }
+    if (expectedAdminId !== null && expectedAdminId !== undefined && String(adminId) !== String(expectedAdminId)) {
       return false;
     }
 
