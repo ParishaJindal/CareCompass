@@ -14,15 +14,19 @@ const apiLimiter = rateLimit({
   }
 });
 
-// Stricter rate limiter for sensitive patient lookup and cancellation (anti-brute-force)
+// Stricter rate limiter for sensitive patient lookup and auth (anti-brute-force)
+const isStagingOrTest = process.env.NODE_ENV === 'staging' || process.env.NODE_ENV === 'test';
+const lookupWindowMs = parseInt(process.env.RATE_LIMIT_LOOKUP_WINDOW_MS || (isStagingOrTest ? '60000' : '900000'), 10);
+const lookupMax = parseInt(process.env.RATE_LIMIT_LOOKUP_MAX || (isStagingOrTest ? '200' : '20'), 10);
+
 const lookupLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20, // Max 20 attempts per IP per 15 minutes
+  windowMs: lookupWindowMs,
+  max: lookupMax,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
     success: false,
-    error: 'Too many lookup attempts from this IP address. Please wait 15 minutes before trying again.'
+    error: 'Too many lookup or auth attempts from this IP address. Please wait before trying again.'
   }
 });
 
