@@ -259,7 +259,7 @@ async function seedStagingHospitals(req, res, next) {
         id: 'STAGE-FICT-002',
         name: 'Apex Memorial Specialty Center (Fictional Sandbox)',
         type: 'Specialty Hospital',
-        ownership: 'Trust',
+        ownership: 'Trust/NGO',
         state: 'Maharashtra',
         district: 'Mumbai',
         address: 'Sector 4, Fictional Medical Enclave',

@@ -37,7 +37,7 @@ INSERT INTO hospitals (
     'STAGE-FICT-002',
     'Apex Memorial Specialty Center (Fictional Sandbox)',
     'Specialty Hospital',
-    'Trust',
+    'Trust/NGO',
     'Maharashtra',
     'Mumbai',
     'Sector 4, Fictional Medical Enclave',
