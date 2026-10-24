@@ -226,6 +226,99 @@ async function downloadDocument(req, res, next) {
   }
 }
 
+/**
+ * POST /api/admin/staging/seed
+ * Seed 3 clearly fictional hospitals into the staging database.
+ * STRICT SAFETY: Strictly forbidden in production.
+ */
+async function seedStagingHospitals(req, res, next) {
+  try {
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(403).json({
+        success: false,
+        error: 'Staging seed endpoint is strictly disabled in production.'
+      });
+    }
+
+    const FICTIONAL_HOSPITALS = [
+      {
+        id: 'STAGE-FICT-001',
+        name: 'CareCompass Test General Hospital (Fictional Sandbox)',
+        type: 'General Hospital',
+        ownership: 'Private',
+        state: 'Delhi',
+        district: 'New Delhi',
+        address: 'Plot 101, Fictional Health Corridor, Knowledge Park',
+        pincode: '110001',
+        phone: '+91 99999 00001',
+        email: 'admin@fictional-hospital-alpha.carecompass.test',
+        specializations: JSON.stringify(['General Medicine', 'Cardiology', 'Pediatrics']),
+        services: JSON.stringify(['OPD', 'Emergency', 'Diagnostics'])
+      },
+      {
+        id: 'STAGE-FICT-002',
+        name: 'Apex Memorial Specialty Center (Fictional Sandbox)',
+        type: 'Specialty Hospital',
+        ownership: 'Trust',
+        state: 'Maharashtra',
+        district: 'Mumbai',
+        address: 'Sector 4, Fictional Medical Enclave',
+        pincode: '400001',
+        phone: '+91 99999 00002',
+        email: 'contact@fictional-apex-beta.carecompass.test',
+        specializations: JSON.stringify(['Neurology', 'Orthopedics', 'Oncology']),
+        services: JSON.stringify(['Consultation', 'Day Care', 'MRI / CT'])
+      },
+      {
+        id: 'STAGE-FICT-003',
+        name: 'St. Jude Community Clinic (Fictional Sandbox - Unintegrated)',
+        type: 'Community Health Centre',
+        ownership: 'Government',
+        state: 'Karnataka',
+        district: 'Bengaluru Urban',
+        address: 'Phase 2, Synthetic Medical Road',
+        pincode: '560001',
+        phone: '+91 99999 00003',
+        email: 'info@fictional-stjude-gamma.carecompass.test',
+        specializations: JSON.stringify(['General Medicine', 'Family Practice']),
+        services: JSON.stringify(['Basic OPD', 'Immunization'])
+      }
+    ];
+
+    for (const h of FICTIONAL_HOSPITALS) {
+      await db.query(`
+        INSERT INTO hospitals (
+          hospital_id, hospital_name, facility_type, ownership_type,
+          state, district, address, pin_code, phone, email,
+          available_specializations, available_services
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        ON CONFLICT (hospital_id) DO UPDATE SET
+          hospital_name = EXCLUDED.hospital_name,
+          facility_type = EXCLUDED.facility_type,
+          ownership_type = EXCLUDED.ownership_type,
+          state = EXCLUDED.state,
+          district = EXCLUDED.district,
+          address = EXCLUDED.address,
+          pin_code = EXCLUDED.pin_code,
+          phone = EXCLUDED.phone,
+          email = EXCLUDED.email
+      `, [
+        h.id, h.name, h.type, h.ownership,
+        h.state, h.district, h.address, h.pincode,
+        h.phone, h.email, h.specializations, h.services
+      ]);
+    }
+
+    res.json({
+      success: true,
+      message: 'Successfully seeded 3 fictional hospital records in staging database.',
+      hospitals: FICTIONAL_HOSPITALS.map(h => ({ id: h.id, name: h.name, state: h.state }))
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   adminLogin,
   listRequests,
@@ -233,5 +326,6 @@ module.exports = {
   rejectRequest,
   getAuditLogs,
   getDocument,
-  downloadDocument
+  downloadDocument,
+  seedStagingHospitals
 };

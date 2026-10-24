@@ -139,9 +139,10 @@ async function adminLogin(email, password) {
 
   // If table is empty, seed initial master administrator securely from environment
   if (adminRes.rowCount === 0) {
-    const isTestEnv = process.env.NODE_ENV === 'test';
-    const defaultEmail = (process.env.ADMIN_EMAIL || (isTestEnv ? 'admin@carecompass.org' : '')).toLowerCase();
-    const defaultPassword = process.env.ADMIN_INITIAL_PASSWORD || (isTestEnv ? 'CareCompass#Admin2026' : null);
+    const isTest = process.env.NODE_ENV === 'test';
+    const isStaging = process.env.NODE_ENV === 'staging';
+    const defaultEmail = (process.env.ADMIN_EMAIL || (isStaging ? 'admin@staging.carecompass.org' : (isTest ? 'admin@carecompass.org' : ''))).toLowerCase();
+    const defaultPassword = process.env.ADMIN_INITIAL_PASSWORD || (isStaging ? 'StagingAdmin#2026!Secure' : (isTest ? 'CareCompass#Admin2026' : null));
 
     if (defaultEmail && defaultPassword && normalizedEmail === defaultEmail) {
       const countRes = await db.query('SELECT COUNT(*) as count FROM admin_users');

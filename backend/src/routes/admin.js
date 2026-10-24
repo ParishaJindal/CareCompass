@@ -20,4 +20,7 @@ router.get('/verifications/:id/documents/:docId', requireAdminAuth, adminPartner
 router.get('/verifications/:id/documents/:docId/download', requireAdminAuth, adminPartnerController.downloadDocument);
 router.get('/audit-logs', requireAdminAuth, adminPartnerController.getAuditLogs);
 
+// Staging Sandbox Management (Disabled in Production)
+router.post('/staging/seed', adminPartnerController.seedStagingHospitals);
+
 module.exports = router;
