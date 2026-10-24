@@ -108,12 +108,12 @@ async function submitVerificationClaim({
   if (provRes.rowCount === 0) {
     await db.query(`
       INSERT INTO appointment_providers (hospital_id, integration_type, booking_enabled, verification_status)
-      VALUES ($1, 'carecompass_partner', 0, 'pending_review')
+      VALUES ($1, 'carecompass_partner', false, 'pending_review')
     `, [hospitalId]);
   } else {
     await db.query(`
       UPDATE appointment_providers
-      SET verification_status = 'pending_review', booking_enabled = 0, updated_at = CURRENT_TIMESTAMP
+      SET verification_status = 'pending_review', booking_enabled = false, updated_at = CURRENT_TIMESTAMP
       WHERE hospital_id = $1
     `, [hospitalId]);
   }
@@ -595,11 +595,11 @@ async function adminApproveVerification({ requestId, adminId, adminEmail, adminN
     WHERE id = $3
   `, [String(adminId), adminNotes.trim(), requestId]);
 
-  // 2. Update appointment_providers: verification_status = 'verified', BUT booking_enabled REMAINS 0!
+  // 2. Update appointment_providers: verification_status = 'verified', BUT booking_enabled REMAINS false!
   await db.query(`
     UPDATE appointment_providers
     SET verification_status = 'verified',
-        booking_enabled = 0,
+        booking_enabled = false,
         updated_at = CURRENT_TIMESTAMP
     WHERE hospital_id = $1
   `, [request.hospital_id]);
@@ -690,7 +690,7 @@ async function adminRejectVerification({ requestId, adminId, adminEmail, rejecti
   await db.query(`
     UPDATE appointment_providers
     SET verification_status = 'Not Verified',
-        booking_enabled = 0,
+        booking_enabled = false,
         updated_at = CURRENT_TIMESTAMP
     WHERE hospital_id = $1
   `, [request.hospital_id]);
@@ -738,7 +738,7 @@ async function activateHospitalDirectBooking({ hospitalId, consultationFee = 0, 
 
   await db.query(`
     UPDATE appointment_providers
-    SET booking_enabled = 1,
+    SET booking_enabled = true,
         consultation_fee = $1,
         departments = $2,
         updated_at = CURRENT_TIMESTAMP

@@ -1,10 +1,11 @@
 const rateLimit = require('express-rate-limit');
 
-const windowMs = parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10); // 15 mins default
-const maxRequests = parseInt(process.env.RATE_LIMIT_MAX || '200', 10);
+const isStagingOrTest = process.env.NODE_ENV === 'staging' || process.env.NODE_ENV === 'test';
+const apiWindowMs = parseInt(process.env.RATE_LIMIT_WINDOW_MS || (isStagingOrTest ? '60000' : '900000'), 10);
+const maxRequests = parseInt(process.env.RATE_LIMIT_MAX || (isStagingOrTest ? '1000' : '200'), 10);
 
 const apiLimiter = rateLimit({
-  windowMs,
+  windowMs: apiWindowMs,
   max: maxRequests,
   standardHeaders: true,
   legacyHeaders: false,
@@ -15,7 +16,6 @@ const apiLimiter = rateLimit({
 });
 
 // Stricter rate limiter for sensitive patient lookup and auth (anti-brute-force)
-const isStagingOrTest = process.env.NODE_ENV === 'staging' || process.env.NODE_ENV === 'test';
 const lookupWindowMs = parseInt(process.env.RATE_LIMIT_LOOKUP_WINDOW_MS || (isStagingOrTest ? '60000' : '900000'), 10);
 const lookupMax = parseInt(process.env.RATE_LIMIT_LOOKUP_MAX || (isStagingOrTest ? '200' : '20'), 10);
 

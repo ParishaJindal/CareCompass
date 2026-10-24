@@ -145,10 +145,9 @@ async function adminLogin(email, password) {
     const defaultPassword = process.env.ADMIN_INITIAL_PASSWORD || (isStaging ? 'StagingAdmin#2026!Secure' : (isTest ? 'CareCompass#Admin2026' : null));
 
     if (defaultEmail && defaultPassword && normalizedEmail === defaultEmail) {
-      const countRes = await db.query('SELECT COUNT(*) as count FROM admin_users');
-      const existingCount = parseInt(countRes.rows[0].count, 10);
+      const emailCheck = await db.query('SELECT * FROM admin_users WHERE email = $1 LIMIT 1', [defaultEmail]);
 
-      if (existingCount === 0) {
+      if (emailCheck.rowCount === 0) {
         const hashedPw = await hashPassword(defaultPassword);
         await db.query(`
           INSERT INTO admin_users (email, full_name, role, password_hash, is_active)
@@ -156,9 +155,11 @@ async function adminLogin(email, password) {
         `, [defaultEmail, 'CareCompass Platform Administrator', 'platform_admin', hashedPw]);
 
         adminRes = await db.query(
-          'SELECT * FROM admin_users WHERE email = $1 LIMIT 1',
+          'SELECT * FROM admin_users WHERE email = $1 AND is_active = true LIMIT 1',
           [defaultEmail]
         );
+      } else {
+        adminRes = emailCheck;
       }
     }
   }
