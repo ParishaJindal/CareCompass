@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Partner With CareCompass — Hospital Verification & Listing Ownership</title>
+  <meta name="description" content="Request official verification of your hospital's directory listing on CareCompass to manage patient appointment inquiries and outpatient consultations.">
+  
+  <!-- Modern Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../assets/images/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <link rel="alternate icon" href="../favicon.ico">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+  <link rel="stylesheet" href="../css/accessibility.css">
+  
+  <style>
+    :root {
+      --partner-teal: #0d9488;
+      --partner-navy: #0f2b48;
+      --partner-slate: #f8fafc;
+      --partner-border: #e2e8f0;
+    }
+    body {
+      background: #f1f5f9;
+      color: #1e293b;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .partner-hero {
+      background: linear-gradient(135deg, #0f2b48 0%, #134e4a 100%);
+      color: #ffffff;
+      padding: 56px 24px;
+      text-align: center;
+      position: relative;
+    }
+    .partner-hero h1 {
+      font-family: 'Manrope', sans-serif;
+      font-size: 2.4rem;
+      font-weight: 800;
+      margin: 0 0 12px;
+      letter-spacing: -0.02em;
+    }
+    .partner-hero p {
+      max-width: 720px;
+      margin: 0 auto 24px;
+      font-size: 1.1rem;
+      color: #cbd5e1;
+      line-height: 1.6;
+    }
+    .partner-main-container {
+      max-width: 900px;
+      width: 100%;
+      margin: -36px auto 60px;
+      padding: 0 20px;
+      flex: 1;
+      position: relative;
+      z-index: 10;
+    }
+    .partner-card {
+      background: #ffffff;
+      border: 1px solid var(--partner-border);
+      border-radius: 16px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+      padding: 36px 32px;
+    }
+    .partner-notice-box {
+      background: #f0fdfa;
+      border: 1px solid #99f6e4;
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 28px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+    .partner-notice-box svg {
+      width: 24px;
+      height: 24px;
+      color: var(--partner-teal);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .partner-notice-box p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: #134e4a;
+      line-height: 1.5;
+    }
+    .form-section-title {
+      font-family: 'Manrope', sans-serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--partner-navy);
+      margin: 28px 0 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 768px) {
+      .form-grid-2 { grid-template-columns: 1fr; }
+      .partner-hero h1 { font-size: 1.8rem; }
+      .partner-card { padding: 24px 18px; }
+    }
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .field-group label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #334155;
+    }
+    .field-input, .field-select {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      background: #ffffff;
+      color: #0f172a;
+      box-sizing: border-box;
+      transition: all 0.2s ease;
+    }
+    .field-input:focus, .field-select:focus {
+      outline: none;
+      border-color: var(--partner-teal);
+      box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+    }
+    .field-helper {
+      font-size: 0.78rem;
+      color: #64748b;
+    }
+    .hospital-search-results {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+      max-height: 240px;
+      overflow-y: auto;
+      z-index: 100;
+      display: none;
+    }
+    .hosp-result-item {
+      padding: 10px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 0.88rem;
+    }
+    .hosp-result-item:hover {
+      background: #f0fdfa;
+      color: var(--partner-teal);
+    }
+    .selected-hospital-badge {
+      background: #f8fafc;
+      border: 1px solid var(--partner-teal);
+      border-radius: 8px;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 8px;
+    }
+    .badge-clear-btn {
+      background: transparent;
+      border: none;
+      color: #ef4444;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-submit-claim {
+      background: #0d9488;
+      color: #ffffff;
+      font-size: 1.05rem;
+      font-weight: 700;
+      padding: 14px 28px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: background 0.2s ease, transform 0.1s ease;
+    }
+    .btn-submit-claim:hover {
+      background: #0f766e;
+    }
+    .btn-submit-claim:active {
+      transform: scale(0.99);
+    }
+    .confirmation-banner {
+      display: none;
+      background: #ecfdf5;
+      border: 2px solid #10b981;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .confirmation-banner h3 {
+      color: #065f46;
+      margin: 0 0 8px;
+    }
+    .ref-pill {
+      display: inline-block;
+      font-family: monospace;
+      font-size: 1.15rem;
+      font-weight: 800;
+      background: #ffffff;
+      color: #0f2b48;
+      border: 1px solid #6ee7b7;
+      padding: 6px 14px;
+      border-radius: 6px;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <header class="navbar" role="banner">
+    <div class="nav-container">
+      <a href="../index.html" class="nav-brand" aria-label="CareCompass Home">
+        <span class="nav-logo-text">CareCompass</span>
+      </a>
+      <nav class="nav-links" role="navigation" aria-label="Primary Navigation">
+        <a href="find-healthcare.html" class="nav-link">Find Healthcare</a>
+        <a href="my-appointments.html" class="nav-link">My Appointments</a>
+        <a href="hospital-portal.html" class="nav-link" style="color:var(--partner-teal); font-weight:700;">Hospital Staff Portal</a>
+        <a href="about.html" class="nav-link">About</a>
+        <a href="contact.html" class="nav-link">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero Header -->
+  <div class="partner-hero">
+    <h1>Hospital Verification &amp; Partner Access</h1>
+    <p>
+      Claim official ownership of your hospital's directory listing on CareCompass to review incoming patient appointment inquiries, manage consultation requests, and verify facility details.
+    </p>
+    <div style="display:inline-flex; align-items:center; gap:8px; font-size:0.9rem; color:#99f6e4;">
+      <span>🔒 Official Hospital Administration Only</span>
+      <span>•</span>
+      <span>Zero Platform Listing Fees</span>
+    </div>
+  </div>
+
+  <!-- Main Container -->
+  <main class="partner-main-container">
+    
+    <!-- Success Confirmation Banner -->
+    <div id="claim-confirmation-banner" class="confirmation-banner">
+      <h3>🎉 Hospital Verification Request Submitted</h3>
+      <p style="color:#047857; margin:0 0 10px;">
+        Your claim for <strong id="conf-hosp-name"></strong> has been recorded under reference:
+      </p>
+      <div id="conf-ref-code" class="ref-pill">HVR-20261023-XXXX</div>
+      <p style="font-size:0.9rem; color:#374151; max-width:680px; margin:12px auto 16px; line-height:1.5;">
+        Verification requests are reviewed manually by our compliance team in the order received. Verification requires thorough validation of official hospital registration and authorized staff credentials. Once approved by our administrators, your staff account will be activated to access the Partner Portal.
+      </p>
+      <div style="display:flex; justify-content:center; gap:12px; margin-top:14px;">
+        <a href="hospital-portal.html" class="btn btn-outline btn-sm">Go to Partner Login</a>
+        <button type="button" class="btn btn-primary btn-sm" onclick="resetClaimForm()">Submit Another Request</button>
+      </div>
+    </div>
+
+    <div class="partner-card" id="claim-form-card">
+      
+      <!-- Compliance & Security Assurance Note -->
+      <div class="partner-notice-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        </svg>
+        <div>
+          <strong style="color:#0f2b48; display:block; margin-bottom:2px;">Government &amp; Clinical Compliance Protocols</strong>
+          <p>
+            CareCompass adheres strictly to NABH and PMJAY directory governance. Hospital ownership is granted only after manual review of clinical registration documents. Verification requests are reviewed manually by our compliance team in the order received. Verification requires thorough validation of official hospital registration and authorized staff credentials.
+          </p>
+        </div>
+      </div>
+
+      <form id="partner-claim-form">
+        
+        <!-- Section 1: Hospital Directory Search -->
+        <div class="form-section-title">
+          <span>🏥</span> 1. Select Hospital from CareCompass Directory
+        </div>
+
+        <div class="field-group" style="position:relative; margin-bottom:14px;">
+          <label for="hospital-search-input">Search Hospital by Name, City, or District *</label>
+          <input type="text" id="hospital-search-input" class="field-input" placeholder="Type at least 2 characters (e.g. Christian Medical College, Max Super Speciality)..." autocomplete="off" required>
+          <div id="hospital-search-dropdown" class="hospital-search-results"></div>
+          <span class="field-helper">Select your hospital listing from India's verified directory of 42,940 hospitals.</span>
+        </div>
+
+        <div id="selected-hospital-container" style="display:none;">
+          <div class="selected-hospital-badge">
+            <div>
+              <strong id="selected-hosp-name" style="color:var(--partner-navy); font-size:1.05rem; display:block;"></strong>
+              <span id="selected-hosp-location" style="font-size:0.82rem; color:#64748b;"></span>
+              <span id="selected-hosp-id" style="font-size:0.75rem; color:var(--partner-teal); font-weight:700; margin-left:8px;"></span>
+            </div>
+            <button type="button" class="badge-clear-btn" id="btn-clear-selected-hosp">Change Facility ✕</button>
+          </div>
+          <input type="hidden" id="selected-hosp-id-hidden" required>
+        </div>
+
+        <!-- Section 2: Official Representative Information -->
+        <div class="form-section-title">
+          <span>👤</span> 2. Authorized Hospital Representative Details
+        </div>
+
+        <div class="form-grid-2">
+          <div class="field-group">
+            <label for="rep-name">Full Name of Applicant *</label>
+            <input type="text" id="rep-name" class="field-input" placeholder="e.g. Dr. Rajesh K. Sharma" required>
+          </div>
+          <div class="field-group">
+            <label for="rep-designation">Official Designation *</label>
+            <select id="rep-designation" class="field-select" required>
+              <option value="">Select official role</option>
+              <option value="Medical Superintendent">Medical Superintendent / MS</option>
+              <option value="Hospital Administrator">Hospital Administrator / COO</option>
+              <option value="Director / Trustee">Managing Director / Trustee</option>
+              <option value="Head of Operations">Head of Operations / Clinical Head</option>
+              <option value="OPD Registration Incharge">OPD Registration Desk Incharge</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-grid-2">
+          <div class="field-group">
+            <label for="rep-email">Official Institutional Email *</label>
+            <input type="email" id="rep-email" class="field-input" placeholder="e.g. ms@hospitaldomain.org" required>
+            <span class="field-helper">Official or domain-specific email is strongly preferred for faster verification.</span>
+          </div>
+          <div class="field-group">
+            <label for="rep-phone">Official Contact Phone (10 digits) *</label>
+            <input type="tel" id="rep-phone" class="field-input" placeholder="e.g. 9876543210" pattern="[0-9]{10}" required>
+            <span class="field-helper">Used for SMS authentication and compliance validation.</span>
+          </div>
+        </div>
+
+        <div class="field-group" style="margin-bottom:16px;">
+          <label for="hosp-reg-num">Hospital State Medical Council / Clinical Establishment Registration No. *</label>
+          <input type="text" id="hosp-reg-num" class="field-input" placeholder="e.g. CEA/PB/2022/10492 or NABH/2024/9912" required>
+          <span class="field-helper">Must match your state health department registration or NABH accreditation record.</span>
+        </div>
+
+        <!-- Section 3: Staff Account Credentials Setup -->
+        <div class="form-section-title">
+          <span>🔑</span> 3. Staff Account Password Setup
+        </div>
+
+        <div class="form-grid-2">
+          <div class="field-group">
+            <label for="staff-pw">Initial Password *</label>
+            <input type="password" id="staff-pw" class="field-input" placeholder="Minimum 8 characters" minlength="8" required>
+          </div>
+          <div class="field-group">
+            <label for="staff-pw-confirm">Confirm Initial Password *</label>
+            <input type="password" id="staff-pw-confirm" class="field-input" placeholder="Re-enter password" minlength="8" required>
+          </div>
+        </div>
+        <span class="field-helper" style="display:block; margin-top:-6px; margin-bottom:14px;">
+          This password will be encrypted using scrypt and will be active once administrator approval is granted.
+        </span>
+
+        <!-- Section 4: Private Verification Documents -->
+        <div class="form-section-title">
+          <span>📄</span> 4. Verification Document Metadata (Private Storage)
+        </div>
+
+        <div class="field-group" style="margin-bottom:14px;">
+          <label for="doc-file-input">Hospital Registration Certificate or Authorization Letter (PDF/JPEG)</label>
+          <input type="file" id="doc-file-input" class="field-input" accept=".pdf,.png,.jpg,.jpeg">
+          <span class="field-helper">
+            🔒 <strong>Private Access Level:</strong> Verification documents are stored in private storage and accessible exclusively by authorized platform compliance officers.
+          </span>
+        </div>
+
+        <div id="form-error-alert" style="display:none; background:#fef2f2; border:1px solid #f87171; border-radius:8px; padding:12px; color:#b91c1c; font-size:0.88rem; margin:14px 0;"></div>
+
+        <button type="submit" id="btn-submit" class="btn-submit-claim">
+          <span>🛡️</span> Submit Hospital Verification Request
+        </button>
+
+      </form>
+
+      <div style="text-align:center; margin-top:24px; padding-top:16px; border-top:1px solid #e2e8f0; font-size:0.9rem; color:#64748b;">
+        Already an approved hospital partner? <a href="hospital-portal.html" style="color:var(--partner-teal); font-weight:700; text-decoration:none;">Log into Hospital Staff Dashboard &rarr;</a>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="main-footer" role="contentinfo">
+    <div class="footer-container">
+      <div class="footer-col">
+        <div class="footer-brand"><span class="footer-brand-name">CareCompass</span></div>
+        <p class="footer-desc">Pan-India healthcare navigation, facility directory verification, and outpatient consultation scheduling.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Hospital Partners</h4>
+        <ul class="footer-links">
+          <li><a href="partner-with-us.html">Partner With Us</a></li>
+          <li><a href="hospital-portal.html">Hospital Staff Portal</a></li>
+          <li><a href="my-appointments.html">Patient Appointment Status</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Compliance Notice</h4>
+        <div class="footer-disclaimer-box">
+          CareCompass is a digital healthcare navigation platform. Hospital verification decisions are governed by verified state clinical establishment registrations.
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 CareCompass. Developed for digital healthcare access and transparency.</p>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="../js/config.js"></script>
+  <script>
+    (function() {
+      'use strict';
+
+      function getApiUrl(endpoint) {
+        if (window.CARECOMPASS_CONFIG && typeof window.CARECOMPASS_CONFIG.getApiUrl === 'function') {
+          return window.CARECOMPASS_CONFIG.getApiUrl(endpoint);
+        }
+        return endpoint;
+      }
+
+      const searchInput = document.getElementById('hospital-search-input');
+      const dropdown = document.getElementById('hospital-search-dropdown');
+      const selectedContainer = document.getElementById('selected-hospital-container');
+      const selectedName = document.getElementById('selected-hosp-name');
+      const selectedLoc = document.getElementById('selected-hosp-location');
+      const selectedIdBadge = document.getElementById('selected-hosp-id');
+      const selectedIdHidden = document.getElementById('selected-hosp-id-hidden');
+      const clearBtn = document.getElementById('btn-clear-selected-hosp');
+      const form = document.getElementById('partner-claim-form');
+      const errorAlert = document.getElementById('form-error-alert');
+      const submitBtn = document.getElementById('btn-submit');
+      const confirmationBanner = document.getElementById('claim-confirmation-banner');
+      const formCard = document.getElementById('claim-form-card');
+
+      let debounceTimer;
+
+      // Hospital search autocomplete
+      searchInput.addEventListener('input', function() {
+        const query = searchInput.value.trim();
+        clearTimeout(debounceTimer);
+
+        if (query.length < 2) {
+          dropdown.style.display = 'none';
+          dropdown.innerHTML = '';
+          return;
+        }
+
+        debounceTimer = setTimeout(async function() {
+          try {
+            const res = await fetch(getApiUrl(`/api/hospitals/search?location=${encodeURIComponent(query)}&limit=10`));
+            const data = await res.json();
+            
+            dropdown.innerHTML = '';
+            if (!data.success || !data.data || data.data.length === 0) {
+              dropdown.innerHTML = '<div style="padding:12px; color:#64748b; font-size:0.85rem;">No hospital directory records found matching this name.</div>';
+              dropdown.style.display = 'block';
+              return;
+            }
+
+            data.data.forEach(hosp => {
+              const item = document.createElement('div');
+              item.className = 'hosp-result-item';
+              item.innerHTML = `<strong>${escapeHtml(hosp.hospital_name || hosp.name)}</strong><br><small style="color:#64748b;">📍 ${escapeHtml(hosp.district || hosp.city || '')}, ${escapeHtml(hosp.state || '')} [ID: ${escapeHtml(hosp.hospital_id || hosp.id)}]</small>`;
+              item.addEventListener('click', function() {
+                selectHospital(hosp);
+              });
+              dropdown.appendChild(item);
+            });
+
+            dropdown.style.display = 'block';
+          } catch (err) {
+            console.warn('Search autocomplete error:', err);
+          }
+        }, 250);
+      });
+
+      function selectHospital(hosp) {
+        const id = hosp.hospital_id || hosp.id;
+        const name = hosp.hospital_name || hosp.name;
+        const loc = `${hosp.district || hosp.city || ''}, ${hosp.state || ''}`;
+
+        selectedIdHidden.value = id;
+        selectedName.textContent = name;
+        selectedLoc.textContent = `📍 ${loc}`;
+        selectedIdBadge.textContent = `ID: ${id}`;
+
+        dropdown.style.display = 'none';
+        searchInput.style.display = 'none';
+        selectedContainer.style.display = 'block';
+      }
+
+      clearBtn.addEventListener('click', function() {
+        selectedIdHidden.value = '';
+        searchInput.value = '';
+        searchInput.style.display = 'block';
+        selectedContainer.style.display = 'none';
+        searchInput.focus();
+      });
+
+      // Close dropdown if clicked outside
+      document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+          dropdown.style.display = 'none';
+        }
+      });
+
+      // Form submission
+      form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        errorAlert.style.display = 'none';
+
+        const hospitalId = selectedIdHidden.value.trim();
+        if (!hospitalId) {
+          showError('Please search and select your hospital from the CareCompass directory.');
+          return;
+        }
+
+        const pw = document.getElementById('staff-pw').value;
+        const pwConfirm = document.getElementById('staff-pw-confirm').value;
+
+        if (pw.length < 8) {
+          showError('Staff password must be at least 8 characters long.');
+          return;
+        }
+
+        if (pw !== pwConfirm) {
+          showError('Password and confirmation do not match.');
+          return;
+        }
+
+        const repPhone = document.getElementById('rep-phone').value.trim();
+        if (repPhone.length !== 10) {
+          showError('Please enter a valid 10-digit contact mobile number.');
+          return;
+        }
+
+        const fileInput = document.getElementById('doc-file-input');
+        const documents = [];
+        if (fileInput.files && fileInput.files.length > 0) {
+          const file = fileInput.files[0];
+          documents.push({
+            fileName: file.name,
+            fileType: file.type || 'application/pdf',
+            fileSizeBytes: file.size,
+            documentType: 'registration_certificate'
+          });
+        }
+
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span>⏳</span> Submitting Verification Request...';
+
+        try {
+          const payload = {
+            hospitalId,
+            applicantName: document.getElementById('rep-name').value.trim(),
+            applicantDesignation: document.getElementById('rep-designation').value.trim(),
+            officialEmail: document.getElementById('rep-email').value.trim(),
+            officialPhone: repPhone,
+            hospitalRegistrationNumber: document.getElementById('hosp-reg-num').value.trim(),
+            password: pw,
+            documents
+          };
+
+          const res = await fetch(getApiUrl('/api/partner/claim'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          const data = await res.json();
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<span>🛡️</span> Submit Hospital Verification Request';
+
+          if (!data || !data.success) {
+            showError(data?.error || 'Failed to submit verification claim.');
+            return;
+          }
+
+          // Show confirmation
+          document.getElementById('conf-hosp-name').textContent = data.hospitalName || selectedName.textContent;
+          document.getElementById('conf-ref-code').textContent = data.requestReference;
+          formCard.style.display = 'none';
+          confirmationBanner.style.display = 'block';
+          window.scrollTo({ top: 100, behavior: 'smooth' });
+
+        } catch (err) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<span>🛡️</span> Submit Hospital Verification Request';
+          showError(`Submission error: ${err.message}. Please check your connection.`);
+        }
+      });
+
+      function showError(msg) {
+        errorAlert.textContent = msg;
+        errorAlert.style.display = 'block';
+        errorAlert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+
+      window.resetClaimForm = function() {
+        form.reset();
+        selectedIdHidden.value = '';
+        searchInput.value = '';
+        searchInput.style.display = 'block';
+        selectedContainer.style.display = 'none';
+        confirmationBanner.style.display = 'none';
+        formCard.style.display = 'block';
+      };
+
+      function escapeHtml(str) {
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+      }
+
+    })();
+  </script>
+</body>
+</html>

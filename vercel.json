@@ -86,6 +86,14 @@
     {
       "source": "/my-appointments",
       "destination": "/pages/my-appointments.html"
+    },
+    {
+      "source": "/partner-with-us",
+      "destination": "/pages/partner-with-us.html"
+    },
+    {
+      "source": "/hospital-portal",
+      "destination": "/pages/hospital-portal.html"
     }
   ]
 }

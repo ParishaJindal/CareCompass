@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CareCompass Hospital Partner Portal — Staff Dashboard &amp; Appointment Inquiries</title>
+  <meta name="description" content="Secure hospital partner portal for verified staff to review, accept, reject, or propose alternative times for patient outpatient consultation requests.">
+  
+  <!-- Modern Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/images/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="../assets/images/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="../apple-touch-icon.png">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <link rel="alternate icon" href="../favicon.ico">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/responsive.css">
+  <link rel="stylesheet" href="../css/accessibility.css">
+  
+  <style>
+    :root {
+      --portal-teal: #0d9488;
+      --portal-navy: #0f2b48;
+      --portal-slate: #f8fafc;
+      --portal-border: #e2e8f0;
+    }
+    body {
+      background: #f1f5f9;
+      color: #1e293b;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .portal-nav {
+      background: var(--portal-navy);
+      color: #ffffff;
+      padding: 14px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--portal-teal);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+    }
+    .portal-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: #ffffff;
+      font-family: 'Manrope', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 800;
+    }
+    .portal-staff-badge {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 0.88rem;
+    }
+    .portal-tabs-nav {
+      display: flex;
+      gap: 8px;
+      background: #ffffff;
+      padding: 12px 28px;
+      border-bottom: 1px solid var(--portal-border);
+      overflow-x: auto;
+    }
+    .portal-tab-btn {
+      padding: 8px 18px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      background: transparent;
+      font-weight: 700;
+      font-size: 0.88rem;
+      color: #475569;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+    .portal-tab-btn:hover {
+      background: #f8fafc;
+      color: var(--portal-teal);
+    }
+    .portal-tab-btn.active {
+      background: var(--portal-navy);
+      color: #ffffff;
+      border-color: var(--portal-navy);
+    }
+    .portal-container {
+      max-width: 1350px;
+      width: 100%;
+      margin: 28px auto;
+      padding: 0 24px;
+      flex: 1;
+    }
+    .portal-card {
+      background: #ffffff;
+      border: 1px solid var(--portal-border);
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+      margin-bottom: 24px;
+    }
+    .stat-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: #ffffff;
+      border: 1px solid var(--portal-border);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    }
+    .stat-label {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--portal-navy);
+    }
+    .table-container {
+      overflow-x: auto;
+      margin-top: 14px;
+    }
+    .inquiries-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    .inquiries-table th {
+      background: #f8fafc;
+      color: #475569;
+      font-weight: 700;
+      text-align: left;
+      padding: 12px 14px;
+      border-bottom: 1.5px solid #e2e8f0;
+      white-space: nowrap;
+    }
+    .inquiries-table td {
+      padding: 14px;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: middle;
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-confirmed { background: #dcfce7; color: #15803d; }
+    .status-rescheduled { background: #e0e7ff; color: #3730a3; }
+    .status-cancelled { background: #fee2e2; color: #b91c1c; }
+    
+    .action-btn-group {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .btn-action {
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.15s ease;
+    }
+    .btn-accept { background: #0d9488; color: #ffffff; }
+    .btn-accept:hover { background: #0f766e; }
+    .btn-reschedule { background: #3b82f6; color: #ffffff; }
+    .btn-reschedule:hover { background: #2563eb; }
+    .btn-reject { background: #ffffff; border-color: #ef4444; color: #ef4444; }
+    .btn-reject:hover { background: #fef2f2; }
+
+    /* Login Modal Overlay */
+    .portal-auth-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 43, 72, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .portal-auth-card {
+      background: #ffffff;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 440px;
+      padding: 36px 32px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+    .portal-auth-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .portal-auth-header h2 {
+      font-family: 'Manrope', sans-serif;
+      font-size: 1.5rem;
+      color: var(--portal-navy);
+      margin: 0 0 6px;
+    }
+    .portal-auth-header p {
+      color: #64748b;
+      font-size: 0.88rem;
+      margin: 0;
+    }
+
+    /* Modal dialog */
+    .action-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(4px);
+      z-index: 10000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .action-modal-card {
+      background: #ffffff;
+      border-radius: 14px;
+      width: 100%;
+      max-width: 520px;
+      padding: 28px;
+      box-shadow: 0 20px 30px rgba(0,0,0,0.2);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <header class="portal-nav" role="banner">
+    <div style="display:flex; align-items:center; gap:20px;">
+      <a href="../index.html" class="portal-brand">
+        <span>CareCompass</span>
+        <span style="font-size:0.8rem; background:rgba(255,255,255,0.15); padding:3px 8px; border-radius:6px; font-weight:600;">Partner Portal</span>
+      </a>
+      <span id="hospital-brand-badge" style="background:#134e4a; color:#5eead4; font-size:0.85rem; font-weight:700; padding:4px 12px; border-radius:20px; display:none;"></span>
+    </div>
+    <div class="portal-staff-badge" id="staff-auth-info" style="display:none;">
+      <span id="staff-user-display" style="color:#cbd5e1;"></span>
+      <button type="button" class="btn btn-outline btn-sm" id="btn-portal-logout" style="border-color:#64748b; color:#ffffff;">
+        Logout ⎋
+      </button>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs (Only visible when logged in) -->
+  <nav class="portal-tabs-nav" id="portal-tabs-bar" style="display:none;" role="navigation">
+    <button type="button" class="portal-tab-btn active" data-tab="all" onclick="switchPortalTab('all')">
+      📋 All Inquiries (<span id="count-tab-all">0</span>)
+    </button>
+    <button type="button" class="portal-tab-btn" data-tab="pending" onclick="switchPortalTab('pending')">
+      ⏳ Pending Review (<span id="count-tab-pending">0</span>)
+    </button>
+    <button type="button" class="portal-tab-btn" data-tab="confirmed" onclick="switchPortalTab('confirmed')">
+      ✓ Confirmed (<span id="count-tab-confirmed">0</span>)
+    </button>
+    <button type="button" class="portal-tab-btn" data-tab="rescheduled" onclick="switchPortalTab('rescheduled')">
+      📅 Alternative Time Offered (<span id="count-tab-rescheduled">0</span>)
+    </button>
+    <button type="button" class="portal-tab-btn" data-tab="scheduling" onclick="switchPortalTab('scheduling')">
+      ⚙️ Direct Scheduling Activation
+    </button>
+  </nav>
+
+  <!-- Login Modal Overlay (Zero reliance on mock client-side auth) -->
+  <div id="portal-login-overlay" class="portal-auth-overlay">
+    <div class="portal-auth-card">
+      <div class="portal-auth-header">
+        <span style="font-size:2.2rem; display:block; margin-bottom:8px;">🏥</span>
+        <h2>Hospital Partner Staff Login</h2>
+        <p>Access patient inquiries for your verified healthcare facility</p>
+      </div>
+
+      <div id="login-error-alert" style="display:none; background:#fef2f2; border:1px solid #f87171; border-radius:8px; padding:10px; color:#b91c1c; font-size:0.85rem; margin-bottom:16px;"></div>
+
+      <form id="portal-login-form">
+        <div style="margin-bottom:14px;">
+          <label for="login-email" style="display:block; font-size:0.84rem; font-weight:600; color:#334155; margin-bottom:6px;">Staff Official Email *</label>
+          <input type="email" id="login-email" class="form-input" placeholder="e.g. ms@hospitaldomain.org" required style="width:100%; box-sizing:border-box;">
+        </div>
+
+        <div style="margin-bottom:18px;">
+          <label for="login-password" style="display:block; font-size:0.84rem; font-weight:600; color:#334155; margin-bottom:6px;">Password *</label>
+          <input type="password" id="login-password" class="form-input" placeholder="Enter staff password" required style="width:100%; box-sizing:border-box;">
+        </div>
+
+        <button type="submit" id="btn-login-submit" class="btn btn-primary" style="width:100%; padding:12px; font-weight:700;">
+          Authenticate &amp; Access Dashboard &rarr;
+        </button>
+      </form>
+
+      <div style="text-align:center; margin-top:20px; font-size:0.82rem; color:#64748b;">
+        Hospital not yet verified? <a href="partner-with-us.html" style="color:var(--portal-teal); font-weight:700; text-decoration:none;">Request Ownership Verification &rarr;</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Authenticated Portal Main Dashboard -->
+  <main class="portal-container" id="portal-dashboard-main" style="display:none;">
+
+    <!-- Stat Overview Cards -->
+    <div class="stat-cards-grid">
+      <div class="stat-card">
+        <div class="stat-label">Pending Inquiries</div>
+        <div class="stat-value" id="stat-pending" style="color:#d97706;">0</div>
+        <span style="font-size:0.75rem; color:#64748b;">Action required (Accept/Reschedule)</span>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Confirmed Appointments</div>
+        <div class="stat-value" id="stat-confirmed" style="color:#16a34a;">0</div>
+        <span style="font-size:0.75rem; color:#64748b;">Ready for OPD desk counter receipt</span>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Proposed Alternative Time</div>
+        <div class="stat-value" id="stat-rescheduled" style="color:#4f46e5;">0</div>
+        <span style="font-size:0.75rem; color:#64748b;">Awaiting patient acceptance</span>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Inquiries Received</div>
+        <div class="stat-value" id="stat-total">0</div>
+        <span style="font-size:0.75rem; color:#64748b;">All-time patient requests</span>
+      </div>
+    </div>
+
+    <!-- Tab 1: Inquiries List Table -->
+    <div id="tab-inquiries-content" class="portal-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
+        <div>
+          <h2 style="font-size:1.3rem; color:var(--portal-navy); margin:0;" id="table-title">Patient Appointment Inquiries</h2>
+          <p style="font-size:0.84rem; color:#64748b; margin:2px 0 0 0;">Zero-trust tenant isolation: displaying strictly inquiries directed to this hospital</p>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <input type="text" id="filter-search-input" placeholder="Search patient name, phone, or ref..." class="form-input" style="padding:6px 12px; font-size:0.85rem; width:260px;">
+          <button type="button" class="btn btn-outline btn-sm" onclick="loadHospitalInquiries()">🔄 Refresh</button>
+        </div>
+      </div>
+
+      <div class="table-container">
+        <table class="inquiries-table">
+          <thead>
+            <tr>
+              <th>Reference</th>
+              <th>Patient Details</th>
+              <th>Specialty / Department</th>
+              <th>Requested Schedule</th>
+              <th>Patient Notes</th>
+              <th>Status</th>
+              <th>Staff Actions</th>
+            </tr>
+          </thead>
+          <tbody id="inquiries-tbody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab 2: Direct Scheduling Setup (Requirement 3: Separation of Identity from Direct Booking) -->
+    <div id="tab-scheduling-content" class="portal-card" style="display:none;">
+      <div style="max-width:760px;">
+        <h2 style="font-size:1.4rem; color:var(--portal-navy); margin:0 0 8px;">⚙️ Automated Direct Scheduling Configuration</h2>
+        <p style="color:#475569; font-size:0.92rem; line-height:1.6;">
+          <strong>Identity Verification vs. Direct Booking:</strong> Administrator approval verifies your facility's identity and allows staff to review and respond to incoming patient inquiries. Direct automated slot booking remains disabled until you configure your OPD consultation fees and department offerings.
+        </p>
+
+        <div id="sched-status-box" style="padding:14px 18px; border-radius:10px; margin:20px 0; background:#f8fafc; border:1px solid #cbd5e1;">
+          <span style="font-size:0.8rem; font-weight:700; color:#64748b; text-transform:uppercase; display:block;">Current Scheduling Status</span>
+          <strong id="sched-status-label" style="font-size:1.15rem; color:#0f2b48;">Disabled (Inquiry Mode Only)</strong>
+        </div>
+
+        <form id="form-activate-scheduling" style="background:#ffffff; border:1px solid #e2e8f0; border-radius:12px; padding:24px; margin-top:16px;">
+          <div style="margin-bottom:16px;">
+            <label for="sched-fee" style="display:block; font-size:0.86rem; font-weight:600; color:#334155; margin-bottom:6px;">Standard OPD Consultation Fee (₹ INR) *</label>
+            <input type="number" id="sched-fee" class="form-input" min="0" step="50" placeholder="e.g. 500" value="0" required style="max-width:240px;">
+            <span style="font-size:0.78rem; color:#64748b; display:block; margin-top:4px;">Collected at your OPD registration counter on patient arrival (Pay at Hospital mode).</span>
+          </div>
+
+          <div style="margin-bottom:20px;">
+            <label style="display:block; font-size:0.86rem; font-weight:600; color:#334155; margin-bottom:8px;">Active OPD Consultation Departments *</label>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:10px;">
+              <label><input type="checkbox" name="sched_dept" value="general" checked> General Medicine</label>
+              <label><input type="checkbox" name="sched_dept" value="cardiology" checked> Cardiology</label>
+              <label><input type="checkbox" name="sched_dept" value="orthopedics" checked> Orthopedics &amp; Joint</label>
+              <label><input type="checkbox" name="sched_dept" value="pediatrics" checked> Pediatrics &amp; Neonatology</label>
+              <label><input type="checkbox" name="sched_dept" value="gynecology" checked> Gynecology &amp; Obstetrics</label>
+              <label><input type="checkbox" name="sched_dept" value="dermatology"> Dermatology</label>
+              <label><input type="checkbox" name="sched_dept" value="ent"> ENT &amp; Ophthalmology</label>
+              <label><input type="checkbox" name="sched_dept" value="neurology"> Neurology</label>
+            </div>
+          </div>
+
+          <button type="submit" id="btn-activate-sched" class="btn btn-primary" style="padding:12px 24px; font-weight:700;">
+            Activate Direct Slot Booking System
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Modal: Propose Reschedule Time -->
+  <div id="modal-reschedule" class="action-modal">
+    <div class="action-modal-card">
+      <h3 style="margin:0 0 6px; font-size:1.25rem; color:var(--portal-navy);">📅 Propose Alternative Appointment Time</h3>
+      <p style="color:#64748b; font-size:0.84rem; margin:0 0 16px;">
+        Propose a new consultation time for <strong id="resched-patient-name"></strong> (<span id="resched-ref"></span>). The patient must accept before the booking is confirmed.
+      </p>
+
+      <form id="form-reschedule-action">
+        <input type="hidden" id="resched-booking-ref">
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+          <div>
+            <label for="resched-date" style="display:block; font-size:0.82rem; font-weight:600; color:#334155; margin-bottom:4px;">Proposed Date *</label>
+            <input type="date" id="resched-date" class="form-input" required style="width:100%; box-sizing:border-box;">
+          </div>
+          <div>
+            <label for="resched-time" style="display:block; font-size:0.82rem; font-weight:600; color:#334155; margin-bottom:4px;">Proposed Time *</label>
+            <input type="time" id="resched-time" class="form-input" required value="10:00" style="width:100%; box-sizing:border-box;">
+          </div>
+        </div>
+
+        <div style="margin-bottom:18px;">
+          <label for="resched-notes" style="display:block; font-size:0.82rem; font-weight:600; color:#334155; margin-bottom:4px;">Note to Patient (Reason for alternative time) *</label>
+          <textarea id="resched-notes" class="form-input" rows="3" placeholder="e.g. The requested specialist is available in the morning clinic from 10:00 AM." required style="width:100%; box-sizing:border-box;"></textarea>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+          <button type="button" class="btn btn-outline" onclick="closeRescheduleModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-reschedule">Submit Proposed Time &rarr;</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Reject Inquiry -->
+  <div id="modal-reject" class="action-modal">
+    <div class="action-modal-card">
+      <h3 style="margin:0 0 6px; font-size:1.25rem; color:#dc2626;">✕ Reject Appointment Inquiry</h3>
+      <p style="color:#64748b; font-size:0.84rem; margin:0 0 16px;">
+        State the clinical or administrative reason for declining <strong id="reject-patient-name"></strong> (<span id="reject-ref"></span>).
+      </p>
+
+      <form id="form-reject-action">
+        <input type="hidden" id="reject-booking-ref">
+
+        <div style="margin-bottom:16px;">
+          <label for="reject-reason" style="display:block; font-size:0.82rem; font-weight:600; color:#334155; margin-bottom:4px;">Reason for Rejection *</label>
+          <select id="reject-reason" class="filter-select" style="width:100%;">
+            <option value="Specialist department unavailable on requested date">Specialist department unavailable on requested date</option>
+            <option value="OPD registration capacity reached for selected date">OPD registration capacity reached for selected date</option>
+            <option value="Facility undergoing clinical maintenance / sterilization">Facility undergoing clinical maintenance / sterilization</option>
+            <option value="Condition requires emergency triage rather than outpatient booking">Condition requires emergency triage rather than outpatient booking</option>
+          </select>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+          <button type="button" class="btn btn-outline" onclick="closeRejectModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary" style="background:#dc2626; border-color:#dc2626;">Confirm Rejection</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="../js/config.js"></script>
+  <script>
+    (function() {
+      'use strict';
+
+      function getApiUrl(endpoint) {
+        if (window.CARECOMPASS_CONFIG && typeof window.CARECOMPASS_CONFIG.getApiUrl === 'function') {
+          return window.CARECOMPASS_CONFIG.getApiUrl(endpoint);
+        }
+        return endpoint;
+      }
+
+      function getStaffToken() {
+        return sessionStorage.getItem('carecompass_staff_token') || '';
+      }
+
+      function setStaffSession(token, staff) {
+        if (token) {
+          sessionStorage.setItem('carecompass_staff_token', token);
+          sessionStorage.setItem('carecompass_staff_data', JSON.stringify(staff));
+        } else {
+          sessionStorage.removeItem('carecompass_staff_token');
+          sessionStorage.removeItem('carecompass_staff_data');
+        }
+      }
+
+      let allInquiries = [];
+      let currentFilterTab = 'all';
+
+      // Check auth state on page load
+      function checkAuthState() {
+        const token = getStaffToken();
+        const loginOverlay = document.getElementById('portal-login-overlay');
+        const dashboardMain = document.getElementById('portal-dashboard-main');
+        const tabsBar = document.getElementById('portal-tabs-bar');
+        const brandBadge = document.getElementById('hospital-brand-badge');
+        const staffInfo = document.getElementById('staff-auth-info');
+
+        if (!token) {
+          loginOverlay.style.display = 'flex';
+          dashboardMain.style.display = 'none';
+          tabsBar.style.display = 'none';
+          brandBadge.style.display = 'none';
+          staffInfo.style.display = 'none';
+        } else {
+          loginOverlay.style.display = 'none';
+          dashboardMain.style.display = 'block';
+          tabsBar.style.display = 'flex';
+          brandBadge.style.display = 'inline-block';
+          staffInfo.style.display = 'flex';
+
+          const staffData = JSON.parse(sessionStorage.getItem('carecompass_staff_data') || '{}');
+          brandBadge.textContent = staffData.hospitalName || 'Partner Facility';
+          document.getElementById('staff-user-display').textContent = `Staff: ${staffData.fullName || staffData.email} (${staffData.role || 'hospital_staff'})`;
+
+          loadHospitalProfile();
+          loadHospitalInquiries();
+        }
+      }
+
+      // Login form submit
+      document.getElementById('portal-login-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const errAlert = document.getElementById('login-error-alert');
+        errAlert.style.display = 'none';
+
+        const email = document.getElementById('login-email').value.trim();
+        const password = document.getElementById('login-password').value;
+        const btn = document.getElementById('btn-login-submit');
+
+        btn.disabled = true;
+        btn.textContent = 'Verifying Credentials...';
+
+        try {
+          const res = await fetch(getApiUrl('/api/partner/auth/login'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+          });
+
+          const data = await res.json();
+          btn.disabled = false;
+          btn.textContent = 'Authenticate & Access Dashboard →';
+
+          if (!data || !data.success || !data.token) {
+            errAlert.textContent = data?.error || 'Authentication failed. Please verify your credentials.';
+            errAlert.style.display = 'block';
+            return;
+          }
+
+          setStaffSession(data.token, data.staff);
+          checkAuthState();
+        } catch (err) {
+          btn.disabled = false;
+          btn.textContent = 'Authenticate & Access Dashboard →';
+          errAlert.textContent = `Login error: ${err.message}. Please check connection.`;
+          errAlert.style.display = 'block';
+        }
+      });
+
+      // Logout handler
+      document.getElementById('btn-portal-logout').addEventListener('click', function() {
+        setStaffSession(null, null);
+        checkAuthState();
+      });
+
+      // Load Profile & Provider Scheduling Status
+      async function loadHospitalProfile() {
+        try {
+          const res = await fetch(getApiUrl('/api/partner/profile'), {
+            headers: { 'Authorization': `Bearer ${getStaffToken()}` }
+          });
+          const data = await res.json();
+          if (data && data.success && data.provider) {
+            const isBookingEnabled = data.provider.booking_enabled === 1 || data.provider.booking_enabled === true;
+            const statusLabel = document.getElementById('sched-status-label');
+            const statusBox = document.getElementById('sched-status-box');
+            if (isBookingEnabled) {
+              statusLabel.textContent = `Active (Direct Slot Booking Enabled — ₹${data.provider.consultation_fee || 0} OPD Counter Fee)`;
+              statusLabel.style.color = '#15803d';
+              statusBox.style.background = '#dcfce7';
+              statusBox.style.borderColor = '#86efac';
+              document.getElementById('btn-activate-sched').textContent = 'Update Direct Scheduling Settings';
+            } else {
+              statusLabel.textContent = 'Disabled (Inquiry Mode Only — Direct Booking Not Active)';
+              statusLabel.style.color = '#0f2b48';
+              statusBox.style.background = '#f8fafc';
+              statusBox.style.borderColor = '#cbd5e1';
+            }
+          }
+        } catch (err) {
+          console.warn('Profile fetch warning:', err);
+        }
+      }
+
+      // Fetch Inquiries for this Hospital (Tenant Isolated)
+      window.loadHospitalInquiries = async function() {
+        const tbody = document.getElementById('inquiries-tbody');
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:24px; color:#64748b;">Loading appointment inquiries...</td></tr>';
+
+        try {
+          const res = await fetch(getApiUrl('/api/partner/appointments?limit=100'), {
+            headers: { 'Authorization': `Bearer ${getStaffToken()}` }
+          });
+          const data = await res.json();
+
+          if (!data || !data.success) {
+            if (res.status === 401 || res.status === 403) {
+              setStaffSession(null, null);
+              checkAuthState();
+              return;
+            }
+            tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:24px; color:#ef4444;">${escapeHtml(data?.error || 'Failed to fetch inquiries.')}</td></tr>`;
+            return;
+          }
+
+          allInquiries = data.inquiries || [];
+          updateStatCounters(allInquiries);
+          renderFilteredInquiries();
+        } catch (err) {
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:24px; color:#ef4444;">Network error: ${err.message}</td></tr>`;
+        }
+      };
+
+      function updateStatCounters(inquiries) {
+        const pending = inquiries.filter(i => i.booking_status === 'pending_confirmation').length;
+        const confirmed = inquiries.filter(i => i.booking_status === 'confirmed').length;
+        const resched = inquiries.filter(i => i.booking_status === 'rescheduled_pending_patient' || i.booking_status === 'rescheduled').length;
+
+        document.getElementById('stat-pending').textContent = pending;
+        document.getElementById('stat-confirmed').textContent = confirmed;
+        document.getElementById('stat-rescheduled').textContent = resched;
+        document.getElementById('stat-total').textContent = inquiries.length;
+
+        document.getElementById('count-tab-all').textContent = inquiries.length;
+        document.getElementById('count-tab-pending').textContent = pending;
+        document.getElementById('count-tab-confirmed').textContent = confirmed;
+        document.getElementById('count-tab-rescheduled').textContent = resched;
+      }
+
+      function renderFilteredInquiries() {
+        const tbody = document.getElementById('inquiries-tbody');
+        const searchTerm = (document.getElementById('filter-search-input').value || '').toLowerCase().trim();
+
+        let filtered = allInquiries;
+        if (currentFilterTab === 'pending') {
+          filtered = filtered.filter(i => i.booking_status === 'pending_confirmation');
+        } else if (currentFilterTab === 'confirmed') {
+          filtered = filtered.filter(i => i.booking_status === 'confirmed');
+        } else if (currentFilterTab === 'rescheduled') {
+          filtered = filtered.filter(i => i.booking_status === 'rescheduled_pending_patient' || i.booking_status === 'rescheduled');
+        }
+
+        if (searchTerm) {
+          filtered = filtered.filter(i => 
+            (i.patient_name || '').toLowerCase().includes(searchTerm) ||
+            (i.patient_phone || '').includes(searchTerm) ||
+            (i.booking_reference || '').toLowerCase().includes(searchTerm) ||
+            (i.department_name || '').toLowerCase().includes(searchTerm)
+          );
+        }
+
+        if (filtered.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:32px; color:#64748b;">No appointment inquiries found for this filter.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = '';
+        filtered.forEach(appt => {
+          const tr = document.createElement('tr');
+
+          let statusBadgeClass = 'status-pending';
+          let statusText = 'Pending Confirmation';
+          if (appt.booking_status === 'confirmed') {
+            statusBadgeClass = 'status-confirmed';
+            statusText = 'Confirmed';
+          } else if (appt.booking_status === 'rescheduled_pending_patient' || appt.booking_status === 'rescheduled') {
+            statusBadgeClass = 'status-rescheduled';
+            statusText = 'Alt. Time Proposed';
+          } else if (appt.booking_status === 'cancelled') {
+            statusBadgeClass = 'status-cancelled';
+            statusText = 'Cancelled';
+          }
+
+          let actionsHtml = '';
+          if (appt.booking_status === 'pending_confirmation' || appt.booking_status === 'rescheduled_pending_patient') {
+            actionsHtml = `
+              <div class="action-btn-group">
+                <button type="button" class="btn-action btn-accept" onclick="actionAccept('${escapeHtml(appt.booking_reference)}')">✓ Accept</button>
+                <button type="button" class="btn-action btn-reschedule" onclick="openRescheduleModal('${escapeHtml(appt.booking_reference)}', '${escapeHtml(appt.patient_name)}')">📅 Reschedule</button>
+                <button type="button" class="btn-action btn-reject" onclick="openRejectModal('${escapeHtml(appt.booking_reference)}', '${escapeHtml(appt.patient_name)}')">✕ Reject</button>
+              </div>
+            `;
+          } else if (appt.booking_status === 'confirmed') {
+            actionsHtml = `<span style="font-size:0.78rem; color:#16a34a; font-weight:700;">✓ Confirmed</span>`;
+          } else {
+            actionsHtml = `<span style="font-size:0.78rem; color:#dc2626;">${escapeHtml(appt.cancellation_reason || 'Cancelled')}</span>`;
+          }
+
+          const rawDate = appt.appointment_date ? String(appt.appointment_date).slice(0, 10) : '';
+
+          tr.innerHTML = `
+            <td><strong style="font-family:monospace; font-size:0.95rem; color:#0f2b48;">${escapeHtml(appt.booking_reference)}</strong></td>
+            <td>
+              <strong>${escapeHtml(appt.patient_name)}</strong><br>
+              <small style="color:#64748b;">📞 +91 ${escapeHtml(appt.patient_phone)}</small>
+            </td>
+            <td>${escapeHtml(appt.department_name || 'General OPD')}</td>
+            <td>
+              📅 <strong>${escapeHtml(rawDate)}</strong><br>
+              <small style="color:#64748b;">⏰ ${(appt.start_time || '').slice(0, 5)} - ${(appt.end_time || '').slice(0, 5)}</small>
+            </td>
+            <td><span style="font-size:0.8rem; color:#475569;">${escapeHtml(appt.notes || '—')}</span></td>
+            <td><span class="status-badge ${statusBadgeClass}">${statusText}</span></td>
+            <td>${actionsHtml}</td>
+          `;
+
+          tbody.appendChild(tr);
+        });
+      }
+
+      // Search filter handler
+      document.getElementById('filter-search-input').addEventListener('input', renderFilteredInquiries);
+
+      // Tab switcher
+      window.switchPortalTab = function(tab) {
+        currentFilterTab = tab;
+        document.querySelectorAll('.portal-tab-btn').forEach(btn => {
+          btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
+        });
+
+        const inquiriesCard = document.getElementById('tab-inquiries-content');
+        const schedulingCard = document.getElementById('tab-scheduling-content');
+
+        if (tab === 'scheduling') {
+          inquiriesCard.style.display = 'none';
+          schedulingCard.style.display = 'block';
+        } else {
+          inquiriesCard.style.display = 'block';
+          schedulingCard.style.display = 'none';
+          renderFilteredInquiries();
+        }
+      };
+
+      // Actions: Accept
+      window.actionAccept = async function(bookingRef) {
+        if (!confirm(`Are you sure you want to accept and confirm appointment ${bookingRef}?`)) return;
+
+        try {
+          const res = await fetch(getApiUrl(`/api/partner/appointments/${encodeURIComponent(bookingRef)}/accept`), {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${getStaffToken()}`
+            }
+          });
+
+          const data = await res.json();
+          if (!data || !data.success) {
+            alert(data?.error || 'Failed to accept inquiry.');
+            return;
+          }
+
+          alert('Appointment confirmed successfully.');
+          loadHospitalInquiries();
+        } catch (err) {
+          alert(`Accept error: ${err.message}`);
+        }
+      };
+
+      // Actions: Reschedule Modal
+      window.openRescheduleModal = function(bookingRef, patientName) {
+        document.getElementById('resched-booking-ref').value = bookingRef;
+        document.getElementById('resched-ref').textContent = bookingRef;
+        document.getElementById('resched-patient-name').textContent = patientName;
+        
+        // Default proposed date to tomorrow
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        document.getElementById('resched-date').value = tomorrow.toISOString().slice(0, 10);
+        document.getElementById('modal-reschedule').style.display = 'flex';
+      };
+
+      window.closeRescheduleModal = function() {
+        document.getElementById('modal-reschedule').style.display = 'none';
+        document.getElementById('form-reschedule-action').reset();
+      };
+
+      document.getElementById('form-reschedule-action').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const ref = document.getElementById('resched-booking-ref').value;
+        const proposedDate = document.getElementById('resched-date').value;
+        const proposedTime = document.getElementById('resched-time').value;
+        const notes = document.getElementById('resched-notes').value.trim();
+
+        try {
+          const res = await fetch(getApiUrl(`/api/partner/appointments/${encodeURIComponent(ref)}/reschedule`), {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${getStaffToken()}`
+            },
+            body: JSON.stringify({ proposedDate, proposedTime, notes })
+          });
+
+          const data = await res.json();
+          if (!data || !data.success) {
+            alert(data?.error || 'Failed to submit proposed reschedule.');
+            return;
+          }
+
+          alert('Proposed reschedule submitted. The appointment status is now awaiting patient acceptance.');
+          closeRescheduleModal();
+          loadHospitalInquiries();
+        } catch (err) {
+          alert(`Reschedule error: ${err.message}`);
+        }
+      });
+
+      // Actions: Reject Modal
+      window.openRejectModal = function(bookingRef, patientName) {
+        document.getElementById('reject-booking-ref').value = bookingRef;
+        document.getElementById('reject-ref').textContent = bookingRef;
+        document.getElementById('reject-patient-name').textContent = patientName;
+        document.getElementById('modal-reject').style.display = 'flex';
+      };
+
+      window.closeRejectModal = function() {
+        document.getElementById('modal-reject').style.display = 'none';
+        document.getElementById('form-reject-action').reset();
+      };
+
+      document.getElementById('form-reject-action').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const ref = document.getElementById('reject-booking-ref').value;
+        const reason = document.getElementById('reject-reason').value;
+
+        try {
+          const res = await fetch(getApiUrl(`/api/partner/appointments/${encodeURIComponent(ref)}/reject`), {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${getStaffToken()}`
+            },
+            body: JSON.stringify({ reason })
+          });
+
+          const data = await res.json();
+          if (!data || !data.success) {
+            alert(data?.error || 'Failed to reject inquiry.');
+            return;
+          }
+
+          alert('Appointment inquiry rejected.');
+          closeRejectModal();
+          loadHospitalInquiries();
+        } catch (err) {
+          alert(`Reject error: ${err.message}`);
+        }
+      });
+
+      // Direct Scheduling Activation Form (Requirement 3)
+      document.getElementById('form-activate-scheduling').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const fee = parseFloat(document.getElementById('sched-fee').value) || 0;
+        const checkedDepts = Array.from(document.querySelectorAll('input[name="sched_dept"]:checked')).map(cb => ({
+          id: cb.value,
+          name: cb.parentElement.textContent.trim()
+        }));
+
+        if (checkedDepts.length === 0) {
+          alert('Please select at least one active OPD department.');
+          return;
+        }
+
+        try {
+          const res = await fetch(getApiUrl('/api/partner/scheduling/activate'), {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${getStaffToken()}`
+            },
+            body: JSON.stringify({ consultationFee: fee, departments: checkedDepts })
+          });
+
+          const data = await res.json();
+          if (!data || !data.success) {
+            alert(data?.error || 'Failed to activate direct booking.');
+            return;
+          }
+
+          alert('Direct appointment scheduling activated successfully!');
+          loadHospitalProfile();
+        } catch (err) {
+          alert(`Activation error: ${err.message}`);
+        }
+      });
+
+      function escapeHtml(str) {
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+      }
+
+      // Initialize
+      checkAuthState();
+
+    })();
+  </script>
+</body>
+</html>

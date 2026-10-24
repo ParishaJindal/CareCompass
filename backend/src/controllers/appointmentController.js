@@ -256,6 +256,69 @@ async function cancelAppointment(req, res, next) {
   }
 }
 
+/**
+ * POST /api/appointments/:ref/reschedule/accept
+ * Patient accepts hospital's proposed alternative appointment time
+ */
+async function acceptReschedule(req, res, next) {
+  try {
+    const { ref } = req.params;
+    const { phone } = req.body;
+    if (!phone) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please provide the registered mobile number to confirm acceptance.'
+      });
+    }
+
+    const partnerService = require('../services/partnerService');
+    const result = await partnerService.patientAcceptReschedule({
+      bookingReference: ref,
+      patientPhone: phone,
+      ipAddress: req.ip
+    });
+
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      error: err.message
+    });
+  }
+}
+
+/**
+ * POST /api/appointments/:ref/reschedule/decline
+ * Patient declines hospital's proposed alternative appointment time
+ */
+async function declineReschedule(req, res, next) {
+  try {
+    const { ref } = req.params;
+    const { phone, reason } = req.body;
+    if (!phone) {
+      return res.status(400).json({
+        success: false,
+        error: 'Please provide the registered mobile number to confirm decline.'
+      });
+    }
+
+    const partnerService = require('../services/partnerService');
+    const result = await partnerService.patientDeclineReschedule({
+      bookingReference: ref,
+      patientPhone: phone,
+      reason,
+      ipAddress: req.ip
+    });
+
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      error: err.message
+    });
+  }
+}
+
 module.exports = {
   getConfig,
   getProvider,
@@ -264,5 +327,8 @@ module.exports = {
   bookAppointment,
   requestAppointment,
   lookupAppointment,
-  cancelAppointment
+  cancelAppointment,
+  acceptReschedule,
+  declineReschedule
 };
+

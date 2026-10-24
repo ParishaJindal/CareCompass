@@ -329,7 +329,7 @@
 </head>
 <body>
 
-  <!-- Secure Login Modal (shown if not authenticated as Parisha) -->
+  <!-- Secure Login Modal (Server-authenticated via scrypt) -->
   <div id="admin-auth-overlay" class="admin-auth-overlay">
     <div class="admin-auth-card">
       <div style="margin-bottom: 18px;">
@@ -339,24 +339,24 @@
         Restricted Administrator Access
       </span>
       <h2 style="font-size: 1.45rem; font-weight: 800; color: #0f2b48; margin: 12px 0 6px 0;">
-        Parisha's Admin Portal
+        CareCompass Master Admin
       </h2>
       <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 20px;">
-        Enter master credentials assigned exclusively to <strong>parishajindal17@gmail.com</strong>.
+        Zero-trust server-side authentication for platform administrators and compliance officers.
       </p>
 
       <div id="admin-logout-alert" style="display:none; background:#ecfdf5; border:1px solid #10b981; color:#065f46; padding:12px; border-radius:8px; font-size:0.84rem; margin-bottom:16px; text-align:left;">
-        🔒 <strong>Session Ended:</strong> You have been logged out. Please enter your password to access Parisha's Admin Portal again.
+        🔒 <strong>Session Ended:</strong> You have been logged out. Please enter your credentials to access the admin portal.
       </div>
 
       <div id="admin-login-error" style="display:none; background:#fee2e2; border:1px solid #ef4444; color:#991b1b; padding:12px; border-radius:8px; font-size:0.84rem; margin-bottom:16px; text-align:left;">
-        ⚠️ <strong>Access Denied:</strong> Incorrect master password. Please enter the correct password.
+        ⚠️ <strong>Access Denied:</strong> <span id="admin-error-text">Incorrect credentials or unauthorized role.</span>
       </div>
 
       <form id="admin-login-form" autocomplete="off">
         <div class="search-field-group" style="margin-bottom: 16px; text-align: left;">
-          <label for="admin-email" style="font-size:0.82rem; font-weight:700;">Admin Email</label>
-          <input type="email" id="admin-email" class="form-input" value="parishajindal17@gmail.com" readonly style="background:#f8fafc; color:#334155; cursor:not-allowed;" required>
+          <label for="admin-email" style="font-size:0.82rem; font-weight:700;">Admin Official Email *</label>
+          <input type="email" id="admin-email" class="form-input" placeholder="e.g. admin@carecompass.org" value="admin@carecompass.org" required>
         </div>
 
         <div class="search-field-group" style="margin-bottom: 22px; text-align: left;">
@@ -366,11 +366,11 @@
               👁️ Show
             </button>
           </div>
-          <input type="password" id="admin-password" class="form-input" placeholder="Enter master password" required autocomplete="new-password" value="">
+          <input type="password" id="admin-password" class="form-input" placeholder="Enter administrative password" required autocomplete="current-password">
         </div>
 
         <button type="submit" class="btn btn-primary" id="btn-submit-admin-login" style="width:100%; padding:12px; font-weight:700;">
-          Authenticate as Parisha &rarr;
+          Authenticate Administrator &rarr;
         </button>
       </form>
 
@@ -381,7 +381,7 @@
     </div>
   </div>
 
-  <!-- Authenticated Admin Dashboard Wrapper (Hidden until password verified) -->
+  <!-- Authenticated Admin Dashboard Wrapper (Hidden until server-verified) -->
   <div id="admin-authenticated-dashboard" style="display:none; min-height:100vh; flex-direction:column;">
   <!-- Admin Navbar -->
   <header class="admin-navbar">
@@ -391,7 +391,7 @@
         <div>
           <span style="font-size:1.15rem; font-weight:800; letter-spacing:-0.5px;">CareCompass</span>
           <span style="font-size:0.75rem; background:rgba(255,255,255,0.18); padding:2px 8px; border-radius:4px; margin-left:6px; font-weight:700;">
-            Master Admin
+            Platform Admin
           </span>
         </div>
       </a>
@@ -403,10 +403,10 @@
     <div style="display: flex; align-items: center; gap: 16px;">
       <div style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem;">
         <span style="width:9px; height:9px; border-radius:50%; background:#10b981; display:inline-block;"></span>
-        <span>Logged in as <strong>Parisha Jindal</strong> (<span id="active-admin-email">parishajindal17@gmail.com</span>)</span>
+        <span>Logged in: <strong id="active-admin-name">Platform Administrator</strong> (<span id="active-admin-email">admin@carecompass.org</span>)</span>
       </div>
       <button type="button" id="btn-admin-logout" class="btn btn-outline btn-sm" style="color:#ffffff; border-color:rgba(255,255,255,0.35);">
-        Log Out
+        Log Out ⎋
       </button>
     </div>
   </header>
@@ -414,7 +414,10 @@
   <!-- Admin Tab Bar -->
   <nav class="admin-tabs-nav" aria-label="Admin Navigation Tabs">
     <button type="button" class="admin-tab-btn active" data-tab="overview">
-      📊 Overview & Metrics
+      📊 Overview &amp; Metrics
+    </button>
+    <button type="button" class="admin-tab-btn" data-tab="verifications">
+      🛡️ Hospital Verifications (<span id="verifications-count-badge">0</span>)
     </button>
     <button type="button" class="admin-tab-btn" data-tab="facilities">
       🏥 Pan-India Facilities (70+)
@@ -426,7 +429,7 @@
       📢 Community Discrepancies (<span id="reports-count-badge">0</span>)
     </button>
     <button type="button" class="admin-tab-btn" data-tab="backup">
-      💾 Data Backup & Export
+      💾 Data Backup &amp; Export
     </button>
     <button type="button" class="admin-tab-btn" data-tab="security">
       🔐 Security Settings
@@ -435,6 +438,49 @@
 
   <!-- Main Container -->
   <main class="admin-container">
+
+    <!-- TAB: HOSPITAL VERIFICATION REQUESTS -->
+    <div id="tab-verifications" class="admin-tab-content" style="display:none;">
+      <div class="admin-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:16px;">
+          <div>
+            <h3 style="font-size:1.3rem; color:#0f2b48; margin:0;">🛡️ Hospital Directory Ownership Verification Requests</h3>
+            <p style="font-size:0.84rem; color:#64748b; margin:4px 0 0 0;">
+              Manual review gate: Approval authorizes staff access to patient inquiries. <strong>Direct booking remains disabled until explicitly activated.</strong>
+            </p>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <select id="filter-verif-status" class="filter-select" style="font-size:0.85rem; padding:6px 12px;">
+              <option value="">All Verification Statuses</option>
+              <option value="pending_review" selected>Pending Review</option>
+              <option value="approved">Approved</option>
+              <option value="rejected">Rejected</option>
+            </select>
+            <button type="button" class="btn btn-outline btn-sm" id="btn-refresh-verifications">🔄 Refresh</button>
+          </div>
+        </div>
+
+        <div class="admin-table-container">
+          <table class="sec-audit-table" id="verifications-table">
+            <thead>
+              <tr>
+                <th>Reference</th>
+                <th>Hospital Listing</th>
+                <th>Applicant &amp; Role</th>
+                <th>Official Contact</th>
+                <th>Clinical Reg No.</th>
+                <th>Private Documents</th>
+                <th>Status</th>
+                <th>Compliance Action</th>
+              </tr>
+            </thead>
+            <tbody id="verifications-tbody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
 
     <!-- TAB 1: OVERVIEW -->
     <div id="tab-overview" class="admin-tab-content" style="display:block;">
@@ -1093,6 +1139,73 @@
           <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:20px;">
             <button type="button" class="btn btn-outline" onclick="closeFacilityModal()">Cancel</button>
             <button type="submit" class="btn btn-primary" id="btn-save-facility">Save Facility</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  <!-- Modal: Approve Verification Request (Requirement 3: Separation of Identity from Direct Booking) -->
+  <div id="modal-approve-verif" class="modal" role="dialog" aria-modal="true" aria-hidden="true" style="display:none;">
+    <div class="modal-backdrop" onclick="closeApproveModal()"></div>
+    <div class="modal-dialog" style="max-width: 560px;">
+      <div class="modal-header">
+        <h3>🛡️ Approve Hospital Partner Verification</h3>
+        <button type="button" class="modal-close-btn" onclick="closeApproveModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Grant official partner verification and hospital staff dashboard access for:</p>
+        <div style="background:#f0fdfa; border:1px solid #99f6e4; border-radius:8px; padding:12px; margin-bottom:14px;">
+          <strong id="approve-hosp-name" style="color:#0f2b48; font-size:1.05rem; display:block;"></strong>
+          <span style="font-size:0.8rem; color:#0d9488;">Applicant: <span id="approve-applicant-name"></span> (<span id="approve-applicant-email"></span>)</span>
+        </div>
+
+        <div style="background:#fffbeb; border:1px solid #fef3c7; border-radius:8px; padding:12px; font-size:0.82rem; color:#92400e; margin-bottom:14px;">
+          ⚠️ <strong>Compliance Safety Guarantee:</strong> Approval verifies hospital identity and activates staff portal access to process inquiries. Direct automated slot booking will remain <strong>disabled</strong> until the hospital explicitly configures its schedule and OPD tariff.
+        </div>
+
+        <form id="form-approve-verif">
+          <input type="hidden" id="approve-req-id">
+          <div class="search-field-group" style="margin-bottom:14px;">
+            <label for="approve-notes">Administrative Compliance Notes *</label>
+            <textarea id="approve-notes" class="form-input" rows="3" placeholder="e.g. Verified with State Clinical Establishment Registry registration number. Approved." required></textarea>
+          </div>
+          <div style="display:flex; justify-content:flex-end; gap:10px;">
+            <button type="button" class="btn btn-outline" onclick="closeApproveModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="btn-submit-approve" style="background:#0d9488; border-color:#0d9488;">
+              Confirm &amp; Approve Verification
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Reject Verification Request -->
+  <div id="modal-reject-verif" class="modal" role="dialog" aria-modal="true" aria-hidden="true" style="display:none;">
+    <div class="modal-backdrop" onclick="closeRejectVerifModal()"></div>
+    <div class="modal-dialog" style="max-width: 560px;">
+      <div class="modal-header">
+        <h3 style="color:#dc2626;">✕ Reject Hospital Verification Request</h3>
+        <button type="button" class="modal-close-btn" onclick="closeRejectVerifModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Decline verification request for <strong id="reject-hosp-name"></strong>.</p>
+        <form id="form-reject-verif">
+          <input type="hidden" id="reject-req-id">
+          <div class="search-field-group" style="margin-bottom:14px;">
+            <label for="reject-verif-reason">Compliance Rejection Reason *</label>
+            <select id="reject-verif-reason" class="filter-select" style="width:100%; margin-bottom:8px;">
+              <option value="Registration number could not be validated against official state medical registry">Registration number could not be validated against official state registry</option>
+              <option value="Official authorization letter / credential proof missing or invalid">Official authorization letter / credential proof missing or invalid</option>
+              <option value="Applicant institutional domain email could not be verified">Applicant institutional domain email could not be verified</option>
+              <option value="Duplicate or fraudulent ownership claim detected">Duplicate or fraudulent ownership claim detected</option>
+            </select>
+            <textarea id="reject-verif-notes" class="form-input" rows="2" placeholder="Additional details / explanation..."></textarea>
+          </div>
+          <div style="display:flex; justify-content:flex-end; gap:10px;">
+            <button type="button" class="btn btn-outline" onclick="closeRejectVerifModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary" style="background:#dc2626; border-color:#dc2626;">
+              Confirm Rejection
+            </button>
           </div>
         </form>
       </div>

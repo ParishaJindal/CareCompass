@@ -32,4 +32,8 @@ router.post('/lookup', lookupLimiter, appointmentController.lookupAppointment);
 // Cancellation Request (rate limited)
 router.post('/cancel', lookupLimiter, appointmentController.cancelAppointment);
 
+// Patient Reschedule Acceptance / Decline (rate limited)
+router.post('/:ref/reschedule/accept', lookupLimiter, appointmentController.acceptReschedule);
+router.post('/:ref/reschedule/decline', lookupLimiter, appointmentController.declineReschedule);
+
 module.exports = router;

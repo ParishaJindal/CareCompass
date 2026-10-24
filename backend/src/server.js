@@ -11,6 +11,8 @@ const helmet = require('helmet');
 
 const hospitalsRouter = require('./routes/hospitals');
 const appointmentsRouter = require('./routes/appointments');
+const partnerRouter = require('./routes/partner');
+const adminRouter = require('./routes/admin');
 const healthRouter = require('./routes/health');
 const hospitalController = require('./controllers/hospitalController');
 const { apiLimiter } = require('./middleware/rateLimiter');
@@ -119,6 +121,12 @@ app.use('/api/hospitals', hospitalsRouter);
 
 // Appointment & Scheduling endpoints: /api/appointments/*
 app.use('/api/appointments', appointmentsRouter);
+
+// Hospital Partner Portal endpoints: /api/partner/*
+app.use('/api/partner', partnerRouter);
+
+// Platform Administration endpoints: /api/admin/*
+app.use('/api/admin', adminRouter);
 
 // Autocomplete endpoint: /api/locations?q=...
 app.get('/api/locations', hospitalController.getLocations);

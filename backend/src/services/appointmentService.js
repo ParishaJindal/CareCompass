@@ -522,6 +522,11 @@ async function lookupAppointment({ reference, phone }) {
     currency: appt.currency || 'INR',
     confirmedBySystem: appt.confirmed_by_system,
     confirmedAt: appt.confirmed_at,
+    cancellationReason: appt.cancellation_reason,
+    cancelledAt: appt.cancelled_at,
+    proposedDate: appt.proposed_date ? (appt.proposed_date instanceof Date ? appt.proposed_date.toISOString().slice(0, 10) : String(appt.proposed_date).slice(0, 10)) : null,
+    proposedTime: appt.proposed_time ? String(appt.proposed_time).slice(0, 5) : null,
+    hospitalStaffNotes: appt.hospital_staff_notes,
     createdAt: appt.created_at,
     isCancellable,
     hoursUntilAppointment: Math.round(hoursUntilAppointment * 10) / 10

@@ -1,46 +1,37 @@
 /**
  * CareCompass Master Admin Portal Logic
- * Exclusively for Parisha Jindal (parishajindal17@gmail.com)
+ * Server-Side Authenticated Platform Administration
  */
 
 (function() {
-  const MASTER_ADMIN_EMAIL = "parishajindal17@gmail.com";
-  const DEFAULT_MASTER_PASSWORD = "ParishaCare@2026";
-
-  // Helper for admin password storage
-  function getAdminPassword() {
-    return localStorage.getItem("carecompass_admin_password") || DEFAULT_MASTER_PASSWORD;
+  function getApiUrl(endpoint) {
+    if (window.CARECOMPASS_CONFIG && typeof window.CARECOMPASS_CONFIG.getApiUrl === 'function') {
+      return window.CARECOMPASS_CONFIG.getApiUrl(endpoint);
+    }
+    return endpoint;
   }
 
-  function setAdminPassword(newPw) {
-    localStorage.setItem("carecompass_admin_password", newPw);
+  function getAdminToken() {
+    return sessionStorage.getItem("carecompass_admin_token") || "";
   }
 
   function isAuthenticated() {
-    return sessionStorage.getItem("carecompass_admin_auth") === "true";
+    return !!getAdminToken();
   }
 
-  function setAuthenticated(val) {
-    if (val) {
-      sessionStorage.setItem("carecompass_admin_auth", "true");
-      try {
-        localStorage.setItem("carecompass_active_user", JSON.stringify({
-          id: "usr-admin-parisha",
-          name: "Parisha Jindal",
-          email: MASTER_ADMIN_EMAIL,
-          role: "super_admin",
-          roleLabel: "Master Administrator"
-        }));
-      } catch (e) {}
+  function setAuthenticated(token, user) {
+    if (token) {
+      sessionStorage.setItem("carecompass_admin_token", token);
+      if (user) {
+        sessionStorage.setItem("carecompass_admin_user", JSON.stringify(user));
+        const emailEl = document.getElementById("active-admin-email");
+        const nameEl = document.getElementById("active-admin-name");
+        if (emailEl) emailEl.textContent = user.email || "admin@carecompass.org";
+        if (nameEl) nameEl.textContent = user.fullName || "Platform Administrator";
+      }
     } else {
-      sessionStorage.removeItem("carecompass_admin_auth");
-      localStorage.removeItem("carecompass_admin_auth");
-      try {
-        const cur = localStorage.getItem("carecompass_active_user");
-        if (cur && cur.includes(MASTER_ADMIN_EMAIL)) {
-          localStorage.removeItem("carecompass_active_user");
-        }
-      } catch (e) {}
+      sessionStorage.removeItem("carecompass_admin_token");
+      sessionStorage.removeItem("carecompass_admin_user");
     }
   }
 
@@ -63,10 +54,12 @@
       content.style.display = content.id === `tab-${tabId}` ? "block" : "none";
     });
 
+    if (tabId === "verifications") loadVerificationRequests();
     if (tabId === "facilities") renderFacilitiesTable();
     if (tabId === "inquiries") renderInquiriesList();
     if (tabId === "reports") renderReportsList();
     if (tabId === "overview") updateOverviewMetrics();
+    if (tabId === "security") loadAuditLogs();
   };
 
   // Check auth state on load - strictly prompt password if not actively authenticated in session
@@ -83,6 +76,13 @@
     } else {
       if (authOverlay) authOverlay.style.display = "none";
       if (authDashboard) authDashboard.style.display = "flex";
+      
+      const userData = JSON.parse(sessionStorage.getItem("carecompass_admin_user") || "{}");
+      const emailEl = document.getElementById("active-admin-email");
+      const nameEl = document.getElementById("active-admin-name");
+      if (emailEl && userData.email) emailEl.textContent = userData.email;
+      if (nameEl && userData.fullName) nameEl.textContent = userData.fullName;
+
       initAdminDashboard();
     }
   }
@@ -100,35 +100,54 @@
     });
   }
 
-  // Setup Auth Submission
+  // Setup Auth Submission (Server-side cryptographic authentication)
   if (loginForm) {
-    loginForm.addEventListener("submit", (e) => {
+    loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const email = document.getElementById("admin-email").value.trim().toLowerCase();
       const pw = pwInput ? pwInput.value : "";
+      const submitBtn = document.getElementById("btn-submit-admin-login");
 
-      if (email === MASTER_ADMIN_EMAIL && pw === getAdminPassword()) {
-        setAuthenticated(true);
-        if (loginError) loginError.style.display = "none";
-        if (logoutAlert) logoutAlert.style.display = "none";
-        if (pwInput) pwInput.value = "";
-        checkAuthState();
-      } else {
-        if (logoutAlert) logoutAlert.style.display = "none";
-        if (loginError) loginError.style.display = "block";
-        if (pwInput) {
-          pwInput.value = "";
-          pwInput.focus();
+      if (submitBtn) submitBtn.disabled = true;
+      if (loginError) loginError.style.display = "none";
+      if (logoutAlert) logoutAlert.style.display = "none";
+
+      try {
+        const res = await fetch(getApiUrl("/api/admin/auth/login"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password: pw })
+        });
+        const data = await res.json();
+        if (submitBtn) submitBtn.disabled = false;
+
+        if (data && data.success && data.token) {
+          setAuthenticated(data.token, data.admin);
+          if (pwInput) pwInput.value = "";
+          checkAuthState();
+        } else {
+          const errSpan = document.getElementById("admin-error-text");
+          if (errSpan) errSpan.textContent = data?.error || "Incorrect credentials or unauthorized administrative role.";
+          if (loginError) loginError.style.display = "block";
+          if (pwInput) {
+            pwInput.value = "";
+            pwInput.focus();
+          }
         }
+      } catch (err) {
+        if (submitBtn) submitBtn.disabled = false;
+        const errSpan = document.getElementById("admin-error-text");
+        if (errSpan) errSpan.textContent = "Network error: " + err.message;
+        if (loginError) loginError.style.display = "block";
       }
     });
   }
 
-  // Logout Handler - Purges session authentication and immediately demands password
+  // Logout Handler - Purges session authentication and immediately demands login
   if (logoutBtn) {
     logoutBtn.addEventListener("click", (e) => {
       e.preventDefault();
-      setAuthenticated(false);
+      setAuthenticated(null, null);
       if (loginError) loginError.style.display = "none";
       if (logoutAlert) logoutAlert.style.display = "block";
       if (pwInput) {
@@ -144,12 +163,15 @@
   // Dashboard Initialization
   function initAdminDashboard() {
     setupTabButtons();
+    setupVerificationManagement();
+    loadVerificationRequests();
     updateOverviewMetrics();
     renderFacilitiesTable();
     setupFacilityFilters();
     setupAddFacilityModal();
     setupBackupTools();
     setupSecurityForm();
+    loadAuditLogs();
   }
 
   function setupTabButtons() {
@@ -159,6 +181,270 @@
         switchAdminTab(tab);
       });
     });
+  }
+
+  // ==========================================
+  // TAB: HOSPITAL VERIFICATION MANAGEMENT
+  // ==========================================
+  let verificationRequests = [];
+
+  function setupVerificationManagement() {
+    const refreshBtn = document.getElementById("btn-refresh-verifications");
+    const filterSelect = document.getElementById("filter-verif-status");
+
+    if (refreshBtn) {
+      refreshBtn.addEventListener("click", () => loadVerificationRequests());
+    }
+    if (filterSelect) {
+      filterSelect.addEventListener("change", () => loadVerificationRequests());
+    }
+
+    // Approve Form Submit
+    const approveForm = document.getElementById("form-approve-verif");
+    if (approveForm) {
+      approveForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const id = document.getElementById("approve-req-id").value;
+        const notes = document.getElementById("approve-notes").value.trim();
+        const btn = document.getElementById("btn-submit-approve");
+
+        if (btn) btn.disabled = true;
+
+        try {
+          const res = await fetch(getApiUrl(`/api/admin/verifications/${id}/approve`), {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${getAdminToken()}`
+            },
+            body: JSON.stringify({ notes })
+          });
+          const data = await res.json();
+          if (btn) btn.disabled = false;
+
+          if (!data || !data.success) {
+            alert(data?.error || "Failed to approve verification request.");
+            return;
+          }
+
+          alert("Hospital verification approved successfully! Staff account activated. (Direct slot booking remains disabled until explicitly activated).");
+          closeApproveModal();
+          loadVerificationRequests();
+          loadAuditLogs();
+        } catch (err) {
+          if (btn) btn.disabled = false;
+          alert("Approval error: " + err.message);
+        }
+      });
+    }
+
+    // Reject Form Submit
+    const rejectForm = document.getElementById("form-reject-verif");
+    if (rejectForm) {
+      rejectForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const id = document.getElementById("reject-req-id").value;
+        const reasonSelect = document.getElementById("reject-verif-reason").value;
+        const notes = document.getElementById("reject-verif-notes").value.trim();
+        const fullReason = notes ? `${reasonSelect} — ${notes}` : reasonSelect;
+
+        try {
+          const res = await fetch(getApiUrl(`/api/admin/verifications/${id}/reject`), {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${getAdminToken()}`
+            },
+            body: JSON.stringify({ reason: fullReason })
+          });
+          const data = await res.json();
+
+          if (!data || !data.success) {
+            alert(data?.error || "Failed to reject verification request.");
+            return;
+          }
+
+          alert("Verification request rejected.");
+          closeRejectVerifModal();
+          loadVerificationRequests();
+          loadAuditLogs();
+        } catch (err) {
+          alert("Rejection error: " + err.message);
+        }
+      });
+    }
+  }
+
+  async function loadVerificationRequests() {
+    const tbody = document.getElementById("verifications-tbody");
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:24px; color:#64748b;">Loading verification requests from secure database...</td></tr>';
+
+    const statusFilter = document.getElementById("filter-verif-status")?.value || "";
+    const url = getApiUrl(`/api/admin/verifications${statusFilter ? '?status=' + encodeURIComponent(statusFilter) : ''}`);
+
+    try {
+      const res = await fetch(url, {
+        headers: {
+          "Authorization": `Bearer ${getAdminToken()}`,
+          "Content-Type": "application/json"
+        }
+      });
+      const data = await res.json();
+
+      if (!data || !data.success) {
+        if (res.status === 401 || res.status === 403) {
+          setAuthenticated(null, null);
+          checkAuthState();
+          return;
+        }
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:24px; color:#ef4444;">${escapeHtml(data?.error || 'Failed to load verifications.')}</td></tr>`;
+        return;
+      }
+
+      verificationRequests = data.requests || [];
+      const badge = document.getElementById("verifications-count-badge");
+      if (badge) {
+        const pendingCount = verificationRequests.filter(r => r.verification_status === "pending_review").length;
+        badge.textContent = pendingCount;
+      }
+
+      renderVerificationTable(verificationRequests);
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:24px; color:#ef4444;">Network error: ${escapeHtml(err.message)}</td></tr>`;
+    }
+  }
+
+  function renderVerificationTable(requests) {
+    const tbody = document.getElementById("verifications-tbody");
+    if (!tbody) return;
+
+    if (requests.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:32px; color:#64748b;">No verification requests found matching this filter.</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = "";
+    requests.forEach(req => {
+      const tr = document.createElement("tr");
+
+      let statusBadge = `<span class="sec-badge sec-badge-warning">● Pending Review</span>`;
+      if (req.verification_status === "approved") {
+        statusBadge = `<span class="sec-badge sec-badge-success">✓ Verified &amp; Approved</span>`;
+      } else if (req.verification_status === "rejected") {
+        statusBadge = `<span class="sec-badge sec-badge-danger">✕ Rejected</span>`;
+      }
+
+      const docCount = (req.documents && req.documents.length) || 0;
+      const docBadge = docCount > 0 
+        ? `<span class="sec-badge sec-badge-info" title="Private Admin-Only Document Storage">🔒 ${docCount} Private Doc(s)</span>`
+        : `<span style="color:#94a3b8; font-size:0.75rem;">None</span>`;
+
+      let actionsHtml = "";
+      if (req.verification_status === "pending_review") {
+        actionsHtml = `
+          <div style="display:flex; gap:6px;">
+            <button type="button" class="btn btn-primary btn-sm" style="background:#0d9488; border-color:#0d9488; padding:4px 10px; font-size:0.75rem;" onclick="openApproveModal(${req.id}, '${escapeHtml(req.hospital_name)}', '${escapeHtml(req.applicant_name)}', '${escapeHtml(req.official_email)}')">
+              ✓ Approve
+            </button>
+            <button type="button" class="btn btn-outline btn-sm" style="color:#dc2626; border-color:#dc2626; padding:4px 10px; font-size:0.75rem;" onclick="openRejectModal(${req.id}, '${escapeHtml(req.hospital_name)}')">
+              ✕ Reject
+            </button>
+          </div>
+        `;
+      } else if (req.verification_status === "approved") {
+        actionsHtml = `<span style="font-size:0.75rem; color:#16a34a; font-weight:700;">Approved (Direct booking disabled)</span>`;
+      } else {
+        actionsHtml = `<span style="font-size:0.75rem; color:#dc2626;" title="${escapeHtml(req.rejection_reason || '')}">Rejected</span>`;
+      }
+
+      tr.innerHTML = `
+        <td><strong style="font-family:monospace; font-size:0.85rem; color:#0f2b48;">${escapeHtml(req.request_reference)}</strong></td>
+        <td>
+          <strong>${escapeHtml(req.hospital_name)}</strong><br>
+          <small style="color:#64748b;">ID: ${escapeHtml(req.hospital_id)}</small>
+        </td>
+        <td>
+          <strong>${escapeHtml(req.applicant_name)}</strong><br>
+          <small style="color:#64748b;">${escapeHtml(req.applicant_designation)}</small>
+        </td>
+        <td>
+          <a href="mailto:${escapeHtml(req.official_email)}" style="color:#0d9488; text-decoration:none;">${escapeHtml(req.official_email)}</a><br>
+          <small style="color:#64748b;">📞 +91 ${escapeHtml(req.official_phone)}</small>
+        </td>
+        <td><span style="font-family:monospace; font-size:0.82rem; font-weight:700;">${escapeHtml(req.hospital_registration_number)}</span></td>
+        <td>${docBadge}</td>
+        <td>${statusBadge}</td>
+        <td>${actionsHtml}</td>
+      `;
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  window.openApproveModal = function(id, hospName, applicantName, applicantEmail) {
+    document.getElementById("approve-req-id").value = id;
+    document.getElementById("approve-hosp-name").textContent = hospName;
+    document.getElementById("approve-applicant-name").textContent = applicantName;
+    document.getElementById("approve-applicant-email").textContent = applicantEmail;
+    document.getElementById("modal-approve-verif").style.display = "flex";
+  };
+
+  window.closeApproveModal = function() {
+    document.getElementById("modal-approve-verif").style.display = "none";
+    document.getElementById("form-approve-verif")?.reset();
+  };
+
+  window.openRejectModal = function(id, hospName) {
+    document.getElementById("reject-req-id").value = id;
+    document.getElementById("reject-hosp-name").textContent = hospName;
+    document.getElementById("modal-reject-verif").style.display = "flex";
+  };
+
+  window.closeRejectVerifModal = function() {
+    document.getElementById("modal-reject-verif").style.display = "none";
+    document.getElementById("form-reject-verif")?.reset();
+  };
+
+  // Live Security & Hospital Audit Logs Loader
+  async function loadAuditLogs() {
+    const tbody = document.getElementById("sec-audit-tbody");
+    if (!tbody) return;
+
+    try {
+      const res = await fetch(getApiUrl("/api/admin/audit-logs?limit=15"), {
+        headers: { "Authorization": `Bearer ${getAdminToken()}` }
+      });
+      const data = await res.json();
+      if (!data || !data.success || !data.logs || data.logs.length === 0) return;
+
+      tbody.innerHTML = "";
+      data.logs.forEach(log => {
+        const tr = document.createElement("tr");
+        const dt = new Date(log.created_at || Date.now());
+        const timeStr = dt.toLocaleString("en-IN", { timeZone: "Asia/Kolkata" });
+        tr.innerHTML = `
+          <td style="font-family:monospace; font-size:0.75rem;">${escapeHtml(timeStr)}</td>
+          <td><strong>${escapeHtml(log.action || log.event_type)}</strong></td>
+          <td style="font-family:monospace; font-size:0.75rem;">${escapeHtml(log.ip_address || '127.0.0.1')}</td>
+          <td><span class="sec-badge sec-badge-info">${escapeHtml(log.actor_type || 'admin')}</span></td>
+          <td><span class="sec-badge sec-badge-success">Recorded</span></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    } catch (e) {
+      console.warn("Audit logs error:", e);
+    }
+  }
+
+  function escapeHtml(str) {
+    if (typeof str !== 'string') return str || '';
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
 
   // ==========================================

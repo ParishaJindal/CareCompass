@@ -337,6 +337,9 @@
         } else if (appt.bookingStatus === 'pending_confirmation') {
           statusClass = 'status-pending';
           statusLabel = 'PENDING HOSPITAL CONFIRMATION';
+        } else if (appt.bookingStatus === 'rescheduled_pending_patient' || appt.bookingStatus === 'rescheduled') {
+          statusClass = 'status-pending';
+          statusLabel = 'ALTERNATIVE TIME PROPOSED BY HOSPITAL';
         } else if (appt.bookingStatus === 'completed') {
           statusClass = 'status-completed';
           statusLabel = 'COMPLETED';
@@ -369,6 +372,44 @@
                   </a>
                 ` : ''}
               </div>
+
+              <!-- Proposed Alternative Time Banner (Requirement 8) -->
+              ${(appt.bookingStatus === 'rescheduled_pending_patient' || appt.bookingStatus === 'rescheduled') ? `
+                <div class="arc-rescheduled-banner" style="background:#f0fdfa; border:2px solid #0d9488; border-radius:12px; padding:20px; margin:18px 0;">
+                  <h3 style="color:#0f2b48; margin:0 0 8px; font-size:1.15rem; display:flex; align-items:center; gap:8px;">
+                    📅 Hospital Proposed an Alternative Appointment Time
+                  </h3>
+                  <p style="color:#334155; font-size:0.9rem; margin:0 0 14px; line-height:1.5;">
+                    The hospital staff has reviewed your consultation inquiry and proposed an alternative appointment schedule. <strong>Your appointment is NOT confirmed until you accept this proposed time.</strong>
+                  </p>
+                  
+                  <div style="background:#ffffff; border:1px solid #ccfbf1; border-radius:10px; padding:16px; margin-bottom:16px; display:flex; flex-wrap:wrap; gap:24px;">
+                    <div>
+                      <span style="font-size:0.75rem; color:#64748b; font-weight:700; text-transform:uppercase; display:block; margin-bottom:2px;">Proposed Date</span>
+                      <strong style="font-size:1.1rem; color:#0f2b48;">📅 ${formatReadableDate(appt.proposedDate || appt.appointmentDate)}</strong>
+                    </div>
+                    <div>
+                      <span style="font-size:0.75rem; color:#64748b; font-weight:700; text-transform:uppercase; display:block; margin-bottom:2px;">Proposed Time</span>
+                      <strong style="font-size:1.1rem; color:#0d9488;">⏰ ${escapeHtml(appt.proposedTime || appt.startTime)}</strong>
+                    </div>
+                    ${appt.hospitalStaffNotes ? `
+                      <div style="width:100%; border-top:1px dashed #e2e8f0; padding-top:12px; margin-top:4px;">
+                        <span style="font-size:0.75rem; color:#64748b; font-weight:700; text-transform:uppercase; display:block; margin-bottom:2px;">Note from Hospital Staff</span>
+                        <span style="font-size:0.9rem; color:#1e293b; font-style:italic;">"${escapeHtml(appt.hospitalStaffNotes)}"</span>
+                      </div>
+                    ` : ''}
+                  </div>
+
+                  <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                    <button type="button" class="btn btn-primary" onclick="handlePatientAcceptReschedule('${escapeHtml(appt.bookingReference)}')">
+                      ✓ Accept Proposed Time &amp; Confirm Booking
+                    </button>
+                    <button type="button" class="btn btn-outline" style="border-color:#dc2626; color:#dc2626;" onclick="handlePatientDeclineReschedule('${escapeHtml(appt.bookingReference)}')">
+                      ✕ Decline &amp; Cancel Request
+                    </button>
+                  </div>
+                </div>
+              ` : ''}
 
               <!-- Details Grid -->
               <div class="arc-details-grid">
@@ -445,6 +486,7 @@
               ${appt.bookingStatus === 'cancelled' ? `
                 <div class="arc-cancelled-banner">
                   <strong>This appointment has been cancelled.</strong>
+                  <p>${appt.cancellationReason ? `Reason: <em>${escapeHtml(appt.cancellationReason)}</em>` : ''}</p>
                   <p>Payment Mode: <strong>PAY AT HOSPITAL</strong>. No advance payment was charged.</p>
                 </div>
               ` : ''}
@@ -583,6 +625,69 @@
           return dateStr;
         }
       }
+
+      // Patient Reschedule Handlers (Requirement 8)
+      window.handlePatientAcceptReschedule = async function(bookingRef) {
+        if (!currentActiveAppointment || !currentActiveAppointment.patientPhone) {
+          alert('Session expired or phone verification missing. Please look up your booking again.');
+          return;
+        }
+
+        if (!confirm(`Confirm acceptance of the proposed appointment time for reference ${bookingRef}?`)) {
+          return;
+        }
+
+        try {
+          const res = await fetch(getApiUrl(`/api/appointments/${encodeURIComponent(bookingRef)}/reschedule/accept`), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone: currentActiveAppointment.patientPhone })
+          });
+
+          const data = await res.json();
+          if (!data || !data.success) {
+            alert(data?.error || 'Failed to accept proposed reschedule.');
+            return;
+          }
+
+          alert('Proposed appointment time accepted! Your consultation is now confirmed.');
+          performLookup(bookingRef, currentActiveAppointment.patientPhone);
+        } catch (err) {
+          alert(`Acceptance error: ${err.message}`);
+        }
+      };
+
+      window.handlePatientDeclineReschedule = async function(bookingRef) {
+        if (!currentActiveAppointment || !currentActiveAppointment.patientPhone) {
+          alert('Session expired or phone verification missing. Please look up your booking again.');
+          return;
+        }
+
+        const reason = prompt('Please specify why you are declining the proposed time (Optional):', 'Unavailable at proposed alternative time');
+        if (reason === null) return; // User pressed Cancel
+
+        try {
+          const res = await fetch(getApiUrl(`/api/appointments/${encodeURIComponent(bookingRef)}/reschedule/decline`), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              phone: currentActiveAppointment.patientPhone,
+              reason: reason || 'Patient declined proposed alternative time'
+            })
+          });
+
+          const data = await res.json();
+          if (!data || !data.success) {
+            alert(data?.error || 'Failed to decline proposed reschedule.');
+            return;
+          }
+
+          alert('Proposed time declined. Your appointment request has been cancelled.');
+          performLookup(bookingRef, currentActiveAppointment.patientPhone);
+        } catch (err) {
+          alert(`Decline error: ${err.message}`);
+        }
+      };
 
       function escapeHtml(str) {
         if (typeof str !== 'string') return str || '';

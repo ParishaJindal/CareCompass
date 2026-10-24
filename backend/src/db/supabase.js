@@ -42,6 +42,12 @@ if (fs.existsSync(SQLITE_FALLBACK_PATH)) {
   try {
     const { DatabaseSync } = require('node:sqlite');
     sqliteDb = new DatabaseSync(SQLITE_FALLBACK_PATH);
+    try {
+      sqliteDb.exec('PRAGMA busy_timeout = 10000;');
+      sqliteDb.exec('PRAGMA journal_mode = WAL;');
+    } catch (pragmaErr) {
+      // WAL may already be active
+    }
     initSqliteAppointmentTables(sqliteDb);
     if (dbType === 'none') {
       dbType = 'local_sqlite_fallback';
@@ -149,6 +155,81 @@ function initSqliteAppointmentTables(db) {
         created_at TEXT DEFAULT (datetime('now')),
         updated_at TEXT DEFAULT (datetime('now'))
       );
+
+      CREATE TABLE IF NOT EXISTS admin_users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        email TEXT UNIQUE NOT NULL,
+        full_name TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'platform_admin',
+        password_hash TEXT NOT NULL,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        last_login_at TEXT,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+      );
+
+      CREATE TABLE IF NOT EXISTS hospital_verification_requests (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        request_reference TEXT UNIQUE NOT NULL,
+        hospital_id TEXT NOT NULL,
+        hospital_name TEXT NOT NULL,
+        applicant_name TEXT NOT NULL,
+        applicant_designation TEXT NOT NULL,
+        official_email TEXT NOT NULL,
+        official_phone TEXT NOT NULL,
+        hospital_registration_number TEXT NOT NULL,
+        initial_password_hash TEXT NOT NULL,
+        verification_status TEXT NOT NULL DEFAULT 'pending_review',
+        admin_notes TEXT,
+        reviewed_by_admin_id TEXT,
+        reviewed_at TEXT,
+        rejection_reason TEXT,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+      );
+
+      CREATE TABLE IF NOT EXISTS verification_documents (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        request_id INTEGER NOT NULL,
+        hospital_id TEXT NOT NULL,
+        document_type TEXT NOT NULL,
+        file_name TEXT NOT NULL,
+        file_type TEXT NOT NULL,
+        file_size_bytes INTEGER NOT NULL,
+        storage_path TEXT NOT NULL,
+        access_level TEXT NOT NULL DEFAULT 'admin_only',
+        uploaded_at TEXT DEFAULT (datetime('now'))
+      );
+
+      CREATE TABLE IF NOT EXISTS hospital_staff_users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        hospital_id TEXT NOT NULL,
+        full_name TEXT NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        phone TEXT,
+        role TEXT NOT NULL DEFAULT 'hospital_staff',
+        password_hash TEXT NOT NULL,
+        is_active INTEGER NOT NULL DEFAULT 1,
+        verification_request_id INTEGER,
+        last_login_at TEXT,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+      );
+
+      CREATE TABLE IF NOT EXISTS hospital_audit_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        event_type TEXT NOT NULL,
+        entity_type TEXT NOT NULL,
+        entity_id TEXT NOT NULL,
+        hospital_id TEXT,
+        actor_type TEXT NOT NULL,
+        actor_id TEXT,
+        actor_email TEXT,
+        action TEXT NOT NULL,
+        details TEXT DEFAULT '{}',
+        ip_address TEXT,
+        created_at TEXT DEFAULT (datetime('now'))
+      );
     `);
 
     // Ensure columns exist on older SQLite databases via safe migrations
@@ -160,6 +241,11 @@ function initSqliteAppointmentTables(db) {
       if (!apptCols.includes('confirmed_at')) db.exec("ALTER TABLE appointments ADD COLUMN confirmed_at TEXT");
       if (!apptCols.includes('cancellation_reason')) db.exec("ALTER TABLE appointments ADD COLUMN cancellation_reason TEXT");
       if (!apptCols.includes('cancelled_at')) db.exec("ALTER TABLE appointments ADD COLUMN cancelled_at TEXT");
+      if (!apptCols.includes('proposed_date')) db.exec("ALTER TABLE appointments ADD COLUMN proposed_date TEXT");
+      if (!apptCols.includes('proposed_time')) db.exec("ALTER TABLE appointments ADD COLUMN proposed_time TEXT");
+      if (!apptCols.includes('hospital_staff_notes')) db.exec("ALTER TABLE appointments ADD COLUMN hospital_staff_notes TEXT");
+      if (!apptCols.includes('actioned_by_staff_id')) db.exec("ALTER TABLE appointments ADD COLUMN actioned_by_staff_id INTEGER");
+      if (!apptCols.includes('actioned_at')) db.exec("ALTER TABLE appointments ADD COLUMN actioned_at TEXT");
 
       const provCols = db.prepare("PRAGMA table_info(appointment_providers)").all();
       const bookingCol = provCols.find(c => c.name === 'booking_enabled');

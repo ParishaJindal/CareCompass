@@ -60,6 +60,8 @@ const ROOT_PAGES = [
   'find-healthcare.html',
   'facility-details.html',
   'my-appointments.html',
+  'partner-with-us.html',
+  'hospital-portal.html',
   'admin.html',
   'login.html'
 ];
